@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app" >
+    <script type="module">
+      import { h, mount, Cortex } from "./humn.js";
+
+      const todoStore = new Cortex({
+        memory: {
+          items: [
+            { id: 1, text: "Create Humn Library", done: true },
+            { id: 2, text: "Write first app", done: false },
+          ],
+          inputValue: "",
+        },
+
+        synapses: (set, get) => ({
+          updateInput: (val) => set({ inputValue: val }),
+
+          add: () =>
+            set((state) => {
+              state.items.push({
+                id: Date.now(),
+                text: state.inputValue,
+                done: false,
+              });
+              state.inputValue = ""; 
+            }),
+
+          toggle: (id) =>
+            set((state) => {
+              const item = state.items.find((i) => i.id === id);
+              if (item) item.done = !item.done;
+            }),
+        }),
+      });
+
+      const App = () => {
+        const { items, inputValue } = todoStore.memory;
+        const { add, toggle, updateInput } = todoStore.synapses;
+
+        return h("div", { style: "padding: 20px; font-family: sans-serif;" }, [
+          h("h1", {}, "Humn Todo"),
+
+          // Input
+          h("div", {}, [
+            h("input", {
+              value: inputValue,
+              oninput: (e) => updateInput(e.target.value),
+            }),
+            h("button", { onclick: add }, "Add Task"),
+          ]),
+
+          // List
+          h(
+            "ul",
+            {},
+            items.map((item) =>
+              h(
+                "li",
+                {
+                  style: `cursor: pointer; ${
+                    item.done
+                      ? "text-decoration: line-through; color: #888"
+                      : ""
+                  }`,
+                  onclick: () => toggle(item.id),
+                },
+                item.text
+              )
+            )
+          ),
+        ]);
+      };
+
+      mount(document.getElementById("app"), App);
+    </script>
+  </body>
+</html>

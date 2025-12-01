@@ -1,4 +1,13 @@
 {
   "name": "humn",
-  "packageManager": "yarn@4.6.0"
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"No Tests Defined\""
+  },
+  "packageManager": "yarn@4.6.0",
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "prettier": "^3.7.3"
+  }
 }
