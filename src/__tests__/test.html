@@ -8,7 +8,7 @@
   <body>
     <div id="app" >
     <script type="module">
-      import { h, mount, Cortex } from "./humn.js";
+      import { h, mount, Cortex } from "../humn.js";
 
       const todoStore = new Cortex({
         memory: {
@@ -17,13 +17,21 @@
             { id: 2, text: "Write first app", done: false },
           ],
           inputValue: "",
+          errorMessage: ""
         },
 
         synapses: (set, get) => ({
           updateInput: (val) => set({ inputValue: val }),
 
-          add: () =>
+          addTodo: () =>
             set((state) => {
+              state.errorMessage = ''
+              
+              if(state.inputValue.length < 5) {
+                state.errorMessage = 'Task title too short'
+                return
+              }
+
               state.items.push({
                 id: Date.now(),
                 text: state.inputValue,
@@ -41,8 +49,8 @@
       });
 
       const App = () => {
-        const { items, inputValue } = todoStore.memory;
-        const { add, toggle, updateInput } = todoStore.synapses;
+        const { items, inputValue, errorMessage } = todoStore.memory;
+        const { addTodo, toggle, updateInput } = todoStore.synapses;
 
         return h("div", { style: "padding: 20px; font-family: sans-serif;" }, [
           h("h1", {}, "Humn Todo"),
@@ -53,8 +61,11 @@
               value: inputValue,
               oninput: (e) => updateInput(e.target.value),
             }),
-            h("button", { onclick: add }, "Add Task"),
+            h("button", { onclick: addTodo }, "Add Task"),
           ]),
+
+          // Error
+          h("p",{style: "color: red;"}, errorMessage),
 
           // List
           h(

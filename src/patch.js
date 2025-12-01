@@ -32,33 +32,39 @@ function createElement(vNode) {
  * @param {object} oldProps - The old properties.
  */
 function patchProps(el, newProps = {}, oldProps = {}) {
+  if (!el) return;
+
   const allProps = { ...oldProps, ...newProps };
 
   for (const key in allProps) {
     const oldValue = oldProps[key];
     const newValue = newProps[key];
 
-    // If nothing changed, skip
-    if (oldValue === newValue) continue;
-
     // Handle removed props
-    if (!newValue) {
+    if (newValue === undefined || newValue === null) {
       el.removeAttribute(key);
       continue;
     }
 
+    if (key === 'value' || key === 'checked') {
+      // For inputs, we check the LIVE DOM value, not the old props.
+      if (el[key] !== newValue) {
+        el[key] = newValue;
+      }
+      continue; 
+    }
+
+    // If nothing changed, skip
+    if (oldValue === newValue) continue;
+
     // Handle Events
     if (key.startsWith("on")) {
       const eventName = key.slice(2).toLowerCase();
-      // Remove old listener if it existed
       // TODO: Handle multiple listeners per type
       if (oldValue) el.removeEventListener(eventName, oldValue);
       el.addEventListener(eventName, newValue);
     }
-    // Handle specific DOM Properties (Crucial for Input Focus!)
-    else if (key === "value" || key === "checked") {
-      el[key] = newValue;
-    }
+
     // Handle standard attributes
     else {
       el.setAttribute(key, newValue);
@@ -75,13 +81,13 @@ function patchProps(el, newProps = {}, oldProps = {}) {
  */
 export function patch(parent, newVNode, oldVNode, index = 0) {
   // CASE A: Start - No old node? Create new.
-  if (!oldVNode) {
+  if (oldVNode === undefined || oldVNode === null) {
     parent.appendChild(createElement(newVNode));
     return;
   }
 
   // CASE B: Removal - No new node? Remove old.
-  if (!newVNode) {
+  if (newVNode === undefined || newVNode === null) {
     const el = parent.childNodes[index];
     if (el) parent.removeChild(el);
     return;
@@ -98,12 +104,18 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   }
 
   // CASE D: Text Update
-  if (typeof newVNode === "string" || typeof newVNode === "number") {
-    if (newVNode !== oldVNode) {
-      parent.childNodes[index].nodeValue = newVNode;
+if (typeof newVNode === "string" || typeof newVNode === "number") {
+  if (newVNode !== oldVNode) {
+    const el = parent.childNodes[index];
+    if (el) {
+      el.nodeValue = newVNode;
+    } else {
+      // Self healing, if it didn't exist we can create it
+      parent.appendChild(document.createTextNode(newVNode));
     }
-    return;
   }
+  return;
+}
 
   // CASE E: Same Tag - Update Props & Children
   const el = oldVNode.el || parent.childNodes[index];

@@ -75,10 +75,17 @@ src/
 
 Use factory functions with optional overrides for test data:
 
-```typescript
-const getMockPaymentPostPaymentRequest = (
-  overrides?: Partial<PostPaymentsRequestV3>,
-): PostPaymentsRequestV3 => {
+```javascript
+/**
+ * @typedef {import('./schemas/payment.schema').PostPaymentsRequestV3} PostPaymentsRequestV3
+ * @typedef {import('./schemas/payment.schema').AddressDetails} AddressDetails
+ */
+
+/**
+ * @param {Partial<PostPaymentsRequestV3>} [overrides]
+ * @returns {PostPaymentsRequestV3}
+ */
+const getMockPaymentPostPaymentRequest = (overrides) => {
   return {
     CardAccountId: '1234567890123456',
     Amount: 100,
@@ -96,9 +103,11 @@ const getMockPaymentPostPaymentRequest = (
   }
 }
 
-const getMockAddressDetails = (
-  overrides?: Partial<AddressDetails>,
-): AddressDetails => {
+/**
+ * @param {Partial<AddressDetails>} [overrides]
+ * @returns {AddressDetails}
+ */
+const getMockAddressDetails = (overrides) => {
   return {
     HouseNumber: '123',
     HouseName: 'Test House',
@@ -124,10 +133,18 @@ Key principles:
 
 When schemas exist, validate factory output to catch test data issues early:
 
-```typescript
-import { type Payment, PaymentSchema } from '../schemas/payment.schema'
+```javascript
+import { PaymentSchema } from '../schemas/payment.schema.js'
 
-const getMockPayment = (overrides?: Partial<Payment>): Payment => {
+/**
+ * @typedef {import('../schemas/payment.schema').Payment} Payment
+ */
+
+/**
+ * @param {Partial<Payment>} [overrides]
+ * @returns {Payment}
+ */
+const getMockPayment = (overrides) => {
   const basePayment = {
     amount: 100,
     currency: 'GBP',
@@ -158,7 +175,7 @@ const payment = getMockPayment({
 
 Avoid these test smells:
 
-```typescript
+```javascript
 // ❌ BAD - Implementation-focused test
 it('should call validateAmount', () => {
   const spy = jest.spyOn(validator, 'validateAmount')
@@ -166,7 +183,7 @@ it('should call validateAmount', () => {
   expect(spy).toHaveBeenCalled()
 })
 
-// ✅ GOOD - Behavior-focused test
+// ✅ GOOD - behaviour-focused test
 it('should reject payments with negative amounts', () => {
   const payment = getMockPayment({ amount: -100 })
   const result = processPayment(payment)
@@ -175,7 +192,7 @@ it('should reject payments with negative amounts', () => {
 })
 
 // ❌ BAD - Using let and beforeEach (shared mutable state)
-let payment: Payment
+let payment
 beforeEach(() => {
   payment = { amount: 100 }
 })
@@ -194,20 +211,24 @@ it('should process payment', () => {
 
 Example showing how validation code gets 100% coverage without testing it directly:
 
-```typescript
-// payment-validator.ts (implementation detail)
-export const validatePaymentAmount = (amount: number): boolean => {
+```javascript
+// payment-validator.js (implementation detail)
+/** @param {number} amount */
+export const validatePaymentAmount = (amount) => {
   return amount > 0 && amount <= 10000
 }
 
-export const validateCardDetails = (card: PayingCardDetails): boolean => {
+/** @param {PayingCardDetails} card */
+export const validateCardDetails = (card) => {
   return /^\d{3,4}$/.test(card.cvv) && card.token.length > 0
 }
 
-// payment-processor.ts (public API)
-export const processPayment = (
-  request: PaymentRequest,
-): Result<Payment, PaymentError> => {
+// payment-processor.js (public API)
+/**
+ * @param {PaymentRequest} request
+ * @returns {Result<Payment, PaymentError>}
+ */
+export const processPayment = (request) => {
   // Validation is used internally but not exposed
   if (!validatePaymentAmount(request.amount)) {
     return { success: false, error: new PaymentError('Invalid amount') }
@@ -221,7 +242,7 @@ export const processPayment = (
   return { success: true, data: executedPayment }
 }
 
-// payment-processor.test.ts
+// payment-processor.test.js
 describe('Payment processing', () => {
   // These tests achieve 100% coverage of validation code
   // without directly testing the validator functions
@@ -267,8 +288,8 @@ describe('Payment processing', () => {
 
 ### React Component Testing
 
-```typescript
-// Good - testing user-visible behavior
+```javascript
+// Good - testing user-visible behaviour
 describe('PaymentForm', () => {
   it('should show error when submitting invalid amount', async () => {
     render(<PaymentForm />)
@@ -290,44 +311,52 @@ describe('PaymentForm', () => {
 
 Use Result types or early returns:
 
-```typescript
+```javascript
 // Good - Result type pattern
-type Result<T, E = Error> =
-| { success: true; data: T }
-| { success: false; error: E };
+/**
+ * @template T
+ * @template {Error} [E=Error]
+ * @typedef {({success: true, data: T} | {success: false, error: E})} Result
+ */
 
-const processPayment = (
-payment: Payment
-): Result<ProcessedPayment, PaymentError> => {
-if (!isValidPayment(payment)) {
-return { success: false, error: new PaymentError("Invalid payment") };
-}
+/**
+ * @param {Payment} payment
+ * @returns {Result<ProcessedPayment, PaymentError>}
+ */
+const processPayment = (payment) => {
+  if (!isValidPayment(payment)) {
+    return { success: false, error: new PaymentError("Invalid payment") };
+  }
 
-if (!hasSufficientFunds(payment)) {
-return { success: false, error: new PaymentError("Insufficient funds") };
-}
+  if (!hasSufficientFunds(payment)) {
+    return { success: false, error: new PaymentError("Insufficient funds") };
+  }
 
-return { success: true, data: executePayment(payment) };
+  return { success: true, data: executePayment(payment) };
 };
 
 // Also good - early returns with exceptions
-const processPayment = (payment: Payment): ProcessedPayment => {
-if (!isValidPayment(payment)) {
-throw new PaymentError("Invalid payment");
-}
+/**
+ * @param {Payment} payment
+ * @returns {ProcessedPayment}
+ */
+const processPayment = (payment) => {
+  if (!isValidPayment(payment)) {
+    throw new PaymentError("Invalid payment");
+  }
 
-if (!hasSufficientFunds(payment)) {
-throw new PaymentError("Insufficient funds");
-}
+  if (!hasSufficientFunds(payment)) {
+    throw new PaymentError("Insufficient funds");
+  }
 
-return executePayment(payment);
+  return executePayment(payment);
 };
 ```
 
-### Testing Behavior
+### Testing behaviour
 
-```typescript
-// Good - tests behavior through public API
+```javascript
+// Good - tests behaviour through public API
 describe('PaymentProcessor', () => {
   it('should decline payment when insufficient funds', () => {
     const payment = getMockPaymentPostPaymentRequest({ Amount: 1000 })
@@ -353,51 +382,62 @@ describe('PaymentProcessor', () => {
 // Avoid - testing implementation details
 describe('PaymentProcessor', () => {
   it('should call checkBalance method', () => {
-    // This tests implementation, not behavior
+    // This tests implementation, not behaviour
   })
 })
 ```
 
 ## 🚫 Common Patterns to Avoid (Anti-Patterns)
 
-```typescript
+```javascript
 // Avoid: Mutation
-const addItem = (items: Item[], newItem: Item) => {
-items.push(newItem); // Mutates array
-return items;
+/**
+ * @param {Item[]} items
+ * @param {Item} newItem
+ */
+const addItem = (items, newItem) => {
+  items.push(newItem); // Mutates array
+  return items;
 };
 
 // Prefer: Immutable update
-const addItem = (items: Item[], newItem: Item): Item[] => {
-return [...items, newItem];
+/**
+ * @param {Item[]} items
+ * @param {Item} newItem
+ * @returns {Item[]}
+ */
+const addItem = (items, newItem) => {
+  return [...items, newItem];
 };
 
 // Avoid: Nested conditionals
 if (user) {
-if (user.isActive) {
-if (user.hasPermission) {
-// do something
-}
-}
+  if (user.isActive) {
+    if (user.hasPermission) {
+      // do something
+    }
+  }
 }
 
 // Prefer: Early returns
 if (!user || !user.isActive || !user.hasPermission) {
-return;
+  return;
 }
 // do something
 
 // Avoid: Large functions
-const processOrder = (order: Order) => {
-// 100+ lines of code
+/** @param {Order} order */
+const processOrder = (order) => {
+  // 100+ lines of code
 };
 
 // Prefer: Composed small functions
-const processOrder = (order: Order) => {
-const validatedOrder = validateOrder(order);
-const pricedOrder = calculatePricing(validatedOrder);
-const finalOrder = applyDiscounts(pricedOrder);
-return submitOrder(finalOrder);
+/** @param {Order} order */
+const processOrder = (order) => {
+  const validatedOrder = validateOrder(order);
+  const pricedOrder = calculatePricing(validatedOrder);
+  const finalOrder = applyDiscounts(pricedOrder);
+  return submitOrder(finalOrder);
 };
 ```
 

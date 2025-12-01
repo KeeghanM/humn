@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "echo \"No Tests Defined\""
+    "test": "vitest"
   },
   "packageManager": "yarn@4.6.0",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
-    "prettier": "^3.7.3"
+    "jsdom": "^27.2.0",
+    "prettier": "^3.7.3",
+    "vitest": "^4.0.14"
   }
 }

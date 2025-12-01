@@ -15,9 +15,16 @@
  * @returns {VNode} The virtual DOM node.
  */
 export const h = (tag, props = {}, children = []) => {
+  const childArray = Array.isArray(children) ? children : [children];
+
+  // Filter out null/false so we don't have "ghost" nodes
+  const cleanChildren = childArray
+    .flat() 
+    .filter(c => c !== null && c !== undefined && c !== false && c !== '');
+
   return {
     tag,
     props,
-    children: Array.isArray(children) ? children : [children],
+    children: cleanChildren
   };
 };
