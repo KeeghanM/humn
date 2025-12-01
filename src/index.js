@@ -7,4 +7,5 @@
 export * from "./cortex.js";
 export * from "./css.js";
 export * from "./h.js";
+export * from "./lifecycle.js";
 export * from "./mount.js";

@@ -1,22 +1,30 @@
+/**
+ * @file Mounts the application to the DOM.
+ * @module mount
+ */
 import { setObserver } from "./observer.js";
 import { patch } from "./patch.js";
 
 /**
- * Mounts a component to a target element.
- * @param {HTMLElement} target - The target element to mount the component to.
- * @param {function(): import("./h").VNode} Component - The component to mount.
+ * Mounts a component to a target DOM element.
+ * @param {HTMLElement} target - The DOM element to mount to.
+ * @param {function} Component - The root component function.
  */
 export const mount = (target, Component) => {
-  let prevVDom = null;
+  let prevVNode = null;
 
   const lifecycle = () => {
     setObserver(lifecycle);
-    const nextVDom = Component();
+
+    const nextVNode = {
+      tag: Component,
+      props: {},
+      children: [],
+    };
+
+    patch(target, nextVNode, prevVNode);
     setObserver(null);
-
-    patch(target, nextVDom, prevVDom);
-
-    prevVDom = nextVDom;
+    prevVNode = nextVNode;
   };
 
   lifecycle();

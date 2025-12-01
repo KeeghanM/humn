@@ -18,6 +18,11 @@ export default defineConfig({
     sourcemap: true,
     minify: "esbuild",
   },
+  server: {
+    fs: {
+      allow: [".."],
+    },
+  },
   plugins: [
     dts({
       insertTypesEntry: true,

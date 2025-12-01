@@ -3,6 +3,7 @@
  * including support for Keyed Diffing.
  * @module patch
  */
+import { setInstance } from "./observer.js";
 
 /**
  * Checks if a list of children contains keys.
@@ -18,15 +19,28 @@ export function hasKeys(children) {
  * @param {import("./h").VNode | string | number} vNode - The virtual node.
  * @returns {Text | HTMLElement} The created DOM element.
  */
-export function createElement(vNode) {
+function createElement(vNode) {
   if (typeof vNode === "string" || typeof vNode === "number") {
     return document.createTextNode(String(vNode));
   }
 
-  const el = document.createElement(vNode.tag);
-  // Store reference to real DOM on the VNode
-  vNode.el = el;
+  if (typeof vNode.tag === "function") {
+    const childVNode = renderComponent(vNode);
+    vNode.child = childVNode;
 
+    // Recursively create the DOM for the child
+    const el = createElement(childVNode);
+    vNode.el = el;
+
+    // Queue Mount Hooks
+    if (vNode.hooks && vNode.hooks.mounts.length > 0) {
+      setTimeout(() => vNode.hooks.mounts.forEach((fn) => fn()), 0);
+    }
+    return el;
+  }
+
+  const el = document.createElement(vNode.tag);
+  vNode.el = el;
   patchProps(el, vNode.props);
 
   vNode.children.forEach((child) => {
@@ -73,6 +87,10 @@ function patchProps(el, newProps = {}, oldProps = {}) {
       const eventName = key.slice(2).toLowerCase();
       if (oldValue) el.removeEventListener(eventName, oldValue);
       el.addEventListener(eventName, newValue);
+    }
+    // Handle the disabled attribute
+    if (key === "disabled") {
+      el.disabled = newValue === true || newValue === "true";
     }
     // Handle standard attributes
     else {
@@ -156,6 +174,57 @@ function reconcileChildren(parent, newChildren, oldChildren) {
 }
 
 /**
+ * Executes a Functional Component, tracks hooks, and returns the VNode.
+ * @param {import("./h").VNode} vNode - The component vNode.
+ * @returns {import("./h").VNode} The rendered child vNode.
+ */
+function renderComponent(vNode) {
+  // 1. Prepare Hook Container
+  const hooks = {
+    mounts: [],
+    cleanups: [],
+  };
+
+  // 2. Set Global Scope
+  setInstance(hooks);
+
+  // 3. Run the User's Component Function
+  // We pass props as the first argument
+  const renderedVNode = vNode.tag(vNode.props);
+
+  // 4. Clear Global Scope
+  setInstance(null);
+
+  // 5. Attach hooks to the VNode so we can run them later
+  vNode.hooks = hooks;
+
+  return renderedVNode;
+}
+
+/**
+ * Helper to recursively run cleanup hooks when a tree is removed.
+ * @param {import("./h").VNode} vNode - The vNode to unmount.
+ */
+function runUnmount(vNode) {
+  if (!vNode) return;
+
+  // 1. Run hooks for this node
+  if (vNode.hooks && vNode.hooks.cleanups) {
+    vNode.hooks.cleanups.forEach((fn) => fn());
+  }
+
+  // 2. Recurse into child (if component)
+  if (vNode.child) {
+    runUnmount(vNode.child);
+  }
+
+  // 3. Recurse into children (if element)
+  if (vNode.children) {
+    vNode.children.forEach(runUnmount);
+  }
+}
+
+/**
  * The main diffing function. Compares V-DOM trees and updates the real DOM.
  * @param {HTMLElement} parent - The parent DOM element.
  * @param {import("./h").VNode | string | number} newVNode - The new virtual node.
@@ -163,6 +232,44 @@ function reconcileChildren(parent, newChildren, oldChildren) {
  * @param {number} [index=0] - The index of the child node (used for simple diffing).
  */
 export function patch(parent, newVNode, oldVNode, index = 0) {
+  // --- HANDLE UNMOUNTING (Cleanup Hooks) ---
+  if (newVNode === undefined || newVNode === null) {
+    const el = oldVNode.el || parent.childNodes[index];
+
+    // Recursive Cleanup
+    runUnmount(oldVNode);
+
+    if (el) parent.removeChild(el);
+    return;
+  }
+
+  // --- HANDLE COMPONENT (Functional VNode) ---
+  if (typeof newVNode.tag === "function") {
+    const isNew = !oldVNode;
+
+    // 1. Render the component function
+    const childVNode = renderComponent(newVNode);
+
+    // 2. Store the result in the vNode ("unwrap" it)
+    newVNode.child = childVNode;
+
+    // 3. Recursively patch the result
+    const oldChild = oldVNode ? oldVNode.child : undefined;
+    patch(parent, childVNode, oldChild, index);
+
+    // 4. Ensure VNode holds the DOM reference
+    newVNode.el = childVNode.el;
+
+    // 5. Run Mount Hooks (Next Tick)
+    if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
+      setTimeout(() => {
+        newVNode.hooks.mounts.forEach((fn) => fn());
+      }, 0);
+    }
+    // TODO: Handle updates (running old cleanups if necessary) for Phase 2
+    return;
+  }
+
   // Start - No old node? Create new.
   if (oldVNode === undefined || oldVNode === null) {
     parent.appendChild(createElement(newVNode));

@@ -75,9 +75,8 @@ mount(document.getElementById('root'), App);
 - [x] **Cortex:** State management with dependency tracking.
 - [x] **Virtual DOM:** Lightweight `h()` function.
 - [x] **Reconciliation:** Keyed Diffing Algorithm.
-- [ ] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
-- [ ] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-- [ ] **Event Delegation:** Optimize events by attaching a single listener to the root (React style).
+- [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
+- [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
 
 ### Phase 2: The Ecosystem (Next)
 

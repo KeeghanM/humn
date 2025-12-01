@@ -1,6 +1,6 @@
 {
   "name": "humn",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A minimal, human-centric reactive UI library with built in state management.",
   "type": "module",
   "main": "./dist/humn.umd.js",
@@ -19,9 +19,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "vite build --watch",
     "build": "vite build",
     "test": "vitest",
+    "dev": "vite --port 3000 --open /playground/",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
