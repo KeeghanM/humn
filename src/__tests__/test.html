@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div id="app" >
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app">
     <script type="module">
-      import { h, mount, Cortex } from "../humn.js";
+      import { h, mount, Cortex, css } from "../../dist/humn.js";
 
       const todoStore = new Cortex({
         memory: {
@@ -26,8 +28,8 @@
           addTodo: () =>
             set((state) => {
               state.errorMessage = ''
-              
-              if(state.inputValue.length < 5) {
+
+              if (state.inputValue.length < 5) {
                 state.errorMessage = 'Task title too short'
                 return
               }
@@ -37,7 +39,7 @@
                 text: state.inputValue,
                 done: false,
               });
-              state.inputValue = ""; 
+              state.inputValue = "";
             }),
 
           toggle: (id) =>
@@ -48,48 +50,98 @@
         }),
       });
 
+      const scopeClass = css`
+        /* Layout for the container */
+        font-family: sans-serif;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+
+        /* Target Children */
+        h1 {
+          color: #333;
+          text-align: center;
+        }
+
+        input {
+          padding: 10px;
+          width: 70%;
+          margin-right: 5px;
+        }
+
+        button {
+          padding: 10px;
+          width: 25%;
+          cursor: pointer;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+        }
+
+        /* Target Specific Classes */
+        .card {
+          background: #f4f4f4;
+          padding: 15px;
+          margin-top: 10px;
+          border-radius: 8px;
+          display: flex;
+          justify-content: space-between;
+          cursor: pointer;
+        }
+
+        .card:hover {
+          background: #e0e0e0;
+        }
+
+        /* "&" is only needed if you want to modify the selector itself,
+          or chained classes on children */
+        .card.done {
+          text-decoration: line-through;
+          opacity: 0.6;
+        }
+        
+        .error {
+          color: red;
+          font-size: 0.9em;
+        }
+      `;
+
       const App = () => {
         const { items, inputValue, errorMessage } = todoStore.memory;
         const { addTodo, toggle, updateInput } = todoStore.synapses;
 
-        return h("div", { style: "padding: 20px; font-family: sans-serif;" }, [
+        // We apply 'scopeClass' to the ROOT element.
+        // All styles inside it will now apply to children.
+        return h("div", { class: scopeClass }, [
           h("h1", {}, "Humn Todo"),
 
-          // Input
           h("div", {}, [
             h("input", {
               value: inputValue,
               oninput: (e) => updateInput(e.target.value),
+              placeholder: "What needs doing?"
             }),
-            h("button", { onclick: addTodo }, "Add Task"),
+            h("button", { onclick: addTodo }, "Add"),
           ]),
 
-          // Error
-          h("p",{style: "color: red;"}, errorMessage),
+          errorMessage ? h("p", { class: "error" }, errorMessage) : null,
 
-          // List
-          h(
-            "ul",
-            {},
-            items.map((item) =>
-              h(
-                "li",
-                {
-                  style: `cursor: pointer; ${
-                    item.done
-                      ? "text-decoration: line-through; color: #888"
-                      : ""
-                  }`,
-                  onclick: () => toggle(item.id),
-                },
-                item.text
-              )
+          h("div", {}, items.map((item) =>
+            h("div",
+              {
+                // We just use the class name defined in CSS
+                class: `card ${item.done ? 'done' : ''}`,
+                onclick: () => toggle(item.id),
+              },
+              item.text
             )
-          ),
+          )),
         ]);
       };
 
-      mount(document.getElementById("app"), App);
+      mount(document.getElementById('app'), App);
     </script>
-  </body>
+</body>
+
 </html>

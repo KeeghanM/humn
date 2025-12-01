@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Cortex, h, mount } from "../index";
+import { Cortex, css, h, mount } from "../index";
 
 describe("rendering", () => {
   // --- BASIC TESTS ---
@@ -39,6 +39,50 @@ describe("rendering", () => {
     expect(target.innerHTML).toBe("<div>Hello, Keeghan!</div>");
     user.synapses.changeName("McGarry");
     expect(target.innerHTML).toBe("<div>Hello, McGarry!</div>");
+  });
+
+  it("should reorder keyed elements (Keyed Diffing)", () => {
+    const store = new Cortex({
+      memory: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+      synapses: (set) => ({
+        reverse: () => set((s) => ({ items: [...s.items].reverse() })),
+      }),
+    });
+
+    const App = () => {
+      const { items } = store.memory;
+      return h(
+        "ul",
+        {},
+        items.map((item) =>
+          h("li", { key: item.id, id: `li-${item.id}` }, item.id)
+        )
+      );
+    };
+
+    const target = document.createElement("div");
+    mount(target, App);
+
+    // 1. Capture the real DOM element for Item 1
+    const item1_DOM = target.querySelector("#li-1");
+    const item3_DOM = target.querySelector("#li-3");
+
+    // Verify initial order
+    expect(target.firstChild.firstChild.id).toBe("li-1");
+
+    // 2. Reverse the list: [3, 2, 1]
+    store.synapses.reverse();
+
+    // 3. Verify order changed
+    expect(target.firstChild.firstChild.id).toBe("li-3");
+
+    // Did we reuse the exact same DOM node?
+    const newItem1_DOM = target.querySelector("#li-1");
+
+    // If Keyed Diffing works, these should be the same object reference.
+    // If Index Diffing ran, newItem1_DOM would be a brand new <li>.
+    expect(newItem1_DOM).toBe(item1_DOM);
+    expect(newItem1_DOM).not.toBe(item3_DOM);
   });
 
   // --- EDGE CASE TESTS ---
@@ -166,5 +210,40 @@ describe("rendering", () => {
     store.synapses.toggle();
 
     expect(target.innerHTML).toBe("<h1>text</h1>");
+  });
+
+  // --- STYLING BEHAVIOR ---
+
+  it("should render components with scoped styles", () => {
+    const alertStyle = css`
+      background: red;
+      color: white;
+      &:hover {
+        opacity: 0.8;
+      }
+    `;
+
+    const AlertComponent = () => h("div", { class: alertStyle }, "Warning!");
+    const target = document.createElement("div");
+
+    mount(target, AlertComponent);
+
+    const el = target.firstChild;
+
+    // The element should have a class that isn't empty
+    expect(el.className).toBeTruthy();
+
+    // The class name should match what the css function returned
+    expect(el.className).toBe(alertStyle);
+
+    // The library should have injected a style tag into the head
+    const styleTag = document.getElementById("humn-styles");
+    expect(styleTag).not.toBeNull();
+
+    // The style tag should contain our rule wrapped in the generated class
+    // We look for ".humn-xyz { background: red; ... }"
+    expect(styleTag.textContent).toContain(`.${alertStyle} {`);
+    expect(styleTag.textContent).toContain("background: red;");
+    expect(styleTag.textContent).toContain("&:hover { opacity: 0.8; }");
   });
 });
