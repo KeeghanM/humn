@@ -70,23 +70,14 @@ mount(document.getElementById('root'), App);
 
 ## Roadmap
 
-### Phase 1: The Core Engine (Current)
-
 - [x] **Cortex:** State management with dependency tracking.
 - [x] **Virtual DOM:** Lightweight `h()` function.
 - [x] **Reconciliation:** Keyed Diffing Algorithm.
 - [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
 - [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-
-### Phase 2: The Ecosystem (Next)
-
 - [ ] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
-- [ ] **Router:** A built-in store that syncs with `window.history`.
-- [ ] **Async Components:** Handling `Promise` rendering (Suspense).
-
-### Phase 3: Developer Experience
-
 - [ ] **Humn Compiler:** `.humn` files for Svelte-like syntax.
+- [ ] **Async Components:** Handling `Promise` rendering (Suspense).
 - [ ] **DevTools:** Browser extension to inspect the Cortex Memory.
 
 ## Contributing
