@@ -12,7 +12,7 @@ npm install humn
 yarn add humn
 ```
 
-## Hello, World!
+## Hello, World
 
 Here's a simple "Hello, World!" example to get you started:
 
