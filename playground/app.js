@@ -7,9 +7,9 @@ const App = () => {
   const { addTodo, toggle, updateInput, fetchRandom } = todoStore.synapses;
 
   return h("div", { class: todoStyles }, [
-    h("h1", {}, "Humn Todo"),
+    h("h1", { key: "title" }, "Humn Todo"),
 
-    h("div", { class: "input-group" }, [
+    h("div", { key: "inputs", class: "input-group" }, [
       h("input", {
         value: inputValue,
         oninput: (e) => updateInput(e.target.value),
@@ -29,13 +29,17 @@ const App = () => {
       ),
     ]),
 
-    isLoading ? h("div", { class: "loading" }, "Fetching task...") : null,
+    isLoading
+      ? h("div", { key: "loader", class: "loading" }, "Fetching task...")
+      : null,
 
-    errorMessage ? h("p", { class: "error" }, errorMessage) : null,
+    errorMessage
+      ? h("p", { key: "error", class: "error" }, errorMessage)
+      : null,
 
     h(
       "div",
-      {},
+      { key: "items-list" },
       items.map((item) =>
         h(
           "div",
