@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "build": "vite build",
-    "test": "vitest --log-output",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
     "dev": "vite --port 3000 --open /playground/",
     "prepublishOnly": "npm run build",
     "prepare": "husky",
