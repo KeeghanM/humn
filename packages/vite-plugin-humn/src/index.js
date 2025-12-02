@@ -1,4 +1,4 @@
-import { compileTemplate } from './compile-template'
+import { compileTemplate } from './compile-template.js'
 
 export default function humn() {
   return {

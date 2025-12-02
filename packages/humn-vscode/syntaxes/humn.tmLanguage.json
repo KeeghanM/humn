@@ -1,0 +1,58 @@
+{
+  "scopeName": "source.humn",
+  "patterns": [
+    {
+      "include": "#script-block"
+    },
+    {
+      "include": "#style-block"
+    },
+    {
+      "include": "#html-content"
+    }
+  ],
+  "repository": {
+    "script-block": {
+      "begin": "(<)(script)(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.html" },
+        "2": { "name": "entity.name.tag.html" },
+        "3": { "name": "punctuation.definition.tag.html" }
+      },
+      "end": "(</)(script)(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.html" },
+        "2": { "name": "entity.name.tag.html" },
+        "3": { "name": "punctuation.definition.tag.html" }
+      },
+      "patterns": [{ "include": "source.js" }]
+    },
+    "style-block": {
+      "begin": "(<)(style)(>)",
+      "end": "(</)(style)(>)",
+      "patterns": [{ "include": "source.css" }]
+    },
+    "html-content": {
+      "patterns": [
+        {
+          "include": "#interpolation"
+        },
+        {
+          "include": "text.html.basic"
+        }
+      ]
+    },
+    "interpolation": {
+      "name": "meta.embedded.expression.humn",
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.embedded.begin.humn" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.embedded.end.humn" }
+      },
+      "patterns": [{ "include": "source.js" }]
+    }
+  }
+}

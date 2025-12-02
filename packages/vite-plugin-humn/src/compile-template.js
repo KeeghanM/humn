@@ -1,7 +1,7 @@
 import { parse } from 'node-html-parser'
 
-import { processChildren } from './process-children'
-import { protectAttributes } from './protect-attributes'
+import { processChildren } from './process-children.js'
+import { protectAttributes } from './protect-attributes.js'
 
 export function compileTemplate(htmlString) {
   const { html: safeHTML, masks } = protectAttributes(htmlString)

@@ -1,4 +1,4 @@
-import { Cortex, persist } from '../src'
+import { Cortex, persist } from '../src/index.js'
 
 export const todoStore = new Cortex({
   memory: {

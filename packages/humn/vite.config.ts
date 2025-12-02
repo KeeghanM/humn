@@ -2,12 +2,16 @@ import terser from '@rollup/plugin-terser'
 import path from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-
-import humnCompiler from './compiler/index.js'
+import humnCompiler from 'vite-plugin-humn'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      humn: path.resolve(__dirname, './src/index.js'),
+    },
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.js'),

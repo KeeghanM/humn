@@ -2,11 +2,8 @@
   "name": "vite-plugin-humn",
   "version": "0.0.1",
   "description": "Vite plugin for compiling .humn files",
-  "main": "index.js",
+  "main": "src/index.js",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "vite",
     "plugin",
@@ -17,5 +14,9 @@
   "license": "MIT",
   "dependencies": {
     "node-html-parser": "^6.1.12"
+  },
+  "peerDependencies": {
+    "humn": "^1.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
   }
 }
