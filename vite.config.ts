@@ -3,6 +3,8 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
+import humnCompiler from './compiler/index.js'
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
@@ -28,6 +30,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    humnCompiler(),
     dts({
       insertTypesEntry: true,
       rollupTypes: true,
