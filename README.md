@@ -1,4 +1,4 @@
-# Humn (Human)
+# Humn (/ˈhjuː.mən/)
 
 [![NPM version](https://img.shields.io/npm/v/humn.svg)](https://www.npmjs.com/package/humn)
 
@@ -6,7 +6,7 @@
 
 **Humn** is a complete, reactive frontend library with built in state management designed to replace the likes of React/Svelte/Solid AND Zustand/Kea/Redux in your stack.
 
-It rejects the complexity of modern frameworks \* no stale closures, no "Hook Rules", and no heavy compilers. Humn decouples your application's **Cortex** (Logic/State) from its **Body** (View), creating applications that are easy to reason about, simple to test, and naturally reactive.
+It rejects the complexity of modern frameworks **no stale closures, no "Hook Rules", and no heavy compilers**. Humn decouples your application's **Cortex** (Logic/State) from its **Body** (View), creating applications that are easy to reason about, simple to test, and naturally reactive.
 
 ## Core Features
 
