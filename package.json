@@ -40,7 +40,11 @@
     "url": "https://github.com/KeeghanM/humn"
   },
   "devDependencies": {
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/npm": "^13.1.2",
     "@types/node": "^24.10.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
     "vite-plugin-dts": "^4.5.4"
