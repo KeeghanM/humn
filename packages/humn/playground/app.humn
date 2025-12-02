@@ -22,8 +22,7 @@
 </div>
    
 <style>
-font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 400px;
   margin: 40px auto;
   padding: 20px;
@@ -121,4 +120,4 @@ font-family:
   button.secondary:hover {
     background: #5a6268;
   }
-  </style>
+</style>

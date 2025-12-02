@@ -7,9 +7,9 @@
     "declaration": true, // Generate definitions
     "emitDeclarationOnly": true,
     "outDir": "./dist",
-    "rootDir": "packages/humn",
+    "rootDir": "./src",
     "strict": false // Set to true if you want stricter type checking later
   },
-  "include": ["packages/humn"],
+  "include": ["./src"],
   "exclude": ["**/*/__tests__"]
 }
