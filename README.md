@@ -77,7 +77,7 @@ mount(document.getElementById('root'), App);
 - [x] **Reconciliation:** Keyed Diffing Algorithm.
 - [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
 - [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-- [ ] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
+- [x] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
 - [ ] **Humn Compiler:** `.humn` files for Svelte-like syntax.
 - [ ] **Async Components:** Handling `Promise` rendering (Suspense).
 - [ ] **DevTools:** Browser extension to inspect the Cortex Memory.
