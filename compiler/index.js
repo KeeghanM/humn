@@ -1,10 +1,7 @@
 import { parse } from 'node-html-parser'
 
 /**
- * 1. PROTECT ATTRIBUTES
- * Scans the HTML string for `attr={...}` patterns.
- * Counts braces to correctly handle nested objects/templates.
- * Replaces the JS content with a safe ID: `attr="__HUMN_ATTR_0__"`
+ * 1. PROTECT ATTRIBUTES (Safe from previous step)
  */
 function protectAttributes(html) {
   let output = ''
@@ -12,18 +9,14 @@ function protectAttributes(html) {
   const masks = new Map()
   let maskId = 0
 
-  // Find the start of an attribute expression: name={
   const regex = /([a-zA-Z0-9:-]+)\s*=\s*\{/g
   let match
 
   while ((match = regex.exec(html)) !== null) {
-    // Append everything before this match
     output += html.slice(lastIndex, match.index)
-
     const attrName = match[1]
-    const startIndex = match.index + match[0].length - 1 // Index of the opening '{'
+    const startIndex = match.index + match[0].length - 1
 
-    // Walk forward counting braces
     let depth = 1
     let curr = startIndex + 1
     let found = false
@@ -32,7 +25,6 @@ function protectAttributes(html) {
       const char = html[curr]
       if (char === '{') depth++
       else if (char === '}') depth--
-
       if (depth === 0) {
         found = true
         break
@@ -41,21 +33,13 @@ function protectAttributes(html) {
     }
 
     if (found) {
-      // Extract the JS code (inner content)
       const code = html.slice(startIndex + 1, curr)
-
-      // Create a mask key
       const key = `__HUMN_ATTR_${maskId++}__`
-      masks.set(key, code) // Store original code
-
-      // Replace with safe string: attr="__HUMN_ATTR_0__"
+      masks.set(key, code)
       output += `${attrName}="${key}"`
-
       lastIndex = curr + 1
-      // Update regex position to skip what we just consumed
       regex.lastIndex = lastIndex
     } else {
-      // Unbalanced braces (syntax error in user code), ignoring
       output += match[0]
       lastIndex = regex.lastIndex
     }
@@ -66,9 +50,7 @@ function protectAttributes(html) {
 }
 
 /**
- * 2. PROCESS CHILDREN
- * Handles "Logic Fragmentation".
- * Stitches text nodes and elements back together if they are part of a { block }.
+ * 2. PROCESS CHILDREN (Upgraded for Chained Blocks)
  */
 function processChildren(nodes, traverseFn) {
   const results = []
@@ -76,21 +58,25 @@ function processChildren(nodes, traverseFn) {
   for (let i = 0; i < nodes.length; i++) {
     const child = nodes[i]
 
-    // Check for "Open Logic Block" (Text starting with { but not ending with })
     const isText = child.nodeType === 3
-    const textContent = isText ? child.rawText : ''
+    let textContent = isText ? child.rawText : ''
+
+    // Detect start of logic block
     const isOpenLogic =
       isText &&
       textContent.trim().startsWith('{') &&
       !textContent.trim().endsWith('}')
 
     if (isOpenLogic) {
-      // Start buffer (remove the leading {)
-      let buffer = textContent.replace('{', '')
+      // Find the first '{' (might be preceded by whitespace)
+      const startIdx = textContent.indexOf('{')
+      let buffer = textContent.slice(startIdx + 1) // Content after {
 
       // Look Ahead Loop
+      let complete = false
+
       while (i + 1 < nodes.length) {
-        i++ // Consume next node
+        i++
         const nextNode = nodes[i]
 
         if (nextNode.nodeType === 1) {
@@ -98,31 +84,56 @@ function processChildren(nodes, traverseFn) {
           const compiledElem = traverseFn(nextNode)
           if (compiledElem) buffer += compiledElem
         } else if (nextNode.nodeType === 3) {
-          // Text: Check for closer '}'
-          const nextText = nextNode.rawText
-          const closeIndex = nextText.indexOf('}')
+          // Text: This is where we handle chained blocks
+          let nextText = nextNode.rawText
 
-          if (closeIndex !== -1) {
-            // Found closer. Append content before it.
-            buffer += nextText.slice(0, closeIndex)
+          // Inner loop to consume multiple blocks within one text node
+          // e.g. "} { next block"
+          while (true) {
+            const closeIndex = nextText.indexOf('}')
 
-            // Handle remainder text (if any text exists after the })
-            const remainder = nextText.slice(closeIndex + 1).trim()
-            if (remainder) {
-              // If there is text after the block, treat it as a static string
-              results.push(buffer) // Push the code block
-              buffer = '' // Clear buffer
-              results.push(`'${remainder.replace(/'/g, "\\'")}'`)
+            if (closeIndex !== -1) {
+              // 1. Found closer. Append content and finish THIS block.
+              buffer += nextText.slice(0, closeIndex)
+              results.push(buffer)
+
+              // 2. Check remainder
+              const remainder = nextText.slice(closeIndex + 1)
+              const trimmed = remainder.trim()
+
+              if (!trimmed) {
+                // Just whitespace, we are done with this chain
+                complete = true
+                break
+              }
+
+              // 3. Does remainder start a NEW block?
+              const nextOpen = remainder.indexOf('{')
+              if (nextOpen !== -1 && !remainder.slice(0, nextOpen).trim()) {
+                // Yes! It's "   { new block..."
+                // Reset buffer and CONTINUE the inner loop to find the next '}'
+                buffer = remainder.slice(nextOpen + 1)
+                nextText = remainder.slice(nextOpen + 1) // Advance text
+                // continue inner loop
+              } else {
+                // No, it's static text. e.g. "} some text"
+                results.push(`'${trimmed.replace(/'/g, "\\'")}'`)
+                complete = true
+                break
+              }
+            } else {
+              // No closer found in this chunk. Append all and move to next node.
+              buffer += nextText
+              break
             }
-            break
-          } else {
-            // Just more code
-            buffer += nextText
           }
+
+          if (complete) break // Break outer look-ahead
         }
       }
 
-      if (buffer.trim()) {
+      // If we ran out of nodes but buffer has content (and not complete), push it
+      if (!complete && buffer.trim()) {
         results.push(buffer)
       }
     } else {
@@ -139,24 +150,16 @@ function processChildren(nodes, traverseFn) {
  * 3. COMPILE TEMPLATE
  */
 function compileTemplate(htmlString) {
-  // A. Protect Attributes first
   const { html: safeHTML, masks } = protectAttributes(htmlString)
-
-  // B. Parse the safe HTML
   const root = parse(safeHTML)
 
   function traverse(node) {
-    // Text Node
     if (node.nodeType === 3) {
       const text = node.rawText.trim()
       if (!text) return null
 
-      // Code Block { val } -> val
-      if (text.startsWith('{') && text.endsWith('}')) {
-        return text.slice(1, -1)
-      }
+      if (text.startsWith('{') && text.endsWith('}')) return text.slice(1, -1)
 
-      // Interpolation "Hi {name}" -> `Hi ${name}`
       if (text.includes('{') && text.includes('}')) {
         const jsTemplate = text.replace(/\{/g, '${').replace(/\}/g, '}')
         return '`' + jsTemplate + '`'
@@ -165,16 +168,13 @@ function compileTemplate(htmlString) {
       return `'${text.replace(/'/g, "\\'")}'`
     }
 
-    // Element Node
     if (node.nodeType === 1) {
       const tag = `'${node.tagName.toLowerCase()}'`
       const propsParts = []
 
       Object.entries(node.attributes).forEach(([key, val]) => {
-        // C. Restore Protected Attributes
         if (masks.has(val)) {
-          const originalCode = masks.get(val)
-          propsParts.push(`${key}: ${originalCode}`)
+          propsParts.push(`${key}: ${masks.get(val)}`)
         } else {
           propsParts.push(`${key}: '${val}'`)
         }
@@ -185,7 +185,6 @@ function compileTemplate(htmlString) {
 
       return `h(${tag}, ${propsString}, [${children.join(', ')}])`
     }
-
     return null
   }
 

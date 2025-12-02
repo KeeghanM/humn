@@ -16,7 +16,9 @@
 {errorMessage && <div key='error' class='error'>{errorMessage}</div>}
 
 <div>
-    {items.map((item)=><div key={item.id} class={`card ${item.done ? 'done' : ''}`} onclick={()=>toggle(item.id)}></div>)}
+    {items.map((item)=><div key={item.id} class={`card ${item.done ? 'done' : ''}`} onclick={()=>toggle(item.id)}>
+    {item.text}
+    </div>)}
 </div>
    
 <style>
