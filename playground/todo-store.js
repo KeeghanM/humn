@@ -47,7 +47,7 @@ export const todoStore = new Cortex({
           state.items.push({
             id: Date.now(),
             text: data.todo,
-            done: data.completed,
+            done: false,
           })
         })
       } catch {

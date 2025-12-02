@@ -11,3 +11,4 @@ dist
 package-lock.json
 yarn.lock
 git-diff.txt
+.vscode
