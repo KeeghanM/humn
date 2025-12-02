@@ -2,6 +2,7 @@ node_modules
 .git
 .github
 vitest.config.js
-example
 src/__tests__
 .yarn
+docs
+playground
