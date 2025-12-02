@@ -1,6 +1,6 @@
 {
   "name": "humn",
-  "version": "0.0.2",
+  "version": "1.0.1",
   "description": "A minimal, human-centric reactive UI library with built in state management.",
   "type": "module",
   "main": "./dist/humn.umd.js",
