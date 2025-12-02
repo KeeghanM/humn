@@ -24,10 +24,10 @@ graph LR
 The `h()` function (short for "hyperscript") creates Virtual DOM nodes:
 
 ```javascript
-import { h } from "humn";
+import { h } from 'humn'
 
 // Creates a VNode: { tag: 'div', props: { class: 'card' }, children: [...] }
-h("div", { class: "card" }, [h("h1", {}, "Title"), h("p", {}, "Content")]);
+h('div', { class: 'card' }, [h('h1', {}, 'Title'), h('p', {}, 'Content')])
 ```
 
 **Signature:**
@@ -144,10 +144,10 @@ For lists, you should provide a unique `key` prop. This allows Humn to efficient
 // New: [{ id: 3, text: 'C' }, { id: 1, text: 'A' }, { id: 2, text: 'B' }]
 
 h(
-  "ul",
+  'ul',
   {},
-  items.map((item) => h("li", { key: item.id }, item.text))
-);
+  items.map((item) => h('li', { key: item.id }, item.text)),
+)
 
 // With keys, Humn sees:
 // id:3 moved to position 0
@@ -206,18 +206,18 @@ const store = new Cortex({
   synapses: (set) => ({
     inc: () =>
       set((s) => {
-        s.count++;
+        s.count++
       }),
   }),
-});
+})
 
 const App = () => {
-  const { count } = store.memory;
-  return h("div", {}, [
-    h("p", {}, `Count: ${count}`),
-    h("button", { onclick: store.synapses.inc }, "Increment"),
-  ]);
-};
+  const { count } = store.memory
+  return h('div', {}, [
+    h('p', {}, `Count: ${count}`),
+    h('button', { onclick: store.synapses.inc }, 'Increment'),
+  ])
+}
 ```
 
 **What happens when you click?**
@@ -235,15 +235,15 @@ const App = () => {
 
 ```javascript
 const App = () => {
-  const { isLoggedIn } = store.memory;
+  const { isLoggedIn } = store.memory
 
-  return h("div", {}, [
-    h("h1", {}, "App"),
+  return h('div', {}, [
+    h('h1', {}, 'App'),
     isLoggedIn
-      ? h("button", { key: "logout" }, "Logout")
-      : h("button", { key: "login" }, "Login"),
-  ]);
-};
+      ? h('button', { key: 'logout' }, 'Logout')
+      : h('button', { key: 'login' }, 'Login'),
+  ])
+}
 ```
 
 **What happens when `isLoggedIn` changes?**
@@ -257,23 +257,23 @@ const App = () => {
 
 ```javascript
 const TodoList = () => {
-  const { todos } = store.memory;
+  const { todos } = store.memory
 
   return h(
-    "ul",
+    'ul',
     {},
     todos.map((todo) =>
-      h("li", { key: todo.id }, [
-        h("input", {
-          type: "checkbox",
+      h('li', { key: todo.id }, [
+        h('input', {
+          type: 'checkbox',
           checked: todo.done,
           onchange: () => store.synapses.toggle(todo.id),
         }),
-        h("span", {}, todo.text),
-      ])
-    )
-  );
-};
+        h('span', {}, todo.text),
+      ]),
+    ),
+  )
+}
 ```
 
 **If you reorder todos:**
@@ -289,10 +289,10 @@ const TodoList = () => {
 Humn automatically flattens nested arrays:
 
 ```javascript
-h("div", {}, [
-  items.map((i) => h("p", {}, i)),
+h('div', {}, [
+  items.map((i) => h('p', {}, i)),
   // No need to worry about the array being nested
-]);
+])
 ```
 
 ### 2. Skip Unnecessary Updates
@@ -309,11 +309,11 @@ Multiple state changes in one synapse are batched into a single render:
 
 ```javascript
 updateAll: () => {
-  set({ a: 1 });
-  set({ b: 2 });
-  set({ c: 3 });
+  set({ a: 1 })
+  set({ b: 2 })
+  set({ c: 3 })
   // Only 1 re-render, not 3!
-};
+}
 ```
 
 ## Debugging the V-DOM
@@ -322,10 +322,10 @@ You can log VNodes to see their structure:
 
 ```javascript
 const App = () => {
-  const vnode = h("div", {}, "Hello");
-  console.log(vnode);
-  return vnode;
-};
+  const vnode = h('div', {}, 'Hello')
+  console.log(vnode)
+  return vnode
+}
 ```
 
 Output:
@@ -345,20 +345,20 @@ Output:
 
 ```javascript
 // BAD: No keys
-items.map((item) => h("li", {}, item.text));
+items.map((item) => h('li', {}, item.text))
 
 // GOOD: With keys
-items.map((item) => h("li", { key: item.id }, item.text));
+items.map((item) => h('li', { key: item.id }, item.text))
 ```
 
 ### ❌ Using Index as Key
 
 ```javascript
 // BAD: Index changes when list reorders
-items.map((item, i) => h("li", { key: i }, item.text));
+items.map((item, i) => h('li', { key: i }, item.text))
 
 // GOOD: Stable, unique ID
-items.map((item) => h("li", { key: item.id }, item.text));
+items.map((item) => h('li', { key: item.id }, item.text))
 ```
 
 ### ❌ Mutating Props

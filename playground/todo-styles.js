@@ -1,7 +1,8 @@
-import { css } from "../src";
+import { css } from '../src'
 
 export const todoStyles = css`
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 400px;
   margin: 40px auto;
   padding: 20px;
@@ -99,4 +100,4 @@ export const todoStyles = css`
   button.secondary:hover {
     background: #5a6268;
   }
-`;
+`

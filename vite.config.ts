@@ -1,13 +1,13 @@
-import path from "path";
-import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
+import path from 'path'
+import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, "src/index.js"),
-      name: "Humn",
-      fileName: (format) => `humn.${format === "es" ? "js" : "umd.js"}`,
+      entry: path.resolve(__dirname, 'src/index.js'),
+      name: 'Humn',
+      fileName: (format) => `humn.${format === 'es' ? 'js' : 'umd.js'}`,
     },
     rollupOptions: {
       external: [],
@@ -16,11 +16,11 @@ export default defineConfig({
       },
     },
     sourcemap: true,
-    minify: "esbuild",
+    minify: 'esbuild',
   },
   server: {
     fs: {
-      allow: [".."],
+      allow: ['..'],
     },
   },
   plugins: [
@@ -29,4 +29,4 @@ export default defineConfig({
       rollupTypes: true,
     }),
   ],
-});
+})

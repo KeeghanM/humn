@@ -64,7 +64,7 @@ graph TB
 ## Quick Example
 
 ```javascript
-import { Cortex, h, mount } from "humn";
+import { Cortex, h, mount } from 'humn'
 
 // The Cortex (State + Logic)
 const store = new Cortex({
@@ -72,21 +72,21 @@ const store = new Cortex({
   synapses: (set) => ({
     increment: () =>
       set((state) => {
-        state.count++;
+        state.count++
       }),
   }),
-});
+})
 
 // The Body (UI)
 const App = () => {
-  const { count } = store.memory;
-  const { increment } = store.synapses;
+  const { count } = store.memory
+  const { increment } = store.synapses
 
-  return h("button", { onclick: increment }, `Count: ${count}`);
-};
+  return h('button', { onclick: increment }, `Count: ${count}`)
+}
 
 // Mount
-mount(document.getElementById("app"), App);
+mount(document.getElementById('app'), App)
 ```
 
 ## Project Structure

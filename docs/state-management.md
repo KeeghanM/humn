@@ -7,7 +7,7 @@ To create a `Cortex` instance, you need to provide an initial `memory` (state) a
 Here's an example of a simple counter:
 
 ```javascript
-import { Cortex, h, mount } from "humn";
+import { Cortex, h, mount } from 'humn'
 
 const counterStore = new Cortex({
   memory: {
@@ -17,20 +17,20 @@ const counterStore = new Cortex({
     increment: () => set((state) => ({ count: state.count + 1 })),
     decrement: () => set((state) => ({ count: state.count - 1 })),
   }),
-});
+})
 
 const App = () => {
-  const { count } = counterStore.memory;
-  const { increment, decrement } = counterStore.synapses;
+  const { count } = counterStore.memory
+  const { increment, decrement } = counterStore.synapses
 
-  return h("div", {}, [
-    h("h1", {}, count),
-    h("button", { onclick: increment }, "Increment"),
-    h("button", { onclick: decrement }, "Decrement"),
-  ]);
-};
+  return h('div', {}, [
+    h('h1', {}, count),
+    h('button', { onclick: increment }, 'Increment'),
+    h('button', { onclick: decrement }, 'Decrement'),
+  ])
+}
 
-mount(document.getElementById("app"), App);
+mount(document.getElementById('app'), App)
 ```
 
 In this example, we're creating a `Cortex` instance called `counterStore` with an initial count of 0. We're also defining two synapses, `increment` and `decrement`, that update the count.

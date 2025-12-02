@@ -2,8 +2,8 @@
  * @file Mounts the application to the DOM.
  * @module mount
  */
-import { setObserver } from "./observer.js";
-import { patch } from "./patch.js";
+import { setObserver } from './observer.js'
+import { patch } from './patch.js'
 
 /**
  * Mounts a component to a target DOM element.
@@ -11,21 +11,21 @@ import { patch } from "./patch.js";
  * @param {function} Component - The root component function.
  */
 export const mount = (target, Component) => {
-  let prevVNode = null;
+  let prevVNode = null
 
   const lifecycle = () => {
-    setObserver(lifecycle);
+    setObserver(lifecycle)
 
     const nextVNode = {
       tag: Component,
       props: {},
       children: [],
-    };
+    }
 
-    patch(target, nextVNode, prevVNode);
-    setObserver(null);
-    prevVNode = nextVNode;
-  };
+    patch(target, nextVNode, prevVNode)
+    setObserver(null)
+    prevVNode = nextVNode
+  }
 
-  lifecycle();
-};
+  lifecycle()
+}

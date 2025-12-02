@@ -22,7 +22,13 @@
     "build": "vite build",
     "test": "vitest",
     "dev": "vite --port 3000 --open /playground/",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*": [
+      "npx prettier . --write"
+    ]
   },
   "keywords": [
     "reactive",
@@ -44,8 +50,11 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
     "@types/node": "^24.10.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.3",
     "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",

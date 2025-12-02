@@ -1,13 +1,13 @@
-import { Cortex } from "../src";
+import { Cortex } from '../src'
 
 export const todoStore = new Cortex({
   memory: {
     items: [
-      { id: 1, text: "Create Humn Library", done: true },
-      { id: 2, text: "Write first app", done: false },
+      { id: 1, text: 'Create Humn Library', done: true },
+      { id: 2, text: 'Write first app', done: false },
     ],
-    inputValue: "",
-    errorMessage: "",
+    inputValue: '',
+    errorMessage: '',
     isLoading: false,
   },
 
@@ -16,48 +16,48 @@ export const todoStore = new Cortex({
 
     addTodo: () =>
       set((state) => {
-        state.errorMessage = "";
+        state.errorMessage = ''
         if (state.inputValue.length < 5) {
-          state.errorMessage = "Task title too short";
-          return;
+          state.errorMessage = 'Task title too short'
+          return
         }
         state.items.push({
           id: Date.now(),
           text: state.inputValue,
           done: false,
-        });
-        state.inputValue = "";
+        })
+        state.inputValue = ''
       }),
 
     toggle: (id) =>
       set((state) => {
-        const item = state.items.find((i) => i.id === id);
-        if (item) item.done = !item.done;
+        const item = state.items.find((i) => i.id === id)
+        if (item) item.done = !item.done
       }),
 
     fetchRandom: async () => {
-      set({ isLoading: true, errorMessage: "" });
+      set({ isLoading: true, errorMessage: '' })
 
       try {
-        const res = await fetch("https://dummyjson.com/todos/random");
-        if (!res.ok) throw new Error("Network error");
-        const data = await res.json();
+        const res = await fetch('https://dummyjson.com/todos/random')
+        if (!res.ok) throw new Error('Network error')
+        const data = await res.json()
 
         set((state) => {
           state.items.push({
             id: Date.now(),
             text: data.todo,
             done: data.completed,
-          });
-        });
+          })
+        })
       } catch {
         set({
-          errorMessage: "Failed to fetch task. Try again.",
-        });
+          errorMessage: 'Failed to fetch task. Try again.',
+        })
       } finally {
-        console.log("FINALLY");
-        set({ isLoading: false });
+        console.log('FINALLY')
+        set({ isLoading: false })
       }
     },
   }),
-});
+})

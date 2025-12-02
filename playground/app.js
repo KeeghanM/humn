@@ -1,59 +1,59 @@
-import { h, mount } from "../src/index.js";
-import { todoStore } from "./todo-store.js";
-import { todoStyles } from "./todo-styles.js";
+import { h, mount } from '../src/index.js'
+import { todoStore } from './todo-store.js'
+import { todoStyles } from './todo-styles.js'
 
 const App = () => {
-  const { items, inputValue, errorMessage, isLoading } = todoStore.memory;
-  const { addTodo, toggle, updateInput, fetchRandom } = todoStore.synapses;
+  const { items, inputValue, errorMessage, isLoading } = todoStore.memory
+  const { addTodo, toggle, updateInput, fetchRandom } = todoStore.synapses
 
-  return h("div", { class: todoStyles }, [
-    h("h1", { key: "title" }, "Humn Todo"),
+  return h('div', { class: todoStyles }, [
+    h('h1', { key: 'title' }, 'Humn Todo'),
 
-    h("div", { key: "inputs", class: "input-group" }, [
-      h("input", {
+    h('div', { key: 'inputs', class: 'input-group' }, [
+      h('input', {
         value: inputValue,
         oninput: (e) => updateInput(e.target.value),
-        placeholder: "What needs doing?",
-        onkeydown: (e) => e.key === "Enter" && addTodo(),
+        placeholder: 'What needs doing?',
+        onkeydown: (e) => e.key === 'Enter' && addTodo(),
         disabled: isLoading,
       }),
-      h("button", { onclick: addTodo }, "Add"),
+      h('button', { onclick: addTodo }, 'Add'),
       h(
-        "button",
+        'button',
         {
-          class: "secondary",
+          class: 'secondary',
           onclick: fetchRandom,
           disabled: isLoading,
         },
-        "🎲"
+        '🎲',
       ),
     ]),
 
     isLoading
-      ? h("div", { key: "loader", class: "loading" }, "Fetching task...")
+      ? h('div', { key: 'loader', class: 'loading' }, 'Fetching task...')
       : null,
 
     errorMessage
-      ? h("p", { key: "error", class: "error" }, errorMessage)
+      ? h('p', { key: 'error', class: 'error' }, errorMessage)
       : null,
 
     h(
-      "div",
-      { key: "items-list" },
+      'div',
+      { key: 'items-list' },
       items.map((item) =>
         h(
-          "div",
+          'div',
           {
             key: item.id,
-            class: `card ${item.done ? "done" : ""}`,
+            class: `card ${item.done ? 'done' : ''}`,
             onclick: () => toggle(item.id),
           },
-          item.text
-        )
-      )
+          item.text,
+        ),
+      ),
     ),
-  ]);
-};
+  ])
+}
 
 // --- MOUNT ---
-mount(document.getElementById("app"), App);
+mount(document.getElementById('app'), App)

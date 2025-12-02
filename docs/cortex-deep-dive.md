@@ -34,14 +34,14 @@ const store = new Cortex({
     posts: [],
     isLoading: false,
     settings: {
-      theme: "light",
+      theme: 'light',
       notifications: true,
     },
   },
   synapses: (set, get) => ({
     // ... actions
   }),
-});
+})
 ```
 
 **Key Principles:**
@@ -62,10 +62,9 @@ synapses: (set, get) => ({
 
   toggleTheme: () =>
     set((state) => {
-      state.settings.theme =
-        state.settings.theme === "light" ? "dark" : "light";
+      state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light'
     }),
-});
+})
 ```
 
 **The `set` Function:**
@@ -75,7 +74,7 @@ The `set` function has two forms:
 #### 1. Object Merge (Shallow)
 
 ```javascript
-set({ count: 10, loading: false });
+set({ count: 10, loading: false })
 ```
 
 Shallow merges the object into the existing state.
@@ -84,9 +83,9 @@ Shallow merges the object into the existing state.
 
 ```javascript
 set((state) => {
-  state.user.name = "Alice";
-  state.user.posts.push(newPost);
-});
+  state.user.name = 'Alice'
+  state.user.posts.push(newPost)
+})
 ```
 
 Receives a **mutable clone** of the state. You can mutate it directly, and Humn handles the immutability.
@@ -97,14 +96,14 @@ Returns the current state snapshot:
 
 ```javascript
 addTodo: (text) => {
-  const currentState = get();
+  const currentState = get()
   if (currentState.todos.length >= 100) {
-    throw new Error("Too many todos!");
+    throw new Error('Too many todos!')
   }
   set((state) => {
-    state.todos.push({ id: Date.now(), text, done: false });
-  });
-};
+    state.todos.push({ id: Date.now(), text, done: false })
+  })
+}
 ```
 
 ## Data Flow
@@ -131,11 +130,11 @@ When a component reads from `store.memory`, it automatically subscribes to updat
 
 ```javascript
 const Counter = () => {
-  const { count } = store.memory; // ← Auto-subscribes!
-  const { increment } = store.synapses;
+  const { count } = store.memory // ← Auto-subscribes!
+  const { increment } = store.synapses
 
-  return h("button", { onclick: increment }, count);
-};
+  return h('button', { onclick: increment }, count)
+}
 ```
 
 **How it works:**
@@ -167,14 +166,14 @@ Only components that **read** from the Cortex will re-render:
 
 ```javascript
 const ComponentA = () => {
-  const { count } = store.memory; // Subscribes to 'count'
-  return h("div", {}, count);
-};
+  const { count } = store.memory // Subscribes to 'count'
+  return h('div', {}, count)
+}
 
 const ComponentB = () => {
-  const { user } = store.memory; // Subscribes to 'user'
-  return h("div", {}, user.name);
-};
+  const { user } = store.memory // Subscribes to 'user'
+  return h('div', {}, user.name)
+}
 
 // If you update 'count', only ComponentA re-renders!
 ```
@@ -194,22 +193,22 @@ const userStore = new Cortex({
   synapses: (set) => ({
     fetchUser: async (id) => {
       // 1. Set loading
-      set({ loading: true, error: null });
+      set({ loading: true, error: null })
 
       try {
         // 2. Fetch data
-        const res = await fetch(`/api/users/${id}`);
-        const data = await res.json();
+        const res = await fetch(`/api/users/${id}`)
+        const data = await res.json()
 
         // 3. Update with result
-        set({ user: data, loading: false });
+        set({ user: data, loading: false })
       } catch (err) {
         // 4. Handle error
-        set({ error: err.message, loading: false });
+        set({ error: err.message, loading: false })
       }
     },
   }),
-});
+})
 ```
 
 **Async Flow:**
@@ -240,17 +239,17 @@ You can derive values in your components:
 
 ```javascript
 const TodoList = () => {
-  const { todos } = store.memory;
+  const { todos } = store.memory
 
   // Computed
-  const completedCount = todos.filter((t) => t.done).length;
-  const progress = (completedCount / todos.length) * 100;
+  const completedCount = todos.filter((t) => t.done).length
+  const progress = (completedCount / todos.length) * 100
 
-  return h("div", {}, [
-    h("p", {}, `Progress: ${progress}%`),
+  return h('div', {}, [
+    h('p', {}, `Progress: ${progress}%`),
     // ... render todos
-  ]);
-};
+  ])
+}
 ```
 
 ### Middleware Pattern
@@ -259,24 +258,24 @@ You can wrap `set` to add logging or persistence:
 
 ```javascript
 const createLogger = (set) => (updater) => {
-  console.log("Before:", get());
-  set(updater);
-  console.log("After:", get());
-};
+  console.log('Before:', get())
+  set(updater)
+  console.log('After:', get())
+}
 
 const store = new Cortex({
   memory: { count: 0 },
   synapses: (set, get) => {
-    const loggedSet = createLogger(set);
+    const loggedSet = createLogger(set)
 
     return {
       increment: () =>
         loggedSet((s) => {
-          s.count++;
+          s.count++
         }),
-    };
+    }
   },
-});
+})
 ```
 
 ### Multiple Stores
@@ -290,7 +289,7 @@ export const userStore = new Cortex({
   synapses: (set) => ({
     /* ... */
   }),
-});
+})
 
 // stores/cart-store.js
 export const cartStore = new Cortex({
@@ -298,7 +297,7 @@ export const cartStore = new Cortex({
   synapses: (set) => ({
     /* ... */
   }),
-});
+})
 ```
 
 ### Local Component State
@@ -313,18 +312,18 @@ const Timer = () => {
     synapses: (set) => ({
       tick: () =>
         set((s) => {
-          s.seconds++;
+          s.seconds++
         }),
     }),
-  });
+  })
 
   onMount(() => {
-    const timer = setInterval(local.synapses.tick, 1000);
-    onCleanup(() => clearInterval(timer));
-  });
+    const timer = setInterval(local.synapses.tick, 1000)
+    onCleanup(() => clearInterval(timer))
+  })
 
-  return h("div", {}, `Elapsed: ${local.memory.seconds}s`);
-};
+  return h('div', {}, `Elapsed: ${local.memory.seconds}s`)
+}
 ```
 
 ## Best Practices
@@ -350,19 +349,19 @@ const Timer = () => {
 1. **Destructure selectively**: Only read what you need
 
    ```javascript
-   const { count } = store.memory; // Good
-   const allState = store.memory; // Subscribes to everything!
+   const { count } = store.memory // Good
+   const allState = store.memory // Subscribes to everything!
    ```
 
 2. **Batch updates**: Multiple `set` calls in one synapse are batched
 
    ```javascript
    updateAll: () => {
-     set({ a: 1 });
-     set({ b: 2 });
-     set({ c: 3 });
+     set({ a: 1 })
+     set({ b: 2 })
+     set({ c: 3 })
      // Only triggers one re-render
-   };
+   }
    ```
 
 3. **Use local state**: For component-specific data, use local Cortex instances
