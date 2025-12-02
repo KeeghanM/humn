@@ -55,7 +55,6 @@ export const todoStore = new Cortex({
           errorMessage: 'Failed to fetch task. Try again.',
         })
       } finally {
-        console.log('FINALLY')
         set({ isLoading: false })
       }
     },

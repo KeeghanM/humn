@@ -3,6 +3,7 @@
  * including support for Keyed Diffing.
  * @module patch
  */
+import { track } from './metrics.js'
 import { setInstance } from './observer.js'
 
 /**
@@ -39,6 +40,8 @@ function createElement(vNode) {
     return el
   }
 
+  track('elementsCreated')
+
   const el = document.createElement(vNode.tag)
   vNode.el = el
   patchProps(el, vNode.props)
@@ -68,6 +71,7 @@ function patchProps(el, newProps = {}, oldProps = {}) {
     // Handle removed props
     if (newValue === undefined || newValue === null) {
       el.removeAttribute(key)
+      track('patches')
       continue
     }
 
@@ -75,12 +79,15 @@ function patchProps(el, newProps = {}, oldProps = {}) {
     if (key === 'value' || key === 'checked') {
       if (el[key] !== newValue) {
         el[key] = newValue
+        track('patches')
       }
       continue
     }
 
     // If prop hasn't changed, skip
     if (oldValue === newValue) continue
+
+    track('patches')
 
     // Handle Events
     if (key.startsWith('on')) {
@@ -148,6 +155,7 @@ function reconcileChildren(parent, newChildren, oldChildren) {
       // If the element exists but is in the wrong place, move it
       if (el && domChildAtIndex !== el) {
         parent.insertBefore(el, domChildAtIndex)
+        track('patches')
       }
 
       // Remove from map so we know it was re-used
@@ -168,7 +176,9 @@ function reconcileChildren(parent, newChildren, oldChildren) {
   // Remove any old keys that weren't used in the new list
   Object.values(keyed).forEach(({ vNode }) => {
     if (vNode.el && vNode.el.parentNode === parent) {
+      runUnmount(vNode) // Clean up hooks
       parent.removeChild(vNode.el)
+      track('elementsRemoved')
     }
   })
 }
@@ -179,6 +189,8 @@ function reconcileChildren(parent, newChildren, oldChildren) {
  * @returns {import("./h").VNode} The rendered child vNode.
  */
 function renderComponent(vNode) {
+  track('componentsRendered')
+
   // 1. Prepare Hook Container
   const hooks = {
     mounts: [],
@@ -232,35 +244,33 @@ function runUnmount(vNode) {
  * @param {number} [index=0] - The index of the child node (used for simple diffing).
  */
 export function patch(parent, newVNode, oldVNode, index = 0) {
-  // --- HANDLE UNMOUNTING (Cleanup Hooks) ---
+  track('diffs')
+
   if (newVNode === undefined || newVNode === null) {
     const el = oldVNode.el || parent.childNodes[index]
 
     // Recursive Cleanup
     runUnmount(oldVNode)
 
-    if (el) parent.removeChild(el)
+    if (el) {
+      parent.removeChild(el)
+      track('elementsRemoved')
+    }
     return
   }
 
-  // --- HANDLE COMPONENT (Functional VNode) ---
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
 
-    // 1. Render the component function
     const childVNode = renderComponent(newVNode)
-
-    // 2. Store the result in the vNode ("unwrap" it)
     newVNode.child = childVNode
 
-    // 3. Recursively patch the result
     const oldChild = oldVNode ? oldVNode.child : undefined
     patch(parent, childVNode, oldChild, index)
 
-    // 4. Ensure VNode holds the DOM reference
     newVNode.el = childVNode.el
 
-    // 5. Run Mount Hooks (Next Tick)
+    // Run mount hooks on the next tick
     if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
       setTimeout(() => {
         newVNode.hooks.mounts.forEach((fn) => fn())
@@ -280,7 +290,10 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   if (newVNode === undefined || newVNode === null) {
     // Try to find the element on the VNode, or fallback to index
     const el = oldVNode.el || parent.childNodes[index]
-    if (el) parent.removeChild(el)
+    if (el) {
+      parent.removeChild(el)
+      track('elementsRemoved')
+    }
     return
   }
 
@@ -290,7 +303,10 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     (typeof newVNode !== 'string' && newVNode.tag !== oldVNode.tag)
   ) {
     const el = oldVNode.el || parent.childNodes[index]
-    if (el) parent.replaceChild(createElement(newVNode), el)
+    if (el) {
+      parent.replaceChild(createElement(newVNode), el)
+      track('patches')
+    }
     return
   }
 
@@ -300,6 +316,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
       const el = parent.childNodes[index]
       if (el) {
         el.nodeValue = String(newVNode)
+        track('patches')
       } else {
         // Self healing: if text node missing, append it
         parent.appendChild(document.createTextNode(String(newVNode)))
