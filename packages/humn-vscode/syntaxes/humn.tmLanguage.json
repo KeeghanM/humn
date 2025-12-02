@@ -3,8 +3,7 @@
   "patterns": [
     { "include": "#script-block" },
     { "include": "#style-block" },
-    { "include": "#humn-tag" },
-    { "include": "#html-content" }
+    { "include": "#template-content" }
   ],
   "repository": {
     "script-block": {
@@ -22,7 +21,13 @@
         "3": { "name": "punctuation.definition.tag.html" }
       },
       "contentName": "source.tsx",
-      "patterns": [{ "include": "source.tsx" }]
+      "patterns": [
+        {
+          "match": "([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[,}])",
+          "name": "variable.other.readwrite.js"
+        },
+        { "include": "source.tsx" }
+      ]
     },
     "style-block": {
       "begin": "(<)(style)\\b([^>]*)(>)",
@@ -36,7 +41,6 @@
       "contentName": "source.css.scss",
       "patterns": [
         {
-          "comment": "Match property: value; manually to ensure highlighting",
           "begin": "([a-zA-Z-]+)\\s*(:)",
           "beginCaptures": {
             "1": { "name": "support.type.property-name.css" },
@@ -57,79 +61,22 @@
           "match": "#[0-9a-fA-F]{3,8}",
           "name": "constant.other.color.rgb-value.css"
         },
-        {
-          "match": "(-?[0-9]+(\\.[0-9]+)?)",
-          "name": "constant.numeric.css"
-        },
+        { "match": "(-?[0-9]+(\\.[0-9]+)?)", "name": "constant.numeric.css" },
         {
           "match": "(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)",
           "name": "keyword.other.unit.css"
         },
         { "include": "#string-double" },
         { "include": "#string-single" },
-        {
-          "match": "[a-zA-Z-]+(?=\\()",
-          "name": "support.function.css"
-        },
+        { "match": "[a-zA-Z-]+(?=\\()", "name": "support.function.css" },
         {
           "match": "[a-zA-Z][a-zA-Z0-9-]*",
           "name": "support.constant.property-value.css"
         },
-        {
-          "match": ",",
-          "name": "punctuation.separator.sequence.css"
-        }
+        { "match": ",", "name": "punctuation.separator.sequence.css" }
       ]
     },
-    "humn-tag": {
-      "begin": "(</?)([_a-zA-Z][a-zA-Z0-9:-]*)",
-      "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.begin.humn" },
-        "2": {
-          "patterns": [
-            { "match": "^[A-Z]", "name": "support.class.component.humn" },
-            { "match": ".*", "name": "entity.name.tag.humn" }
-          ]
-        }
-      },
-      "end": "(/?>)",
-      "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.end.humn" }
-      },
-      "patterns": [
-        { "include": "#interpolation" },
-        { "include": "#string-double" },
-        { "include": "#string-single" },
-        {
-          "match": "([a-zA-Z0-9:-]+)(=)",
-          "captures": {
-            "1": { "name": "entity.other.attribute-name.humn" },
-            "2": { "name": "punctuation.separator.key-value.humn" }
-          }
-        },
-        {
-          "match": "[a-zA-Z0-9:-]+",
-          "name": "entity.other.attribute-name.humn"
-        }
-      ]
-    },
-    "html-content": {
-      "patterns": [
-        { "include": "#interpolation" },
-        { "include": "text.html.basic" }
-      ]
-    },
-    "interpolation": {
-      "name": "meta.embedded.expression.humn",
-      "begin": "\\{",
-      "beginCaptures": {
-        "0": { "name": "punctuation.section.embedded.begin.humn" }
-      },
-      "end": "\\}",
-      "endCaptures": {
-        "0": { "name": "punctuation.section.embedded.end.humn" }
-      },
-      "contentName": "source.tsx",
+    "template-content": {
       "patterns": [{ "include": "source.tsx" }]
     },
     "string-double": {
