@@ -1,5 +1,7 @@
 # Humn (Human)
 
+[![NPM version](https://img.shields.io/npm/v/humn.svg)](https://www.npmjs.com/package/humn)
+
 > **The organic, human-centric UI library for the modern web.**
 
 **Humn** is a complete, reactive frontend library with built in state management designed to replace the likes of React/Svelte/Solid AND Zustand/Kea/Redux in your stack.
