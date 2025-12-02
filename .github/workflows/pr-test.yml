@@ -1,16 +1,12 @@
-name: Release
+name: PR Test
 on:
   push:
-    branches:
+    branches-ignore:
       - main
 
-permissions:
-  contents: write
-  id-token: write
-
 jobs:
-  release:
-    name: Release
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,14 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
-          registry-url: 'https://registry.npmjs.org'
       - name: Install latest npm
         run: npm install -g npm@latest
       - name: Install dependencies
         run: npm install
       - name: Test
         run: npm test
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
