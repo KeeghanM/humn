@@ -11,6 +11,13 @@
     <button onclick={addTodo}>Add</button>
     <button class='secondary' onclick={fetchRandom} disabled={isLoading}>🎲</button>
 </div>
+
+{isLoading && <div key='loader' class='loading'>Fetching task...</div>}
+{errorMessage && <div key='error' class='error'>{errorMessage}</div>}
+
+<div>
+    {items.map((item)=><div key={item.id} class={`card ${item.done ? 'done' : ''}`} onclick={()=>toggle(item.id)}></div>)}
+</div>
    
 <style>
 font-family:
