@@ -1,3 +1,4 @@
+import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
 
 /**
@@ -23,7 +24,31 @@ export class Cortex {
    * @param {CortexParams} CortexParams - The parameters for the Cortex.
    */
   constructor({ memory, synapses }) {
-    this._memory = memory
+    const liveMemory = { ...memory }
+    this._persistenceMap = new Map()
+
+    // Load in any existing values from local-storage
+    for (const [key, value] of Object.entries(memory)) {
+      if (value && value.__humn_persist) {
+        const storageKey = value.config.key || key
+        this._persistenceMap.set(key, storageKey)
+
+        try {
+          const stored = localStorage.getItem(storageKey)
+          if (stored !== null) {
+            liveMemory[key] = JSON.parse(stored)
+          } else {
+            liveMemory[key] = value.initial
+          }
+        } catch (err) {
+          if (isDev)
+            console.warn(`Humn: Failed to load '${key}' from storage.`, err)
+          liveMemory[key] = value.initial
+        }
+      }
+    }
+
+    this._memory = liveMemory
     this._listeners = new Map()
 
     const get = () => this._memory
@@ -37,22 +62,39 @@ export class Cortex {
         const proxy = this._createChangeTrackingProxy(clone, changedPaths)
         const result = updater(proxy)
 
-        // Handle both Immutable (return object) and Mutable (void) patterns
         if (result && typeof result === 'object') {
-          // If the function returns an object, treat it as a partial update
           nextState = { ...this._memory, ...result }
           Object.keys(result).forEach((key) => changedPaths.add(key))
         } else {
-          // If it returns nothing, assume mutation occurred on the clone
           nextState = clone
         }
       } else {
-        // Object merge pattern
         nextState = { ...this._memory, ...updater }
         changedPaths = new Set(Object.keys(updater))
       }
 
       this._memory = nextState
+
+      // If we need to persist any of the values
+      // we save them to localStorage here
+      if (this._persistenceMap.size > 0) {
+        this._persistenceMap.forEach((storageKey, stateKey) => {
+          const isDirty = Array.from(changedPaths).some(
+            (path) => path === stateKey || path.startsWith(stateKey + '.'),
+          )
+
+          if (isDirty) {
+            try {
+              const value = this._memory[stateKey]
+              localStorage.setItem(storageKey, JSON.stringify(value))
+            } catch (err) {
+              if (isDev)
+                console.error(`Humn: Failed to save '${stateKey}'.`, err)
+            }
+          }
+        })
+      }
+
       this._notifyRelevantListeners(changedPaths)
     }
 

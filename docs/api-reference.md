@@ -34,6 +34,14 @@ Registers a callback to be called when a component is unmounted.
 
 - `callback`: The function to be called.
 
+## `persist(initial, config)`
+
+Marks a section of the state for persistence in localStorage.
+
+- `initial`: The initial value of the state.
+- `config`: (Optional) The configuration for persistence.
+  - `key`: A custom key to use in `localStorage`.
+
 ## `css`
 
 A template literal tag for writing scoped CSS.

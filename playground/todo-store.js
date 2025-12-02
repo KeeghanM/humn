@@ -1,11 +1,11 @@
-import { Cortex } from '../src'
+import { Cortex, persist } from '../src'
 
 export const todoStore = new Cortex({
   memory: {
-    items: [
+    items: persist([
       { id: 1, text: 'Create Humn Library', done: true },
       { id: 2, text: 'Write first app', done: false },
-    ],
+    ]),
     inputValue: '',
     errorMessage: '',
     isLoading: false,

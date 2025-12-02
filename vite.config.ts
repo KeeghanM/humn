@@ -1,6 +1,9 @@
+import terser from '@rollup/plugin-terser'
 import path from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
+
+const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
   build: {
@@ -13,6 +16,7 @@ export default defineConfig({
       external: [],
       output: {
         globals: {},
+        compact: isProduction,
       },
     },
     sourcemap: true,
@@ -28,5 +32,14 @@ export default defineConfig({
       insertTypesEntry: true,
       rollupTypes: true,
     }),
+    isProduction &&
+      terser({
+        format: {
+          comments: false,
+        },
+        compress: {
+          drop_console: true,
+        },
+      }),
   ],
 })

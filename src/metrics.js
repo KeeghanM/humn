@@ -5,7 +5,7 @@
 
 // Vite/Rollup replaces this constant at build time.
 // In production, 'isDev' becomes false, allowing dead-code elimination.
-const isDev = import.meta.env ? import.meta.env.DEV : false
+export const isDev = import.meta.env ? import.meta.env.DEV : false
 
 let metrics = {
   diffs: 0,
@@ -27,7 +27,7 @@ function flush() {
     metrics.patches > 0 ||
     metrics.componentsRendered > 0
   ) {
-    console.group(
+    console.groupCollapsed(
       `%c[Humn Metrics] %c${new Date().toLocaleTimeString()}`,
       'color: #ff0055; font-weight: bold;',
       'color: gray; font-weight: normal;',

@@ -23,7 +23,8 @@
     "test": "vitest --log-output",
     "dev": "vite --port 3000 --open /playground/",
     "prepublishOnly": "npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "git-diff": "git log origin/main..HEAD --pretty=format:'%ad:: %s' > git-diff.txt && echo '\n----------\n' >> git-diff.txt && git diff origin/main...HEAD --color ':!*.lock' >> git-diff.txt"
   },
   "lint-staged": {
     "**/*": [
@@ -46,6 +47,7 @@
     "url": "https://github.com/KeeghanM/humn"
   },
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",

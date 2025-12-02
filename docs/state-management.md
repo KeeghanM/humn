@@ -36,3 +36,46 @@ mount(document.getElementById('app'), App)
 In this example, we're creating a `Cortex` instance called `counterStore` with an initial count of 0. We're also defining two synapses, `increment` and `decrement`, that update the count.
 
 The `App` component gets the `count` from the `counterStore.memory` and the `increment` and `decrement` functions from the `counterStore.synapses`. It then renders the count and two buttons to increment and decrement the count.
+
+## State Persistence
+
+You can persist the state of your application to `localStorage` using the `persist` utility. This is useful for keeping the state of your application across page reloads.
+
+To use it, wrap the value you want to persist with the `persist` function.
+
+```javascript
+import { Cortex, persist } from 'humn'
+
+const todoStore = new Cortex({
+  memory: {
+    items: persist([
+      { id: 1, text: 'Create Humn Library', done: true },
+      { id: 2, text: 'Write first app', done: false },
+    ]),
+    inputValue: '',
+    errorMessage: '',
+    isLoading: false,
+  },
+  // ...
+})
+```
+
+By default, the key used in `localStorage` will be the same as the key in the `memory` object. In the example above, the key will be `items`.
+
+You can also provide a custom key by passing a configuration object to the `persist` function:
+
+```javascript
+const todoStore = new Cortex({
+  memory: {
+    items: persist(
+      [
+        { id: 1, text: 'Create Humn Library', done: true },
+        { id: 2, text: 'Write first app', done: false },
+      ],
+      { key: 'my-custom-key' },
+    ),
+    // ...
+  },
+  // ...
+})
+```
