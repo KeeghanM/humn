@@ -23,7 +23,7 @@ export default function humn() {
 
       const renderNodes = compileTemplate(templateHTML)
 
-      const importRegex = /import[\s\S]*?from\s+['"][^'"]+['"];?/g
+      const importRegex = /import\s+(?:[\s\S]*?from\s+)?['"][^'"]+['"];?/g
       const userImports = (scriptContent.match(importRegex) || []).join('\n')
       const componentLogic = scriptContent.replace(importRegex, '').trim()
 
@@ -31,7 +31,10 @@ export default function humn() {
         `import { h${styleContent ? ', css' : ''} } from 'humn';`,
       ]
       let styleLogic = ''
-      if (styleContent) styleLogic = `const __styles = css\`${styleContent}\`;`
+      if (styleContent) {
+        const escapedStyle = styleContent.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+        styleLogic = `const __styles = css\`${escapedStyle}\`;`
+      }
 
       let vdomAssignment = ''
       if (renderNodes.length === 1) {
