@@ -54,7 +54,7 @@ jobs:
       - name: Install Dependencies
         run: |
           npm install -g @vscode/vsce
-          cd packages/vscode-humn
+          cd packages/humn-vscode
           npm install
 
       - name: Release Extension
@@ -62,5 +62,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
         run: |
-          cd packages/vscode-humn
+          cd packages/humn-vscode
           npx semantic-release
