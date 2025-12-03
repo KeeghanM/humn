@@ -1,5 +1,5 @@
-import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
+import { isDev } from './metrics.js'
 
 /**
  * @typedef {object} Synapses

@@ -1,5 +1,5 @@
-import * as prettier from 'prettier'
 import * as humnPlugin from 'prettier-plugin-humn'
+import * as prettier from 'prettier'
 import * as vscode from 'vscode'
 
 /**

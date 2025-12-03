@@ -3,8 +3,8 @@
  * including support for Keyed Diffing.
  * @module patch
  */
-import { track } from './metrics.js'
 import { setInstance } from './observer.js'
+import { track } from './metrics.js'
 
 /**
  * Checks if a list of children contains keys.

@@ -52,8 +52,8 @@ export default defineConfig({
 
 ```javascript
 // __tests__/user-management.test.js
-import { Cortex } from 'humn'
 import { describe, expect, it } from 'vitest'
+import { Cortex } from 'humn'
 
 describe('User management', () => {
   it('should update user name', () => {
@@ -162,8 +162,8 @@ describe('Data fetching', () => {
 ### Simple Rendering
 
 ```javascript
-import { h, mount } from 'humn'
 import { describe, expect, it } from 'vitest'
+import { h, mount } from 'humn'
 
 describe('Greeting component', () => {
   it('should display greeting message', () => {
@@ -342,8 +342,8 @@ describe('Todo list', () => {
 ## Testing Lifecycle Hooks
 
 ```javascript
-import { onCleanup, onMount } from 'humn'
 import { describe, expect, it, vi } from 'vitest'
+import { onCleanup, onMount } from 'humn'
 
 describe('Component lifecycle', () => {
   it('should call onMount when component appears', async () => {

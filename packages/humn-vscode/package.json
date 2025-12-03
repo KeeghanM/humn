@@ -1,14 +1,19 @@
 {
   "name": "humn-vscode",
   "displayName": "Humn Language Support",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KeeghanM/humn.git"
   },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "package": "vsce package"
+  },
   "license": "MIT",
   "publisher": "HumanSideOfCode",
-  "type": "module",
   "main": "./src/extension.js",
   "activationEvents": [
     "onLanguage:humn"
@@ -48,14 +53,15 @@
       }
     ]
   },
-  "devDependencies": {
-    "semantic-release-vsce": "^6.0.18"
-  },
   "engines": {
     "vscode": "^1.70.0"
   },
-  "dependencies": {
-    "prettier-plugin-humn": "file:../prettier-plugin-humn",
+  "devDependencies": {
+    "semantic-release-vsce": "^6.0.18",
+    "vite": "^7.2.6",
+    "prettier-plugin-humn": "*"
+  },
+  "peerDependencies": {
     "prettier": "^3.7.3"
   }
 }
