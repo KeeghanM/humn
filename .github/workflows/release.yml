@@ -11,63 +11,15 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Release Plugins in Parallel
-  release-plugins:
-    name: Release Plugins
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: ['packages/vite-plugin-humn', 'packages/prettier-plugin-humn']
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # Check if files in this specific package folder have changed
-      - name: Check for changes
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            src:
-              - '${{ matrix.package }}/**'
-
-      - name: Setup Node.js
-        if: steps.filter.outputs.src == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        if: steps.filter.outputs.src == 'true'
-        run: npm install
-
-      # Run tests ONLY if changes are detected (saves time)
-      - name: Test ${{ matrix.package }}
-        if: steps.filter.outputs.src == 'true'
-        run: npm run qa:test -w ${{ matrix.package }}
-
-      # Publish ONLY if changes detected AND tests passed
-      - name: Release ${{ matrix.package }}
-        if: steps.filter.outputs.src == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd ${{ matrix.package }}
-          npx semantic-release
-
-  # Release Core
   release-core:
     name: Release Core
-    needs: release-plugins
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Check for changes
         uses: dorny/paths-filter@v3
@@ -88,7 +40,6 @@ jobs:
         if: steps.filter.outputs.src == 'true'
         run: npm install
 
-      # Build is required for Humn tests to run correctly
       - name: Build Humn
         if: steps.filter.outputs.src == 'true'
         run: npm run build -w packages/humn
@@ -104,17 +55,100 @@ jobs:
         run: |
           cd packages/humn
           npx semantic-release
-
-  # Release Extension
-  release-extension:
-    name: Release Extension
-    needs: release-core
+  release-prettier:
+    name: Release Prettier Plugin
+    needs: [release-core]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'packages/prettier-plugin-humn/**'
+
+      - name: Setup Node.js
+        if: steps.filter.outputs.src == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        if: steps.filter.outputs.src == 'true'
+        run: npm install
+
+      - name: Test
+        if: steps.filter.outputs.src == 'true'
+        run: npm run qa:test -w packages/prettier-plugin-humn
+
+      - name: Release
+        if: steps.filter.outputs.src == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd packages/prettier-plugin-humn
+          npx semantic-release
+
+  release-vite:
+    name: Release Vite Plugin
+    needs: release-prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'packages/vite-plugin-humn/**'
+
+      - name: Setup Node.js
+        if: steps.filter.outputs.src == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        if: steps.filter.outputs.src == 'true'
+        run: npm install
+
+      - name: Test
+        if: steps.filter.outputs.src == 'true'
+        run: npm run qa:test -w packages/vite-plugin-humn
+
+      - name: Release
+        if: steps.filter.outputs.src == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd packages/vite-plugin-humn
+          npx semantic-release
+
+  release-extension:
+    name: Release Extension
+    needs: release-vite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Check for changes
         uses: dorny/paths-filter@v3
