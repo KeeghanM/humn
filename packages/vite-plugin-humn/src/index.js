@@ -23,7 +23,7 @@ export default function humn() {
 
       const renderNodes = compileTemplate(templateHTML)
 
-      const importRegex = /import[\s\S]*?from\s+['"][^'"]+['"];?/g
+      const importRegex = /import\s+(?:[\s\S]*?from\s+)?['"][^'"]+['"];?/g
       const userImports = (scriptContent.match(importRegex) || []).join('\n')
       const componentLogic = scriptContent.replace(importRegex, '').trim()
 
