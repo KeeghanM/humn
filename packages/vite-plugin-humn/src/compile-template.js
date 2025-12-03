@@ -12,7 +12,9 @@ export function compileTemplate(htmlString) {
       const text = node.rawText.trim()
       if (!text) return null
 
-      if (text.startsWith('{') && text.endsWith('}')) return text.slice(1, -1)
+      // Checks for a SINGLE expression (e.g. "{name}")
+      // and not multiple expressions (e.g. "{first} {last}")
+      if (/^\{[^}]+\}$/.test(text)) return text.slice(1, -1)
 
       if (text.includes('{') && text.includes('}')) {
         const jsTemplate = text.replace(/\{([^}]*)\}/g, '${$1}')
