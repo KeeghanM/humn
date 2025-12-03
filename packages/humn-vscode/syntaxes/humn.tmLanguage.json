@@ -106,12 +106,18 @@
     "string-double": {
       "begin": "\"",
       "end": "\"",
-      "name": "string.quoted.double.humn"
+      "name": "string.quoted.double.humn",
+      "patterns": [
+        { "match": "\\\\.", "name": "constant.character.escape.humn" }
+      ]
     },
     "string-single": {
       "begin": "'",
       "end": "'",
-      "name": "string.quoted.single.humn"
+      "name": "string.quoted.single.humn",
+      "patterns": [
+        { "match": "\\\\.", "name": "constant.character.escape.humn" }
+      ]
     }
   }
 }
