@@ -18,8 +18,18 @@ export function protectAttributes(html) {
 
     while (curr < html.length) {
       const char = html[curr]
-      if (char === '{') depth++
-      else if (char === '}') depth--
+      if (char === '"' || char === "'" || char === '`') {
+        const quote = char
+        curr++
+        while (curr < html.length && html[curr] !== quote) {
+          if (html[curr] === '\\') curr++ // skip escaped char
+          curr++
+        }
+      } else if (char === '{') {
+        depth++
+      } else if (char === '}') {
+        depth--
+      }
       if (depth === 0) {
         found = true
         break
