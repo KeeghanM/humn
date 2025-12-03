@@ -7,9 +7,10 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "qa:test": "npm run test --workspaces --if-present",
+    "qa:test": "npm run qa:test --workspaces --if-present",
     "release": "npx semantic-release",
-    "prepare": "husky"
+    "prepare": "husky",
+    "qa:format": "npx prettier . --write"
   },
   "lint-staged": {
     "**/*": [

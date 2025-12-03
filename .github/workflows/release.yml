@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Test
-        run: npm test
+        run: npm qa:test
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,18 +51,6 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      - name: Install Dependencies
-        run: |
-          npm install -g @vscode/vsce
-          cd packages/humn-vscode
-          npm install
-
-      - name: Release Extension
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
-        run: |
-          cd packages/humn-vscode
       - name: Install Dependencies
         run: |
           npm install -g @vscode/vsce

@@ -32,7 +32,9 @@ export default function humn() {
       ]
       let styleLogic = ''
       if (styleContent) {
-        const escapedStyle = styleContent.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+        const escapedStyle = styleContent
+          .replace(/`/g, '\\`')
+          .replace(/\$\{/g, '\\${')
         styleLogic = `const __styles = css\`${escapedStyle}\`;`
       }
 
