@@ -55,7 +55,6 @@ describe('Prettier Humn Parser', () => {
     // If you update the regex to /<script[^>]*>.../, this expectation changes.
     // For now, let's assume standard behavior based on your regex:
     // It currently won't match <script lang="ts"> based on your provided file.
-    // This test highlights a potential improvement or expected limitation.
-    expect(ast.script).toBe('')
+    expect(ast.script).toContain('const x = 1')
   })
 })

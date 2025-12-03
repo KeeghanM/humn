@@ -15,31 +15,19 @@ export const parsers = {
   'humn-parser': {
     astFormat: 'humn-ast',
     parse: (text) => {
-      const scriptMatch = text.match(/<script>([\s\S]*?)<\/script>/)
-      const styleMatch = text.match(/<style>([\s\S]*?)<\/style>/)
+      const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/)
+      const styleMatch = text.match(/<style[^>]*>([\s\S]*?)<\/style>/)
 
       const template = text
-        .replace(/<script>[\s\S]*?<\/script>/, '')
-        .replace(/<style>[\s\S]*?<\/style>/, '')
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/, '')
         .trim()
-
-      const children = []
-
-      if (scriptMatch) {
-        children.push({ type: 'humn-script', content: scriptMatch[1] })
-      }
-
-      if (template) {
-        children.push({ type: 'humn-template', content: template })
-      }
-
-      if (styleMatch) {
-        children.push({ type: 'humn-style', content: styleMatch[1] })
-      }
 
       return {
         type: 'root',
-        children,
+        script: scriptMatch ? scriptMatch[1] : '',
+        style: styleMatch ? styleMatch[1] : '',
+        template,
       }
     },
     locStart: () => 0,
@@ -53,18 +41,36 @@ export const printers = {
       const node = path.getValue()
 
       if (node.type === 'root') {
-        return join([hardline, hardline], path.map(print, 'children'))
+        const parts = []
+
+        if (node.script) {
+          parts.push(path.call(print, 'script'))
+        }
+
+        if (node.template) {
+          parts.push(path.call(print, 'template'))
+        }
+
+        if (node.style) {
+          parts.push(path.call(print, 'style'))
+        }
+
+        return group(join([hardline, hardline], parts))
       }
 
       return node.content || ''
     },
 
     embed: (path) => {
+      const parent = path.getParentNode()
+      const name = path.getName()
       const node = path.getValue()
 
-      if (node.type === 'humn-script') {
+      if (parent.type !== 'root') return null
+
+      if (name === 'script' && node) {
         return async (textToDoc) => {
-          const doc = await textToDoc(node.content, { parser: 'babel' })
+          const doc = await textToDoc(node, { parser: 'babel' })
           return group([
             '<script>',
             indent([hardline, doc]),
@@ -74,9 +80,9 @@ export const printers = {
         }
       }
 
-      if (node.type === 'humn-style') {
+      if (name === 'style' && node) {
         return async (textToDoc) => {
-          const doc = await textToDoc(node.content, { parser: 'css' })
+          const doc = await textToDoc(node, { parser: 'css' })
           return group([
             '<style>',
             indent([hardline, doc]),
@@ -86,9 +92,9 @@ export const printers = {
         }
       }
 
-      if (node.type === 'humn-template') {
+      if (name === 'template' && node) {
         return async (textToDoc) => {
-          const doc = await textToDoc(`<>${node.content}</>`, {
+          const doc = await textToDoc(`<>${node}</>`, {
             parser: 'babel',
             semi: false,
           })
