@@ -12,6 +12,14 @@
   ],
   "author": "Keeghan McGarry",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KeeghanM/humn.git",
+    "directory": "packages/vite-plugin-humn"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
   "dependencies": {
     "node-html-parser": "^6.1.12"
   },
