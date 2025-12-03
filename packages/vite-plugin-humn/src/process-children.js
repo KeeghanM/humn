@@ -41,7 +41,7 @@ export function processChildren(nodes, traverseFn) {
           // No more code blocks, rest is static string
           const remainder = text.slice(cursor)
           if (remainder) {
-            results.push(`'${remainder.replace(/'/g, "\\'")}'`)
+            results.push(`'${remainder.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`)
           }
           break
         }
