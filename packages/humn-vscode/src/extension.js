@@ -15,13 +15,12 @@ export function activate(context) {
         const text = document.getText()
 
         try {
-          // Format the text using Prettier and your plugin
+          // Format the text using Prettier and this plugin
           const formatted = await prettier.format(text, {
+            ...(await prettier.resolveConfig(document.fileName)),
+            // These must come after resolveConfig to prevent override
             parser: 'humn-parser',
             plugins: [humnPlugin],
-            // Pull user config defaults if you want,
-            // or let Prettier resolve .prettierrc automatically:
-            ...(await prettier.resolveConfig(document.fileName)),
           })
 
           // Calculate the range of the entire document

@@ -15,19 +15,34 @@ export const parsers = {
   'humn-parser': {
     astFormat: 'humn-ast',
     parse: (text) => {
-      const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/)
-      const styleMatch = text.match(/<style[^>]*>([\s\S]*?)<\/style>/)
+      const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/
+      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/
+
+      const scriptMatch = text.match(scriptRegex)
+      const styleMatch = text.match(styleRegex)
 
       const template = text
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/, '')
+        .replace(scriptRegex, '')
+        .replace(styleRegex, '')
         .trim()
+
+      const children = []
+
+      if (scriptMatch) {
+        children.push({ type: 'humn-script', content: scriptMatch[1] })
+      }
+
+      if (template) {
+        children.push({ type: 'humn-template', content: template })
+      }
+
+      if (styleMatch) {
+        children.push({ type: 'humn-style', content: styleMatch[1] })
+      }
 
       return {
         type: 'root',
-        script: scriptMatch ? scriptMatch[1] : '',
-        style: styleMatch ? styleMatch[1] : '',
-        template,
+        children,
       }
     },
     locStart: () => 0,
@@ -40,37 +55,23 @@ export const printers = {
     print: (path, options, print) => {
       const node = path.getValue()
 
+      if (!node) return ''
+
       if (node.type === 'root') {
-        const parts = []
-
-        if (node.script) {
-          parts.push(path.call(print, 'script'))
-        }
-
-        if (node.template) {
-          parts.push(path.call(print, 'template'))
-        }
-
-        if (node.style) {
-          parts.push(path.call(print, 'style'))
-        }
-
-        return group(join([hardline, hardline], parts))
+        return join([hardline, hardline], path.map(print, 'children'))
       }
 
       return node.content || ''
     },
 
     embed: (path) => {
-      const parent = path.getParentNode()
-      const name = path.getName()
       const node = path.getValue()
 
-      if (parent.type !== 'root') return null
+      if (!node) return null
 
-      if (name === 'script' && node) {
+      if (node.type === 'humn-script') {
         return async (textToDoc) => {
-          const doc = await textToDoc(node, { parser: 'babel' })
+          const doc = await textToDoc(node.content, { parser: 'babel' })
           return group([
             '<script>',
             indent([hardline, doc]),
@@ -80,9 +81,9 @@ export const printers = {
         }
       }
 
-      if (name === 'style' && node) {
+      if (node.type === 'humn-style') {
         return async (textToDoc) => {
-          const doc = await textToDoc(node, { parser: 'css' })
+          const doc = await textToDoc(node.content, { parser: 'css' })
           return group([
             '<style>',
             indent([hardline, doc]),
@@ -92,9 +93,9 @@ export const printers = {
         }
       }
 
-      if (name === 'template' && node) {
+      if (node.type === 'humn-template') {
         return async (textToDoc) => {
-          const doc = await textToDoc(`<>${node}</>`, {
+          const doc = await textToDoc(`<>${node.content}</>`, {
             parser: 'babel',
             semi: false,
           })

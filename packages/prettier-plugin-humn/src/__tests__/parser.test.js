@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-
 import { parsers } from '../index.js'
 
 const parse = parsers['humn-parser'].parse
+
+function getContent(ast, type) {
+  const node = ast.children.find((n) => n.type === type)
+  return node ? node.content : undefined
+}
 
 describe('Prettier Humn Parser', () => {
   it('should parse a complete SFC', () => {
@@ -13,17 +17,18 @@ describe('Prettier Humn Parser', () => {
     `
     const ast = parse(code)
 
-    expect(ast.script).toContain('const a = 1;')
-    expect(ast.style).toContain('color: red;')
-    expect(ast.template.trim()).toBe('<div>{a}</div>')
+    expect(getContent(ast, 'humn-script')).toContain('const a = 1;')
+    expect(getContent(ast, 'humn-style')).toContain('color: red;')
+    expect(getContent(ast, 'humn-template').trim()).toBe('<div>{a}</div>')
   })
 
   it('should handle missing script block', () => {
     const code = `<h1>Hello</h1>`
     const ast = parse(code)
 
-    expect(ast.script).toBe('')
-    expect(ast.template).toBe('<h1>Hello</h1>')
+    // If script is missing, the node should not exist (undefined)
+    expect(getContent(ast, 'humn-script')).toBeUndefined()
+    expect(getContent(ast, 'humn-template')).toBe('<h1>Hello</h1>')
   })
 
   it('should handle missing style block', () => {
@@ -33,28 +38,20 @@ describe('Prettier Humn Parser', () => {
     `
     const ast = parse(code)
 
-    expect(ast.style).toBe('')
-    expect(ast.script).toContain("console.log('hi')")
-    expect(ast.template.trim()).toBe('<button>Click</button>')
+    expect(getContent(ast, 'humn-style')).toBeUndefined()
+    expect(getContent(ast, 'humn-script')).toContain("console.log('hi')")
+    expect(getContent(ast, 'humn-template').trim()).toBe(
+      '<button>Click</button>',
+    )
   })
 
   it('should ignore attributes on script/style tags', () => {
-    // Ensuring regex is robust enough to catch tags with attrs if you support them later
-    // or at least doesn't break.
     const code = `
       <script lang="ts">const x = 1</script>
       <div></div>
     `
-    // Current regex implementation in index.js: /<script>([\s\S]*?)<\/script>/
-    // Note: The current implementation might fail this if it strictly expects <script>.
-    // If strict compliance is desired, this test documents current behavior or a TODO.
-
     const ast = parse(code)
 
-    // Based on current implementation, this might return empty script if attributes aren't handled.
-    // If you update the regex to /<script[^>]*>.../, this expectation changes.
-    // For now, let's assume standard behavior based on your regex:
-    // It currently won't match <script lang="ts"> based on your provided file.
-    expect(ast.script).toContain('const x = 1')
+    expect(getContent(ast, 'humn-script')).toBe('const x = 1')
   })
 })
