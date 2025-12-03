@@ -31,7 +31,10 @@ export default function humn() {
         `import { h${styleContent ? ', css' : ''} } from 'humn';`,
       ]
       let styleLogic = ''
-      if (styleContent) styleLogic = `const __styles = css\`${styleContent}\`;`
+      if (styleContent) {
+        const escapedStyle = styleContent.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+        styleLogic = `const __styles = css\`${escapedStyle}\`;`
+      }
 
       let vdomAssignment = ''
       if (renderNodes.length === 1) {
