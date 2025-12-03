@@ -22,12 +22,16 @@ jobs:
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
+
       - name: Install latest npm
         run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm install
+
       - name: Test
-        run: npm test
+        run: npm run qa:test
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,17 +61,8 @@ jobs:
           cd packages/humn-vscode
           npm install
 
-      - name: Release Extension
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
-        run: |
-          cd packages/humn-vscode
-      - name: Install Dependencies
-        run: |
-          npm install -g @vscode/vsce
-          cd packages/humn-vscode
-          npm install
+      - name: Test
+        run: npm run qa:test
 
       - name: Release Extension
         env:

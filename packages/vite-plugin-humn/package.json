@@ -10,6 +10,9 @@
     "humn",
     "compiler"
   ],
+  "scripts": {
+    "qa:test": "vitest run"
+  },
   "author": "Keeghan McGarry",
   "license": "MIT",
   "repository": {

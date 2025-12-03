@@ -4,17 +4,25 @@
   "workspaces": [
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "qa:test": "npm run test --workspaces --if-present",
+    "qa:test": "npm run qa:test --workspaces --if-present",
     "release": "npx semantic-release",
-    "prepare": "husky"
+    "prepare": "husky",
+    "qa:format": "npx prettier . --write"
   },
   "lint-staged": {
     "**/*": [
       "npx prettier . --write"
     ]
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.3",
+    "vitest": "^4.0.15"
+  }
 }

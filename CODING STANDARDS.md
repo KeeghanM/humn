@@ -325,15 +325,15 @@ Use Result types or early returns:
  */
 const processPayment = (payment) => {
   if (!isValidPayment(payment)) {
-    return { success: false, error: new PaymentError("Invalid payment") };
+    return { success: false, error: new PaymentError('Invalid payment') }
   }
 
   if (!hasSufficientFunds(payment)) {
-    return { success: false, error: new PaymentError("Insufficient funds") };
+    return { success: false, error: new PaymentError('Insufficient funds') }
   }
 
-  return { success: true, data: executePayment(payment) };
-};
+  return { success: true, data: executePayment(payment) }
+}
 
 // Also good - early returns with exceptions
 /**
@@ -342,15 +342,15 @@ const processPayment = (payment) => {
  */
 const processPayment = (payment) => {
   if (!isValidPayment(payment)) {
-    throw new PaymentError("Invalid payment");
+    throw new PaymentError('Invalid payment')
   }
 
   if (!hasSufficientFunds(payment)) {
-    throw new PaymentError("Insufficient funds");
+    throw new PaymentError('Insufficient funds')
   }
 
-  return executePayment(payment);
-};
+  return executePayment(payment)
+}
 ```
 
 ### Testing behaviour
@@ -396,9 +396,9 @@ describe('PaymentProcessor', () => {
  * @param {Item} newItem
  */
 const addItem = (items, newItem) => {
-  items.push(newItem); // Mutates array
-  return items;
-};
+  items.push(newItem) // Mutates array
+  return items
+}
 
 // Prefer: Immutable update
 /**
@@ -407,8 +407,8 @@ const addItem = (items, newItem) => {
  * @returns {Item[]}
  */
 const addItem = (items, newItem) => {
-  return [...items, newItem];
-};
+  return [...items, newItem]
+}
 
 // Avoid: Nested conditionals
 if (user) {
@@ -421,7 +421,7 @@ if (user) {
 
 // Prefer: Early returns
 if (!user || !user.isActive || !user.hasPermission) {
-  return;
+  return
 }
 // do something
 
@@ -429,16 +429,16 @@ if (!user || !user.isActive || !user.hasPermission) {
 /** @param {Order} order */
 const processOrder = (order) => {
   // 100+ lines of code
-};
+}
 
 // Prefer: Composed small functions
 /** @param {Order} order */
 const processOrder = (order) => {
-  const validatedOrder = validateOrder(order);
-  const pricedOrder = calculatePricing(validatedOrder);
-  const finalOrder = applyDiscounts(pricedOrder);
-  return submitOrder(finalOrder);
-};
+  const validatedOrder = validateOrder(order)
+  const pricedOrder = calculatePricing(validatedOrder)
+  const finalOrder = applyDiscounts(pricedOrder)
+  return submitOrder(finalOrder)
+}
 ```
 
 ## 📝 Documentation Philosophy

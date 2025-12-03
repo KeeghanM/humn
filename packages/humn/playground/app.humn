@@ -1,29 +1,45 @@
 <script>
   import { todoStore } from './todo-store.js'
-
   const { items, inputValue, errorMessage, isLoading } = todoStore.memory
   const { addTodo, toggle, updateInput, fetchRandom } = todoStore.synapses
 </script>
 
 <h1>Humn Todo</h1>
-<div key='inputs' class='input-group'>
-    <input value={inputValue} oninput={(e) => updateInput(e.target.value)} />
-    <button onclick={addTodo}>Add</button>
-    <button class='secondary' onclick={fetchRandom} disabled={isLoading}>🎲</button>
+<div key="inputs" class="input-group">
+  <input value={inputValue} oninput={(e) => updateInput(e.target.value)} />
+  <button onclick={addTodo}>Add</button>
+  <button class="secondary" onclick={fetchRandom} disabled={isLoading}>
+    🎲
+  </button>
 </div>
 
-{errorMessage && <div key='error' class='error'>{errorMessage}</div>}
+{errorMessage && (
+  <div key="error" class="error">
+    {errorMessage}
+  </div>
+)}
 
 <div>
-    {items.map((item)=><div key={item.id} class={`card ${item.done ? 'done' : ''}`} onclick={()=>toggle(item.id)}>
-    {item.text}
-    </div>)}
+  {items.map((item) => (
+    <div
+      key={item.id}
+      class={`card ${item.done ? 'done' : ''}`}
+      onclick={() => toggle(item.id)}
+    >
+      {item.text}
+    </div>
+  ))}
 </div>
-   
-{isLoading && <div key='loader' class='loading'>Fetching task...</div>}
+
+{isLoading && (
+  <div key="loader" class="loading">
+    Fetching task...
+  </div>
+)}
 
 <style>
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 400px;
   margin: 40px auto;
   padding: 20px;

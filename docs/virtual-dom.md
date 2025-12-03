@@ -365,12 +365,12 @@ items.map((item) => h('li', { key: item.id }, item.text))
 
 ```javascript
 // BAD: Mutating props object
-const props = { class: "btn" };
-props.class = "btn-primary"; // Don't do this!
+const props = { class: 'btn' }
+props.class = 'btn-primary' // Don't do this!
 
 // GOOD: Create new object
-const props = { class: "btn" };
-const newProps = { ...props, class: "btn-primary" };
+const props = { class: 'btn' }
+const newProps = { ...props, class: 'btn-primary' }
 ```
 
 ## Next Steps
