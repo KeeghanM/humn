@@ -115,9 +115,17 @@ export function processChildren(nodes, traverseFn) {
                 // Found the closer!
                 // Add the part before the closer to buffer
                 buffer += nextText.slice(0, localCursor - 1)
+                const remainder = nextText.slice(localCursor)
+                if (remainder) {
+                  // 1. Mutate the current node to contain only the unprocessed text
+                  nextNode.rawText = remainder
 
-                // Note: We ignore the rest of this text node for simplicity in this loop.
-                // In a perfect compiler we'd need to re-process the remainder.
+                  // 2. Decrement the main loop index.
+                  // When the `break` happens, the outer loop will do `i++`,
+                  // bringing us back to THIS node, allowing it to be processed
+                  // from the start as a fresh text node.
+                  i--
+                }
                 break
               } else {
                 buffer += nextText

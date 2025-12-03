@@ -59,7 +59,7 @@ export default config
 
 Here's a simple "Hello, World!" example to get you started:
 
-```javascript
+```html
 // App.humn
 <script>
   const message = 'Hello, World!'

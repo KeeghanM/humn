@@ -1,4 +1,4 @@
-# Humn (/ˈhjuː.mən/)
+# ![Humn Logo](./packages/humn-vscode/icons/humn-dark.svg) Humn (/ˈhjuː.mən/)
 
 [![NPM version](https://img.shields.io/npm/v/humn.svg)](https://www.npmjs.com/package/humn)
 
