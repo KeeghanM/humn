@@ -7,48 +7,118 @@ on:
 permissions:
   contents: write
   id-token: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  release-core:
-    name: Release Core
+  # Release Plugins in Parallel
+  release-plugins:
+    name: Release Plugins
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ['packages/vite-plugin-humn', 'packages/prettier-plugin-humn']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Check if files in this specific package folder have changed
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - '${{ matrix.package }}/**'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install latest npm
-        run: npm install -g npm@latest
-
       - name: Install dependencies
         run: npm install
 
-      - name: Test
-        run: npm run qa:test
+      # Run tests ONLY if changes are detected (saves time)
+      - name: Test ${{ matrix.package }}
+        if: steps.filter.outputs.src == 'true'
+        run: npm run qa:test -w ${{ matrix.package }}
 
-      - name: Release
+      # Publish ONLY if changes detected AND tests passed
+      - name: Release ${{ matrix.package }}
+        if: steps.filter.outputs.src == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          cd ${{ matrix.package }}
+          npx semantic-release
 
-  release-extension:
-    name: Release Extension
+  # Release Core
+  release-core:
+    name: Release Core
+    needs: release-plugins
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'packages/humn/**'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Build is required for Humn tests to run correctly
+      - name: Build Humn
+        if: steps.filter.outputs.src == 'true'
+        run: npm run build -w packages/humn
+
+      - name: Test Humn
+        if: steps.filter.outputs.src == 'true'
+        run: npm run qa:test -w packages/humn
+
+      - name: Release Humn
+        if: steps.filter.outputs.src == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd packages/humn
+          npx semantic-release
+
+  # Release Extension
+  release-extension:
+    name: Release Extension
+    needs: release-core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'packages/humn-vscode/**'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -57,14 +127,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm install -g @vscode/vsce
-          cd packages/humn-vscode
           npm install
+          npm install -g @vscode/vsce
 
-      - name: Test
-        run: npm run qa:test
+      - name: Test Extension
+        if: steps.filter.outputs.src == 'true'
+        run: npm run qa:test -w packages/humn-vscode
 
       - name: Release Extension
+        if: steps.filter.outputs.src == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
