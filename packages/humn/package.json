@@ -36,15 +36,9 @@
     "build": "vite build",
     "dev": "vite --port 3000 --open /playground/",
     "git-diff": "git log origin/main..HEAD --pretty=format:'%ad:: %s' > git-diff.txt && echo '\n----------\n' >> git-diff.txt && git diff origin/main...HEAD --color ':!*.lock' >> git-diff.txt",
-    "prepare": "husky",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest watch"
-  },
-  "lint-staged": {
-    "**/*": [
-      "npx prettier . --write"
-    ]
+    "qa:test": "vitest run",
+    "qa:test:watch": "vitest watch"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
