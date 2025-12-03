@@ -1,7 +1,6 @@
 <script>
   import { todoStore } from './todo-store.js'
-  const item = props
-  console.log({ item, props })
+  const { item } = props
   const { toggle } = todoStore.synapses
 </script>
 

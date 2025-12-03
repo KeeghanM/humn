@@ -1,6 +1,6 @@
 <script>
   import { todoStore } from './todo-store.js'
-  import ToDoItem from './item.humn'
+  import TodoItem from './item.humn'
 
   const { items, inputValue, errorMessage, isLoading } = todoStore.memory
   const { addTodo, updateInput, fetchRandom } = todoStore.synapses
@@ -21,7 +21,11 @@
   </div>
 )}
 
-<div>{items.map((item) => ToDoItem({ item }))}</div>
+<div>
+  {items.map((item) => (
+    <TodoItem item={item} />
+  ))}
+</div>
 
 {isLoading && (
   <div key="loader" class="loading">

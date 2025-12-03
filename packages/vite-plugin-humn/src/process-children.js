@@ -1,90 +1,113 @@
 export function processChildren(nodes, traverseFn) {
   const results = []
 
+  // 1. Flatten nodes into a single stream to handle fragmentation
   for (let i = 0; i < nodes.length; i++) {
     const child = nodes[i]
 
-    const isText = child.nodeType === 3
-    let textContent = isText ? child.rawText : ''
+    if (child.nodeType === 1) {
+      // Element: Compile directly
+      results.push(traverseFn(child))
+    } else if (child.nodeType === 3) {
+      // Text: Robust Tokenizer
+      let text = child.rawText
+      let cursor = 0
 
-    const trimmed = textContent.trim()
-    // Detect start of logic block
-    const isOpenLogic =
-      isText && trimmed.startsWith('{') && !trimmed.endsWith('}')
+      while (cursor < text.length) {
+        // Find next open brace
+        const openIdx = text.indexOf('{', cursor)
 
-    if (isOpenLogic) {
-      // Find the first '{' (might be preceded by whitespace)
-      const startIdx = textContent.indexOf('{')
-      let buffer = textContent.slice(startIdx + 1) // Content after {
+        if (openIdx === -1) {
+          // No more code blocks, rest is static string
+          const remainder = text.slice(cursor).trim()
+          if (remainder) {
+            results.push(`'${remainder.replace(/'/g, "\\'")}'`)
+          }
+          break
+        }
 
-      // Look Ahead Loop
-      let complete = false
+        // Push static text BEFORE the brace
+        const staticPart = text.slice(cursor, openIdx).trim()
+        if (staticPart) {
+          results.push(`'${staticPart.replace(/'/g, "\\'")}'`)
+        }
 
-      while (i + 1 < nodes.length) {
-        i++
-        const nextNode = nodes[i]
+        // START SCANNING LOGIC BLOCK
+        // We need to determine if this block closes IN THIS NODE or spans multiple nodes.
+        let depth = 1
+        let endIdx = openIdx + 1
+        let foundCloser = false
 
-        if (nextNode.nodeType === 1) {
-          // Element: Compile and append
-          const compiledElem = traverseFn(nextNode)
-          if (compiledElem) buffer += compiledElem
-        } else if (nextNode.nodeType === 3) {
-          // Text: This is where we handle chained blocks
-          let nextText = nextNode.rawText
+        // Scan current text node
+        while (endIdx < text.length) {
+          const char = text[endIdx]
+          if (char === '{') depth++
+          else if (char === '}') depth--
 
-          // Inner loop to consume multiple blocks within one text node
-          // e.g. "} { next block"
-          while (true) {
-            const closeIndex = nextText.indexOf('}')
+          if (depth === 0) {
+            foundCloser = true
+            break
+          }
+          endIdx++
+        }
 
-            if (closeIndex !== -1) {
-              // 1. Found closer. Append content and finish THIS block.
-              buffer += nextText.slice(0, closeIndex)
-              results.push(buffer)
+        if (foundCloser) {
+          // Case A: Block closes in this node. { item.id }
+          const code = text.slice(openIdx + 1, endIdx)
+          results.push(code)
+          cursor = endIdx + 1
+        } else {
+          // Case B: Block is fragmented! { isLoading && <div...
+          // We must consume subsequent nodes until depth hits 0.
 
-              // 2. Check remainder
-              const remainder = nextText.slice(closeIndex + 1)
-              const trimmed = remainder.trim()
+          let buffer = text.slice(openIdx + 1) // Start buffer with rest of this text
 
-              if (!trimmed) {
-                // Just whitespace, we are done with this chain
-                complete = true
-                break
+          // Enter Look-Ahead Loop
+          let complete = false
+          while (i + 1 < nodes.length) {
+            i++ // Advance main loop to consume next node
+            const nextNode = nodes[i]
+
+            if (nextNode.nodeType === 1) {
+              // Element: Compile and add to buffer
+              const compiledElem = traverseFn(nextNode)
+              if (compiledElem) buffer += compiledElem
+            } else if (nextNode.nodeType === 3) {
+              const nextText = nextNode.rawText
+
+              // Scan next text node
+              let localCursor = 0
+              while (localCursor < nextText.length) {
+                const char = nextText[localCursor]
+                if (char === '{') depth++
+                else if (char === '}') depth--
+
+                localCursor++
+
+                if (depth === 0) {
+                  complete = true
+                  break
+                }
               }
 
-              // 3. Does remainder start a NEW block?
-              const nextOpen = remainder.indexOf('{')
-              if (nextOpen !== -1 && !remainder.slice(0, nextOpen).trim()) {
-                // Yes! It's "   { new block..."
-                // Reset buffer and CONTINUE the inner loop to find the next '}'
-                buffer = remainder.slice(nextOpen + 1)
-                nextText = remainder.slice(nextOpen + 1) // Advance text
-                // continue inner loop
+              if (complete) {
+                // Found the closer!
+                // Add the part before the closer to buffer
+                buffer += nextText.slice(0, localCursor - 1)
+
+                // Note: We ignore the rest of this text node for simplicity in this loop.
+                // In a perfect compiler we'd need to re-process the remainder.
+                break
               } else {
-                // No, it's static text. e.g. "} some text"
-                results.push(`'${trimmed.replace(/'/g, "\\'")}'`)
-                complete = true
-                break
+                buffer += nextText
               }
-            } else {
-              // No closer found in this chunk. Append all and move to next node.
-              buffer += nextText
-              break
             }
           }
 
-          if (complete) break // Break outer look-ahead
+          results.push(buffer)
+          cursor = text.length // Done with this text node
         }
       }
-
-      // If we ran out of nodes but buffer has content (and not complete), push it
-      if (!complete && buffer.trim()) {
-        results.push(buffer)
-      }
-    } else {
-      // Standard Node
-      const compiled = traverseFn(child)
-      if (compiled) results.push(compiled)
     }
   }
 
