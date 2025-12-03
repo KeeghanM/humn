@@ -10,6 +10,6 @@
     "rootDir": "./src",
     "strict": false // Set to true if you want stricter type checking later
   },
-  "include": ["src"],
+  "include": ["./src"],
   "exclude": ["**/*/__tests__"]
 }

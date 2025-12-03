@@ -9,8 +9,8 @@ permissions:
   id-token: write
 
 jobs:
-  release:
-    name: Release
+  release-core:
+    name: Release Core
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,3 +32,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+  release-extension:
+    name: Release Extension
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install Dependencies
+        run: |
+          npm install -g @vscode/vsce
+          cd packages/humn-vscode
+          npm install
+
+      - name: Release Extension
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          cd packages/humn-vscode
+      - name: Install Dependencies
+        run: |
+          npm install -g @vscode/vsce
+          cd packages/humn-vscode
+          npm install
+
+      - name: Release Extension
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          cd packages/humn-vscode
+          npx semantic-release

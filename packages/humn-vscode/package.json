@@ -1,0 +1,52 @@
+{
+  "name": "humn-vscode",
+  "displayName": "Humn Language Support",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KeeghanM/humn.git"
+  },
+  "license": "MIT",
+  "publisher": "HumanSideOfCode",
+  "description": "Syntax highlighting and language support for the Humn language",
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "grammars": [
+      {
+        "language": "humn",
+        "scopeName": "source.humn",
+        "path": "./syntaxes/humn.tmLanguage.json",
+        "embeddedLanguages": {
+          "text.html.basic": "html",
+          "source.js": "javascript",
+          "source.css": "css"
+        }
+      }
+    ],
+    "languages": [
+      {
+        "id": "humn",
+        "aliases": [
+          "Humn",
+          "humn"
+        ],
+        "extensions": [
+          ".humn"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/humn-light.svg",
+          "dark": "./icons/humn-dark.svg"
+        }
+      }
+    ]
+  },
+  "devDependencies": {
+    "semantic-release-vsce": "^6.0.18"
+  },
+  "engines": {
+    "vscode": "^1.70.0"
+  }
+}

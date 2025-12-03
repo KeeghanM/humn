@@ -1,4 +1,4 @@
-import { Cortex, persist } from '../src'
+import { Cortex, persist } from '../src/index.js'
 
 export const todoStore = new Cortex({
   memory: {
@@ -47,7 +47,7 @@ export const todoStore = new Cortex({
           state.items.push({
             id: Date.now(),
             text: data.todo,
-            done: data.completed,
+            done: false,
           })
         })
       } catch {

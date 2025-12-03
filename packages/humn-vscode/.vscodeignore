@@ -1,0 +1,10 @@
+# Ignore source control and build tools
+.git
+.gitignore
+.vscode
+.github
+node_modules
+**/*.map
+
+# Ignore the monorepo root references if any exist
+../

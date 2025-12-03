@@ -77,11 +77,20 @@ mount(document.getElementById('root'), App);
 - [x] **Reconciliation:** Keyed Diffing Algorithm.
 - [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
 - [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-- [ ] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
-- [ ] **Humn Compiler:** `.humn` files for Svelte-like syntax.
+- [x] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
+- [x] **Humn Compiler:** `.humn` files for Svelte-like syntax.
 - [ ] **Async Components:** Handling `Promise` rendering (Suspense).
 - [ ] **DevTools:** Browser extension to inspect the Cortex Memory.
 
 ## Contributing
 
 We are building a library for humans, by humans. Please read CODING_STANDARDS.md before pushing code.
+
+## Packages
+
+This monorepo contains the following packages:
+
+- [`humn`](/packages/humn): The core Humn library.
+- [`humn-vscode`](/packages/humn-vscode): VSCode language support for `.humn` files.
+- [`prettier-plugin-humn`](/packages/prettier-plugin-humn): Prettier plugin for formatting `.humn` files.
+- [`vite-plugin-humn`](/packages/vite-plugin-humn): Vite plugin for compiling `.humn` files.

@@ -8,7 +8,7 @@ import { setInstance } from './observer.js'
 
 /**
  * Checks if a list of children contains keys.
- * @param {Array<import("./h").VNode>} children - The list of VNodes.
+ * @param {Array<import("./h.js").VNode>} children - The list of VNodes.
  * @returns {boolean} True if keys are present.
  */
 export function hasKeys(children) {
@@ -17,7 +17,7 @@ export function hasKeys(children) {
 
 /**
  * Creates a real DOM element from a virtual node.
- * @param {import("./h").VNode | string | number} vNode - The virtual node.
+ * @param {import("./h.js").VNode | string | number} vNode - The virtual node.
  * @returns {Text | HTMLElement} The created DOM element.
  */
 function createElement(vNode) {
@@ -109,8 +109,8 @@ function patchProps(el, newProps = {}, oldProps = {}) {
 /**
  * Reconciles the children of a node, handling both simple lists and keyed reordering.
  * @param {HTMLElement} parent - The parent DOM element.
- * @param {Array<import("./h").VNode>} newChildren - The new list of children.
- * @param {Array<import("./h").VNode>} oldChildren - The old list of children.
+ * @param {Array<import("./h.js").VNode>} newChildren - The new list of children.
+ * @param {Array<import("./h.js").VNode>} oldChildren - The old list of children.
  */
 function reconcileChildren(parent, newChildren, oldChildren) {
   const isKeyed = hasKeys(newChildren) || hasKeys(oldChildren)
@@ -185,8 +185,8 @@ function reconcileChildren(parent, newChildren, oldChildren) {
 
 /**
  * Executes a Functional Component, tracks hooks, and returns the VNode.
- * @param {import("./h").VNode} vNode - The component vNode.
- * @returns {import("./h").VNode} The rendered child vNode.
+ * @param {import("./h.js").VNode} vNode - The component vNode.
+ * @returns {import("./h.js").VNode} The rendered child vNode.
  */
 function renderComponent(vNode) {
   track('componentsRendered')
@@ -215,7 +215,7 @@ function renderComponent(vNode) {
 
 /**
  * Helper to recursively run cleanup hooks when a tree is removed.
- * @param {import("./h").VNode} vNode - The vNode to unmount.
+ * @param {import("./h.js").VNode} vNode - The vNode to unmount.
  */
 function runUnmount(vNode) {
   if (!vNode) return
@@ -239,8 +239,8 @@ function runUnmount(vNode) {
 /**
  * The main diffing function. Compares V-DOM trees and updates the real DOM.
  * @param {HTMLElement} parent - The parent DOM element.
- * @param {import("./h").VNode | string | number} newVNode - The new virtual node.
- * @param {import("./h").VNode | string | number} oldVNode - The old virtual node.
+ * @param {import("./h.js").VNode | string | number} newVNode - The new virtual node.
+ * @param {import("./h.js").VNode | string | number} oldVNode - The old virtual node.
  * @param {number} [index=0] - The index of the child node (used for simple diffing).
  */
 export function patch(parent, newVNode, oldVNode, index = 0) {

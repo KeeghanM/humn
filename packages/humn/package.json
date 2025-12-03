@@ -1,0 +1,64 @@
+{
+  "name": "humn",
+  "version": "1.1.0",
+  "description": "A minimal, human-centric reactive UI library with built in state management.",
+  "keywords": [
+    "reactive",
+    "ui",
+    "state",
+    "store",
+    "cortex"
+  ],
+  "homepage": "https://www.npmjs.com/package/humn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KeeghanM/humn.git"
+  },
+  "license": "MIT",
+  "author": "Keeghan McGarry",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/humn.js",
+      "require": "./dist/humn.umd.js"
+    }
+  },
+  "main": "./dist/humn.umd.js",
+  "module": "./dist/humn.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --port 3000 --open /playground/",
+    "git-diff": "git log origin/main..HEAD --pretty=format:'%ad:: %s' > git-diff.txt && echo '\n----------\n' >> git-diff.txt && git diff origin/main...HEAD --color ':!*.lock' >> git-diff.txt",
+    "prepublishOnly": "npm run build",
+    "qa:test": "vitest run",
+    "qa:test:watch": "vitest watch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/npm": "^13.1.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/node": "^24.10.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "husky": "^9.1.7",
+    "jsdom": "^27.2.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.3",
+    "semantic-release": "^25.0.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-humn": "*",
+    "vitest": "^4.0.15"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
