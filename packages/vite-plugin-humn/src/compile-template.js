@@ -30,7 +30,7 @@ export function compileTemplate(htmlString) {
         if (masks.has(val)) {
           propsParts.push(`${key}: ${masks.get(val)}`)
         } else {
-          propsParts.push(`${key}: '${val}'`)
+          propsParts.push(`${key}: '${val.replace(/'/g, "\\'")}'`)
         }
       })
 
