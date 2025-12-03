@@ -9,7 +9,9 @@
   "license": "MIT",
   "publisher": "HumanSideOfCode",
   "description": "Syntax highlighting and language support for the Humn language",
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages"
+  ],
   "contributes": {
     "grammars": [
       {
