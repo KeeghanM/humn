@@ -1,87 +1,70 @@
-# Humn (/ˈhjuː.mən/)
+# humn
 
-[![NPM version](https://img.shields.io/npm/v/humn.svg)](https://www.npmjs.com/package/humn)
+Humn is a minimal, human-centric reactive UI library with built-in state management. It's designed to be simple, intuitive, and powerful.
 
-> **The organic, human-centric UI library for the modern web.**
-
-**Humn** is a complete, reactive frontend library with built in state management designed to replace the likes of React/Svelte/Solid AND Zustand/Kea/Redux in your stack.
-
-It rejects the complexity of modern frameworks **no stale closures, no "Hook Rules", and no heavy compilers**. Humn decouples your application's **Cortex** (Logic/State) from its **Body** (View), creating applications that are easy to reason about, simple to test, and naturally reactive.
-
-## Core Features
-
-- **🧬 Biological Architecture:** A strict separation of concerns. Your data lives in the `Cortex`; your UI is just a dumb projection of that memory.
-- **⚡ Zero-Build Reactive View:** Write standard JavaScript. Components are just functions that return virtual DOM nodes. No compilation required (unless you want it).
-- **🧠 Built-in Global State:** No need for Redux or Zustand. The `Cortex` is built-in, handling deep updates, async actions, and side effects out of the box.
-- **mutative syntax, immutable updates:** Write `state.count++`. We handle the immutability and render triggers for you.
-- **🎨 Scoped Styles:** Encapsulated CSS that lives alongside your components.
+This package is the core `humn` library.
 
 ## Installation
 
 ```bash
 npm install humn
-# or yarn add humn
-# or pnpm install humn
+# or
+yarn add humn
 ```
 
-## The "Hello World" (That actually scales)
+## Quick Start
 
-Unlike other libraries, Humn encourages separating logic from the start.
+Here's a simple counter example to get you started.
 
-### The Cortex (Logic)
+### 1. Create a Cortex (Store)
 
-```JavaScript
+The `Cortex` holds your application's state (`memory`) and the actions that can modify it (`synapses`).
 
-import { Cortex } from 'humn';
+```javascript
+// store.js
+import { Cortex } from 'humn'
 
-export const appStore = new Cortex({
+export const counterStore = new Cortex({
   memory: {
     count: 0,
-    user: 'Guest'
   },
-  synapses: (set, get) => ({
-    increment: () => set(state => { state.count++ }),
-    login: (name) => set({ user: name })
-  })
-});
+  synapses: (set) => ({
+    increment: () =>
+      set((state) => {
+        state.count++
+      }),
+    decrement: () =>
+      set((state) => {
+        state.count--
+      }),
+  }),
+})
 ```
 
-### The View (UI)
+### 2. Create a Component
 
-```JavaScript
+Components are just JavaScript functions that return virtual DOM nodes using the `h` function. They automatically re-render when the `Cortex` memory they use changes.
 
-import { h, mount } from 'humn-js';
-import { appStore } from './store';
+```javascript
+// App.js
+import { h, mount } from 'humn'
+
+import { counterStore } from './store'
 
 const App = () => {
-  // 1. Read Memory (Auto-subscribes)
-  const { count, user } = appStore.memory;
-  const { increment } = appStore.synapses;
+  const { count } = counterStore.memory
+  const { increment, decrement } = counterStore.synapses
 
-  // 2. Return V-DOM
-  return h('div', { class: 'container' }, [
-    h('h1', {}, `Hello, ${user}`),
-    h('p', {}, `Vital Signs: ${count}`),
-    h('button', { onclick: increment }, 'Pulse')
-  ]);
-};
+  return h('div', {}, [
+    h('h1', {}, `Count: ${count}`),
+    h('button', { onclick: increment }, '+'),
+    h('button', { onclick: decrement }, '-'),
+  ])
+}
 
-// 3. Mount
-mount(document.getElementById('root'), App);
+mount(document.getElementById('root'), App)
 ```
 
-## Roadmap
+## Learn More
 
-- [x] **Cortex:** State management with dependency tracking.
-- [x] **Virtual DOM:** Lightweight `h()` function.
-- [x] **Reconciliation:** Keyed Diffing Algorithm.
-- [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
-- [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-- [x] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
-- [ ] **Humn Compiler:** `.humn` files for Svelte-like syntax.
-- [ ] **Async Components:** Handling `Promise` rendering (Suspense).
-- [ ] **DevTools:** Browser extension to inspect the Cortex Memory.
-
-## Contributing
-
-We are building a library for humans, by humans. Please read CODING_STANDARDS.md before pushing code.
+For a complete guide, including information on lifecycle hooks, scoped CSS, `.humn` files, and more, please see the [**full documentation in the main project README**](https://github.com/KeeghanM/humn).

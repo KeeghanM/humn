@@ -4,7 +4,7 @@
   "main": "index.js",
   "description": "Prettier plugin for the Humn language",
   "peerDependencies": {
-    "prettier": "^3.0.0"
+    "prettier": "^3.7.0"
   },
   "license": "MIT"
 }

@@ -15,8 +15,10 @@ export function compileTemplate(htmlString) {
       if (text.startsWith('{') && text.endsWith('}')) return text.slice(1, -1)
 
       if (text.includes('{') && text.includes('}')) {
-        const jsTemplate = text.replace(/\{/g, '${').replace(/\}/g, '}')
-        return '`' + jsTemplate + '`'
+        const jsTemplate = text.replace(/\{([^}]*)\}/g, '${$1}')
+        if (jsTemplate !== text) {
+          return '`' + jsTemplate + '`'
+        }
       }
 
       return `'${text.replace(/'/g, "\\'")}'`

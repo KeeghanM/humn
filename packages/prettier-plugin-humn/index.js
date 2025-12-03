@@ -1,6 +1,6 @@
-import { parsers as babelParsers } from 'prettier/parser-babel'
-import { parsers as htmlParsers } from 'prettier/parser-html'
-import { parsers as cssParsers } from 'prettier/parser-postcss'
+import { doc } from 'prettier';
+
+const { group, hardline, indent, join } = doc.builders;
 
 export const languages = [
   {
@@ -8,80 +8,77 @@ export const languages = [
     extensions: ['.humn'],
     parsers: ['humn-parser'],
   },
-]
+];
 
 export const parsers = {
   'humn-parser': {
     astFormat: 'humn-ast',
-    parse: (text, options) => {
-      // 1. Reuse your own compiler logic here!
-      // You already wrote regexes in `compiler/index.js` to split the file.
-      const scriptMatch = text.match(/<script>([\s\S]*?)<\/script>/)
-      const styleMatch = text.match(/<style>([\s\S]*?)<\/style>/)
+    parse: (text) => {
+      const scriptMatch = text.match(/<script>([\s\S]*?)<\/script>/);
+      const styleMatch = text.match(/<style>([\s\S]*?)<\/style>/);
 
-      // 2. Extract content
       return {
         type: 'root',
-        script: scriptMatch ? scriptMatch[1] : null,
-        style: styleMatch ? styleMatch[1] : null,
-        // Remove script/style tags to get just the template for processing
+        script: scriptMatch ? scriptMatch[1] : '',
+        style: styleMatch ? styleMatch[1] : '',
         template: text
           .replace(/<script>[\s\S]*?<\/script>/, '')
-          .replace(/<style>[\s\S]*?<\/style>/, '')
-          .trim(),
-      }
+          .replace(/<style>[\s\S]*?<\/style>/, ''),
+      };
     },
     locStart: () => 0,
     locEnd: () => 0,
   },
-}
+};
 
 export const printers = {
   'humn-ast': {
-    print: (path, options, print) => {
-      const node = path.getValue()
+    embed: (path, options) => {
+      const node = path.getValue();
 
-      const parts = []
+      return async (textToDoc) => {
+        const parts = [];
 
-      // 1. Format Script (JS)
-      if (node.script) {
-        const formattedScript = prettier
-          .format(node.script, {
-            ...options,
+        if (node.script) {
+          const formattedScript = await textToDoc(node.script, {
             parser: 'babel',
-          })
-          .trim()
-        parts.push(`<script>\n${formattedScript}\n</script>`)
-      }
+          });
+          parts.push(
+            group([
+              '<script>',
+              hardline,
+              indent([hardline, formattedScript]),
+              hardline,
+              '</script>',
+            ])
+          );
+        }
 
-      // 2. Format Template (HTML with Expressions)
-      if (node.template) {
-        // TRICKY BIT: To format HTML with { js } inside, you can either:
-        // A) Use 'prettier/parser-html' directly if your {} usage is "safe" enough
-        // B) Temporarily replace { logic } with UUIDs, format HTML, then swap back.
-
-        // For MVP, simple HTML formatting often works:
-        const formattedHTML = prettier
-          .format(node.template, {
-            ...options,
+        if (node.template) {
+          const formattedTemplate = await textToDoc(node.template, {
             parser: 'html',
-          })
-          .trim()
-        parts.push(formattedHTML)
-      }
+          });
+          parts.push(formattedTemplate);
+        }
 
-      // 3. Format Style (CSS)
-      if (node.style) {
-        const formattedStyle = prettier
-          .format(node.style, {
-            ...options,
+        if (node.style) {
+          const formattedStyle = await textToDoc(node.style, {
             parser: 'css',
-          })
-          .trim()
-        parts.push(`<style>\n${formattedStyle}\n</style>`)
-      }
+          });
+          parts.push(
+            group([
+              '<style>',
+              hardline,
+              indent([hardline, formattedStyle]),
+              hardline,
+              '</style>',
+            ])
+          );
+        }
 
-      return parts.join('\n\n')
+        return join([hardline, hardline], parts);
+      };
     },
+    print: (path) => path.getValue(),
   },
-}
+};

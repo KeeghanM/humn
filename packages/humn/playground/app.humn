@@ -7,7 +7,7 @@
 
 <h1>Humn Todo</h1>
 <div key='inputs' class='input-group'>
-    <input value={inputValue} />
+    <input value={inputValue} oninput={(e) => updateInput(e.target.value)} />
     <button onclick={addTodo}>Add</button>
     <button class='secondary' onclick={fetchRandom} disabled={isLoading}>🎲</button>
 </div>

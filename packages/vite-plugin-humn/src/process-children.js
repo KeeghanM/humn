@@ -7,16 +7,10 @@ export function processChildren(nodes, traverseFn) {
     const isText = child.nodeType === 3
     let textContent = isText ? child.rawText : ''
 
-    // Detect start of logic block
-    const isText = child.nodeType === 3
-    let textContent = isText ? child.rawText : ''
-
     const trimmed = textContent.trim()
     // Detect start of logic block
     const isOpenLogic =
-      isText &&
-      trimmed.startsWith('{') &&
-      !trimmed.endsWith('}')
+      isText && trimmed.startsWith('{') && !trimmed.endsWith('}')
 
     if (isOpenLogic) {
       // Find the first '{' (might be preceded by whitespace)
