@@ -7,20 +7,20 @@ Mounts a component to a target DOM element.
 - `target`: The DOM element to mount the component to.
 - `Component`: The root component to render.
 
-## `h(tag, props, children)`
-
-Creates a virtual DOM node.
-
-- `tag`: The tag name of the element or a component function.
-- `props`: An object of properties to apply to the element.
-- `children`: An array of child nodes.
-
 ## `Cortex({ memory, synapses })`
 
 Creates a `Cortex` instance for state management.
 
 - `memory`: The initial state of your application.
 - `synapses`: A function that receives `set` and `get` functions to interact with the state.
+
+### `persist(initial, config)`
+
+Marks a section of the state for persistence in localStorage.
+
+- `initial`: The initial value of the state.
+- `config`: (Optional) The configuration for persistence.
+  - `key`: A custom key to use in `localStorage`.
 
 ## `onMount(callback)`
 
@@ -33,15 +33,3 @@ Registers a callback to be called after a component is mounted.
 Registers a callback to be called when a component is unmounted.
 
 - `callback`: The function to be called.
-
-## `persist(initial, config)`
-
-Marks a section of the state for persistence in localStorage.
-
-- `initial`: The initial value of the state.
-- `config`: (Optional) The configuration for persistence.
-  - `key`: A custom key to use in `localStorage`.
-
-## `css`
-
-A template literal tag for writing scoped CSS.

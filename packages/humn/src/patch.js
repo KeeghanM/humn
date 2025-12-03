@@ -3,8 +3,8 @@
  * including support for Keyed Diffing.
  * @module patch
  */
-import { setInstance } from './observer.js'
 import { track } from './metrics.js'
+import { setInstance } from './observer.js'
 
 /**
  * Checks if a list of children contains keys.
@@ -58,6 +58,10 @@ function createElement(vNode) {
  * @param {HTMLElement} el - The DOM element to update.
  * @param {object} [newProps={}] - The new properties.
  * @param {object} [oldProps={}] - The old properties.
+ *
+ * WHY: We check against the LIVE DOM value for inputs (value/checked) to prevent
+ * the "cursor jumping" bug. If we just blindly set the attribute, the browser
+ * might reset the cursor position to the end of the input.
  */
 function patchProps(el, newProps = {}, oldProps = {}) {
   if (!el) return
@@ -111,6 +115,12 @@ function patchProps(el, newProps = {}, oldProps = {}) {
  * @param {HTMLElement} parent - The parent DOM element.
  * @param {Array<import("./h.js").VNode>} newChildren - The new list of children.
  * @param {Array<import("./h.js").VNode>} oldChildren - The old list of children.
+ *
+ * WHY: This is the most complex part of the VDOM. We need to efficiently update
+ * a list of items. Without keys, we just update index-by-index, which is fast
+ * but causes issues if items are reordered (state gets mixed up).
+ * With keys, we can track items as they move around, preserving their state
+ * and minimizing DOM operations.
  */
 function reconcileChildren(parent, newChildren, oldChildren) {
   const isKeyed = hasKeys(newChildren) || hasKeys(oldChildren)
