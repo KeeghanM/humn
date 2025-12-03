@@ -1,8 +1,8 @@
+import humnCompiler from 'vite-plugin-humn'
 import terser from '@rollup/plugin-terser'
-import path from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-import humnCompiler from 'vite-plugin-humn'
+import path from 'path'
 
 const isProduction = process.env.NODE_ENV === 'production'
 

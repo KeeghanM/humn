@@ -1,7 +1,9 @@
 <script>
   import { todoStore } from './todo-store.js'
+  import TodoItem from './item.humn'
+
   const { items, inputValue, errorMessage, isLoading } = todoStore.memory
-  const { addTodo, toggle, updateInput, fetchRandom } = todoStore.synapses
+  const { addTodo, updateInput, fetchRandom } = todoStore.synapses
 </script>
 
 <h1>Humn Todo</h1>
@@ -21,13 +23,7 @@
 
 <div>
   {items.map((item) => (
-    <div
-      key={item.id}
-      class={`card ${item.done ? 'done' : ''}`}
-      onclick={() => toggle(item.id)}
-    >
-      {item.text}
-    </div>
+    <TodoItem item={item} />
   ))}
 </div>
 

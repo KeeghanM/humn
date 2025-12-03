@@ -3,6 +3,41 @@ import { parse } from 'node-html-parser'
 import { processChildren } from './process-children.js'
 import { protectAttributes } from './protect-attributes.js'
 
+/**
+ * Recovers the original case-sensitive tag name from the source string.
+ * This works around the parser normalizing everything to uppercase.
+ */
+function getRawTagName(node, htmlSource) {
+  if (!node.range) return node.tagName // Fallback
+
+  const [start] = node.range
+  // The node starts at '<'. The tag name starts at start + 1.
+  const tagStart = start + 1
+
+  let i = tagStart
+  // Scan until we hit whitespace, '>', or '/' (self-closing)
+  while (i < htmlSource.length) {
+    const char = htmlSource[i]
+    if (/\s|\/|>/.test(char)) {
+      break
+    }
+    i++
+  }
+
+  return htmlSource.slice(tagStart, i)
+}
+
+/**
+ * Checks if a tag name looks like a Component (starts with uppercase)
+ */
+function isComponent(tagName) {
+  const firstChar = tagName.charAt(0)
+  return (
+    firstChar === firstChar.toUpperCase() &&
+    firstChar !== firstChar.toLowerCase()
+  )
+}
+
 export function compileTemplate(htmlString) {
   const { html: safeHTML, masks } = protectAttributes(htmlString)
   const root = parse(safeHTML)
@@ -27,7 +62,10 @@ export function compileTemplate(htmlString) {
     }
 
     if (node.nodeType === 1) {
-      const tag = `'${node.tagName.toLowerCase()}'`
+      const rawTag = getRawTagName(node, safeHTML)
+      const isComp = isComponent(rawTag)
+      const tagOutput = isComp ? rawTag : `'${rawTag.toLowerCase()}'`
+
       const propsParts = []
 
       Object.entries(node.attributes).forEach(([key, val]) => {
@@ -41,7 +79,7 @@ export function compileTemplate(htmlString) {
       const propsString = `{ ${propsParts.join(', ')} }`
       const children = processChildren(node.childNodes, traverse)
 
-      return `h(${tag}, ${propsString}, [${children.join(', ')}])`
+      return `h(${tagOutput}, ${propsString}, [${children.join(', ')}])`
     }
     return null
   }

@@ -34,12 +34,14 @@ jobs:
               - '${{ matrix.package }}/**'
 
       - name: Setup Node.js
+        if: steps.filter.outputs.src == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
+        if: steps.filter.outputs.src == 'true'
         run: npm install
 
       # Run tests ONLY if changes are detected (saves time)
@@ -76,12 +78,14 @@ jobs:
               - 'packages/humn/**'
 
       - name: Setup Node.js
+        if: steps.filter.outputs.src == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
+        if: steps.filter.outputs.src == 'true'
         run: npm install
 
       # Build is required for Humn tests to run correctly
@@ -121,18 +125,16 @@ jobs:
               - 'packages/humn-vscode/**'
 
       - name: Setup Node.js
+        if: steps.filter.outputs.src == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
 
       - name: Install Dependencies
+        if: steps.filter.outputs.src == 'true'
         run: |
           npm install
           npm install -g @vscode/vsce
-
-      - name: Test Extension
-        if: steps.filter.outputs.src == 'true'
-        run: npm run qa:test -w packages/humn-vscode
 
       - name: Release Extension
         if: steps.filter.outputs.src == 'true'

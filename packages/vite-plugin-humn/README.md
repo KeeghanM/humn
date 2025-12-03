@@ -16,8 +16,8 @@ In your `vite.config.js` or `vite.config.ts` file, add the Humn plugin:
 
 ```javascript
 // vite.config.js
-import { defineConfig } from 'vite'
 import humn from 'vite-plugin-humn'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [humn()],

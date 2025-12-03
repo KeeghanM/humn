@@ -7,9 +7,10 @@ To create a `Cortex` instance, you need to provide an initial `memory` (state) a
 Here's an example of a simple counter:
 
 ```javascript
-import { Cortex, h, mount } from 'humn'
+// store.js
+import { Cortex } from 'humn'
 
-const counterStore = new Cortex({
+export const counterStore = new Cortex({
   memory: {
     count: 0,
   },
@@ -18,17 +19,30 @@ const counterStore = new Cortex({
     decrement: () => set((state) => ({ count: state.count - 1 })),
   }),
 })
+```
 
-const App = () => {
+```html
+<!-- App.humn -->
+<script>
+  import { counterStore } from './store.js'
+
   const { count } = counterStore.memory
   const { increment, decrement } = counterStore.synapses
+</script>
 
-  return h('div', {}, [
-    h('h1', {}, count),
-    h('button', { onclick: increment }, 'Increment'),
-    h('button', { onclick: decrement }, 'Decrement'),
-  ])
-}
+<div>
+  <h1>{count}</h1>
+  <button onclick="{increment}">Increment</button>
+  <button onclick="{decrement}">Decrement</button>
+</div>
+```
+
+To mount the app:
+
+```javascript
+// main.js
+import { mount } from 'humn'
+import App from './App.humn'
 
 mount(document.getElementById('app'), App)
 ```

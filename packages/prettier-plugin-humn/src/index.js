@@ -95,6 +95,8 @@ export const printers = {
 
       if (node.type === 'humn-template') {
         return async (textToDoc) => {
+          // We wrap the template in a fragment so Babel can parse it as JSX.
+          // Otherwise, multiple top-level elements would fail.
           const doc = await textToDoc(`<>${node.content}</>`, {
             parser: 'babel',
             semi: false,
@@ -109,6 +111,13 @@ export const printers = {
   },
 }
 
+/**
+ * Strips the `<>...</>` wrapper from the printed Doc.
+ *
+ * WHY: We added the fragment wrapper just to make Babel happy during parsing.
+ * Now we need to remove it so it doesn't appear in the final output.
+ * This is tricky because Prettier returns a complex Doc structure, not just a string.
+ */
 function stripFragmentWrapper(doc) {
   // Remove the wrapper strings immediately.
   // This guarantees that ;<> and </> will be gone, even if the unwrap fails.

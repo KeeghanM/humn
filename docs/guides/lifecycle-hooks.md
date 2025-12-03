@@ -8,10 +8,11 @@ The `onCleanup` hook is called when a component is unmounted from the DOM. You c
 
 Here's an example of how to use the lifecycle hooks:
 
-```javascript
-import { h, onCleanup, onMount } from 'humn'
+```html
+<!-- MyComponent.humn -->
+<script>
+  import { onMount, onCleanup } from 'humn'
 
-const MyComponent = () => {
   onMount(() => {
     console.log('Component mounted!')
   })
@@ -19,7 +20,7 @@ const MyComponent = () => {
   onCleanup(() => {
     console.log('Component unmounted!')
   })
+</script>
 
-  return h('p', {}, 'My component')
-}
+<p>My component</p>
 ```

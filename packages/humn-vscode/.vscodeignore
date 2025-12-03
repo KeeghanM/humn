@@ -6,5 +6,11 @@
 node_modules
 **/*.map
 
+# we only want to bundle  dist
+src/
+vite.config.js
+!dist/
+
 # Ignore the monorepo root references if any exist
 ../
+../../

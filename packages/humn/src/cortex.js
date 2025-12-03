@@ -1,5 +1,5 @@
-import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
+import { isDev } from './metrics.js'
 
 /**
  * @typedef {object} Synapses
@@ -17,6 +17,11 @@ import { getObserver } from './observer.js'
  * The Cortex class manages the state of the application.
  * This uses a Proxy for fine-grained reactivity, ensuring only those components
  * which use the updated value get re-rendered.
+ *
+ * WHY: We use Proxies instead of simple getters/setters because it allows us to
+ * detect access to nested properties dynamically without needing to declare
+ * dependencies upfront. This "magic" auto-subscription is what makes Humn's
+ * DX so clean.
  */
 export class Cortex {
   /**
@@ -104,6 +109,10 @@ export class Cortex {
   /**
    * Creates a Proxy that tracks which properties are being mutated.
    * Includes a GET trap to recursively proxy nested objects for deep mutation tracking.
+   *
+   * WHY: We need to know exactly which paths were changed so we can notify ONLY
+   * the components that care about those specific paths. If we just knew "something changed",
+   * we'd have to re-render the whole app (like Redux) or rely on manual optimization.
    */
   _createChangeTrackingProxy(obj, changedPaths, path = '') {
     return new Proxy(obj, {
@@ -157,6 +166,11 @@ export class Cortex {
 
   /**
    * Creates a Proxy that tracks which properties are accessed during render
+   *
+   * WHY: This is the other half of the magic. By tracking what a component READS
+   * during its render, we build a precise dependency graph. If a component reads
+   * `state.user.name`, it will only re-render when `state.user.name` changes,
+   * not when `state.count` changes.
    */
   _createAccessTrackingProxy(obj, accessedPaths, path = '') {
     if (typeof obj !== 'object' || obj === null) return obj

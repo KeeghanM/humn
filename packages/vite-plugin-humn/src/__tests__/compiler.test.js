@@ -69,15 +69,14 @@ describe('Humn Compiler', () => {
       const input = '<p>Hello {name}!</p>'
       const output = compileTemplate(input)
 
-      expect(normalize(output[0])).toBe("h('p', {}, [`Hello ${name}!`])")
+      expect(normalize(output[0])).toBe("h('p', {}, ['Hello ', name, '!'])")
     })
 
     it('should handle multiple interpolations in one node', () => {
       const input = '<p>{first} {last}</p>'
       const output = compileTemplate(input)
 
-      // This previously failed with [first} {last]
-      expect(normalize(output[0])).toBe("h('p', {}, [`${first} ${last}`])")
+      expect(normalize(output[0])).toBe("h('p', {}, [first, ' ', last])")
     })
   })
 

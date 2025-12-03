@@ -1,4 +1,4 @@
-# Humn (/ˈhjuː.mən/)
+# ![Humn Logo](./packages/humn-vscode/icons/humn-dark.svg) Humn (/ˈhjuː.mən/)
 
 [![NPM version](https://img.shields.io/npm/v/humn.svg)](https://www.npmjs.com/package/humn)
 
@@ -11,76 +11,78 @@ It rejects the complexity of modern frameworks **no stale closures, no "Hook Rul
 ## Core Features
 
 - **🧬 Biological Architecture:** A strict separation of concerns. Your data lives in the `Cortex`; your UI is just a dumb projection of that memory.
-- **⚡ Zero-Build Reactive View:** Write standard JavaScript. Components are just functions that return virtual DOM nodes. No compilation required (unless you want it).
 - **🧠 Built-in Global State:** No need for Redux or Zustand. The `Cortex` is built-in, handling deep updates, async actions, and side effects out of the box.
 - **mutative syntax, immutable updates:** Write `state.count++`. We handle the immutability and render triggers for you.
 - **🎨 Scoped Styles:** Encapsulated CSS that lives alongside your components.
+- **Logical File Structure:** The `.humn` files read like straightforward Javascript and HTML. If you can write those, you can write Humn.
 
 ## Installation
 
 ```bash
 npm install humn
-# or yarn add humn
-# or pnpm install humn
+npm install -D vite-plugin-humn
 ```
 
 ## The "Hello World" (That actually scales)
 
-Unlike other libraries, Humn encourages separating logic from the start.
+Humn uses Single File Components (`.humn`) to keep your logic, view, and styles together.
 
-### The Cortex (Logic)
+### 1. The Cortex (Logic)
 
-```JavaScript
-
-import { Cortex } from 'humn';
+```javascript
+// store.js
+import { Cortex } from 'humn'
 
 export const appStore = new Cortex({
   memory: {
     count: 0,
-    user: 'Guest'
+    user: 'Guest',
   },
   synapses: (set, get) => ({
-    increment: () => set(state => { state.count++ }),
-    login: (name) => set({ user: name })
-  })
-});
+    increment: () =>
+      set((state) => {
+        state.count++
+      }),
+    login: (name) => set({ user: name }),
+  }),
+})
 ```
 
-### The View (UI)
+### 2. The Body (Component)
 
-```JavaScript
+```html
+<!-- App.humn -->
+<script>
+  import { appStore } from './store'
 
-import { h, mount } from 'humn-js';
-import { appStore } from './store';
-
-const App = () => {
   // 1. Read Memory (Auto-subscribes)
-  const { count, user } = appStore.memory;
-  const { increment } = appStore.synapses;
+  const { count, user } = appStore.memory
+  const { increment } = appStore.synapses
+</script>
 
-  // 2. Return V-DOM
-  return h('div', { class: 'container' }, [
-    h('h1', {}, `Hello, ${user}`),
-    h('p', {}, `Vital Signs: ${count}`),
-    h('button', { onclick: increment }, 'Pulse')
-  ]);
-};
+<div class="container">
+  <h1>Hello, {user}</h1>
+  <p>Vital Signs: {count}</p>
+  <button onclick="{increment}">Pulse</button>
+</div>
 
-// 3. Mount
-mount(document.getElementById('root'), App);
+<style>
+  .container {
+    padding: 2rem;
+    text-align: center;
+  }
+</style>
 ```
 
-## Roadmap
+### 3. Mount
 
-- [x] **Cortex:** State management with dependency tracking.
-- [x] **Virtual DOM:** Lightweight `h()` function.
-- [x] **Reconciliation:** Keyed Diffing Algorithm.
-- [x] **Scoped Styles:** Runtime CSS-in-JS with `css` tag.
-- [x] **Lifecycle Hooks:** `onMount` and `onCleanup` for components (Needed for API calls/Timers).
-- [x] **Global Store Persist:** Middleware to save Cortex state to `localStorage`.
-- [x] **Humn Compiler:** `.humn` files for Svelte-like syntax.
-- [ ] **Async Components:** Handling `Promise` rendering (Suspense).
-- [ ] **DevTools:** Browser extension to inspect the Cortex Memory.
+```javascript
+// main.js
+import { mount } from 'humn'
+import App from './App.humn'
+
+mount(document.getElementById('root'), App)
+```
 
 ## Contributing
 

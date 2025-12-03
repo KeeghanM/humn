@@ -58,6 +58,10 @@ function createElement(vNode) {
  * @param {HTMLElement} el - The DOM element to update.
  * @param {object} [newProps={}] - The new properties.
  * @param {object} [oldProps={}] - The old properties.
+ *
+ * WHY: We check against the LIVE DOM value for inputs (value/checked) to prevent
+ * the "cursor jumping" bug. If we just blindly set the attribute, the browser
+ * might reset the cursor position to the end of the input.
  */
 function patchProps(el, newProps = {}, oldProps = {}) {
   if (!el) return
@@ -111,6 +115,12 @@ function patchProps(el, newProps = {}, oldProps = {}) {
  * @param {HTMLElement} parent - The parent DOM element.
  * @param {Array<import("./h.js").VNode>} newChildren - The new list of children.
  * @param {Array<import("./h.js").VNode>} oldChildren - The old list of children.
+ *
+ * WHY: This is the most complex part of the VDOM. We need to efficiently update
+ * a list of items. Without keys, we just update index-by-index, which is fast
+ * but causes issues if items are reordered (state gets mixed up).
+ * With keys, we can track items as they move around, preserving their state
+ * and minimizing DOM operations.
  */
 function reconcileChildren(parent, newChildren, oldChildren) {
   const isKeyed = hasKeys(newChildren) || hasKeys(oldChildren)
@@ -125,8 +135,19 @@ function reconcileChildren(parent, newChildren, oldChildren) {
     return
   }
 
-  // Keyed Diffing
-  // Map existing children by Key
+  reconcileKeyedChildren(parent, newChildren, oldChildren)
+}
+
+/**
+ * Handles the complex logic of reconciling keyed children.
+ *
+ * WHY: When keys are present, we can't just iterate by index. We need to map
+ * existing children by their key so we can find them even if they've moved.
+ * This allows us to re-use DOM nodes (preserving focus/state) instead of
+ * destroying and re-creating them.
+ */
+function reconcileKeyedChildren(parent, newChildren, oldChildren) {
+  // Map existing children by Key for O(1) lookup
   const keyed = {}
   oldChildren.forEach((child, i) => {
     const key = (child.props && child.props.key) != null ? child.props.key : i
@@ -136,13 +157,13 @@ function reconcileChildren(parent, newChildren, oldChildren) {
   newChildren.forEach((newChild, i) => {
     const key =
       (newChild.props && newChild.props.key) != null ? newChild.props.key : i
-    const oldItem = keyed[key]
+    const existingChildMatch = keyed[key]
 
-    if (oldItem) {
-      // A. MATCH FOUND
-      const oldVNode = oldItem.vNode
+    if (existingChildMatch) {
+      // A. MATCH FOUND - The item existed before
+      const oldVNode = existingChildMatch.vNode
 
-      // Update the node's content (Recursion)
+      // Update the node's content recursively
       patch(parent, newChild, oldVNode, i)
 
       // If the DOM node isn't in the right spot, move it.
@@ -161,7 +182,7 @@ function reconcileChildren(parent, newChildren, oldChildren) {
       // Remove from map so we know it was re-used
       delete keyed[key]
     } else {
-      // B. NO MATCH (New Item)
+      // B. NO MATCH - This is a new item
       const newEl = createElement(newChild)
       const domChildAtIndex = parent.childNodes[i]
 
@@ -246,6 +267,7 @@ function runUnmount(vNode) {
 export function patch(parent, newVNode, oldVNode, index = 0) {
   track('diffs')
 
+  // Case 1: Removal - The new node is null/undefined, so we remove the old one.
   if (newVNode === undefined || newVNode === null) {
     const el = oldVNode.el || parent.childNodes[index]
 
@@ -259,6 +281,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     return
   }
 
+  // Case 2: Component - If it's a function, we delegate to the component logic.
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
 
@@ -280,24 +303,13 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     return
   }
 
-  // Start - No old node? Create new.
+  // Case 3: Creation - No old node exists, so we create a new one.
   if (oldVNode === undefined || oldVNode === null) {
     parent.appendChild(createElement(newVNode))
     return
   }
 
-  // Removal - No new node? Remove old.
-  if (newVNode === undefined || newVNode === null) {
-    // Try to find the element on the VNode, or fallback to index
-    const el = oldVNode.el || parent.childNodes[index]
-    if (el) {
-      parent.removeChild(el)
-      track('elementsRemoved')
-    }
-    return
-  }
-
-  // Changed Type - (e.g. <div> becomes <span>) -> Replace whole node
+  // Case 4: Replacement - The node type changed (e.g. div -> span), so we replace it entirely.
   if (
     typeof newVNode !== typeof oldVNode ||
     (typeof newVNode !== 'string' && newVNode.tag !== oldVNode.tag)
@@ -310,7 +322,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     return
   }
 
-  // Text Update
+  // Case 5: Text Update - It's a text node, so we just update the text content.
   if (typeof newVNode === 'string' || typeof newVNode === 'number') {
     if (newVNode !== oldVNode) {
       const el = parent.childNodes[index]
@@ -325,7 +337,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     return
   }
 
-  // Same Tag - Update Props & Children
+  // Case 6: Update - Same tag, so we update props and recurse into children.
   const el = oldVNode.el || parent.childNodes[index]
 
   if (!el) return
