@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "main": "./src/index.js",
   "description": "Prettier plugin for the Humn language",
+  "type": "module",
   "peerDependencies": {
     "prettier": "^3.7.0"
   },

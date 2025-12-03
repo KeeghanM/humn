@@ -1,13 +1,18 @@
 {
   "name": "humn-vscode",
   "displayName": "Humn Language Support",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KeeghanM/humn.git"
   },
   "license": "MIT",
   "publisher": "HumanSideOfCode",
+  "type": "module",
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onLanguage:humn"
+  ],
   "description": "Syntax highlighting and language support for the Humn language",
   "categories": [
     "Programming Languages"
@@ -48,5 +53,9 @@
   },
   "engines": {
     "vscode": "^1.70.0"
+  },
+  "dependencies": {
+    "prettier-plugin-humn": "file:../prettier-plugin-humn",
+    "prettier": "^3.7.3"
   }
 }

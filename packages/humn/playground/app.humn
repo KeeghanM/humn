@@ -1,4 +1,5 @@
 <script>
+
   import { todoStore } from './todo-store.js'
 
   const { items, inputValue, errorMessage, isLoading } = todoStore.memory
@@ -23,7 +24,9 @@
 {isLoading && <div key='loader' class='loading'>Fetching task...</div>}
 
 <style>
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 400px;
   margin: 40px auto;
   padding: 20px;
