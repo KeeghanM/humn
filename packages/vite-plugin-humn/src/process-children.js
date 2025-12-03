@@ -1,3 +1,23 @@
+/**
+ * @file Processes child nodes for the Humn Vite plugin.
+ * @module process-children
+ */
+
+/**
+ * Processes a list of nodes, handling text fragmentation and code blocks.
+ *
+ * WHY: The HTML parser splits text nodes at arbitrary points, and doesn't understand
+ * our `{}` syntax. This means a code block like `{ user.name }` might be split across
+ * multiple text nodes if it contains spaces or newlines.
+ *
+ * We need to manually "tokenize" the text stream to correctly identify and reconstruct
+ * these code blocks, ensuring they are treated as JavaScript expressions rather than
+ * static strings.
+ *
+ * @param {Array<import("node-html-parser").Node>} nodes - The list of child nodes.
+ * @param {function} traverseFn - The function to compile element nodes.
+ * @returns {string[]} The list of compiled code strings.
+ */
 export function processChildren(nodes, traverseFn) {
   const results = []
 
@@ -59,11 +79,12 @@ export function processChildren(nodes, traverseFn) {
         } else {
           // Case B: Block is fragmented! { isLoading && <div...
           // We must consume subsequent nodes until depth hits 0.
+          // This "Look-Ahead Loop" consumes future nodes from the main loop.
 
           let buffer = text.slice(openIdx + 1) // Start buffer with rest of this text
 
           // Enter Look-Ahead Loop
-          let complete = false
+          let isBlockComplete = false
           while (i + 1 < nodes.length) {
             i++ // Advance main loop to consume next node
             const nextNode = nodes[i]
@@ -85,12 +106,12 @@ export function processChildren(nodes, traverseFn) {
                 localCursor++
 
                 if (depth === 0) {
-                  complete = true
+                  isBlockComplete = true
                   break
                 }
               }
 
-              if (complete) {
+              if (isBlockComplete) {
                 // Found the closer!
                 // Add the part before the closer to buffer
                 buffer += nextText.slice(0, localCursor - 1)
