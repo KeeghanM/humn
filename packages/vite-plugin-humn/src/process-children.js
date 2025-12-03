@@ -19,7 +19,7 @@ export function processChildren(nodes, traverseFn) {
 
         if (openIdx === -1) {
           // No more code blocks, rest is static string
-          const remainder = text.slice(cursor).trim()
+          const remainder = text.slice(cursor)
           if (remainder) {
             results.push(`'${remainder.replace(/'/g, "\\'")}'`)
           }
@@ -27,7 +27,7 @@ export function processChildren(nodes, traverseFn) {
         }
 
         // Push static text BEFORE the brace
-        const staticPart = text.slice(cursor, openIdx).trim()
+        const staticPart = text.slice(cursor, openIdx)
         if (staticPart) {
           results.push(`'${staticPart.replace(/'/g, "\\'")}'`)
         }
