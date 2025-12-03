@@ -1,7 +1,7 @@
 import * as humnPlugin from './packages/prettier-plugin-humn/src/index.js'
 
 const config = {
-  plugins: ['@trivago/prettier-plugin-sort-imports', humnPlugin],
+  plugins: [humnPlugin],
   semi: false,
   printWidth: 80,
   singleQuote: true,

@@ -1,6 +1,7 @@
 import { doc } from 'prettier'
 
 const { group, hardline, indent, join } = doc.builders
+const { mapDoc } = doc.utils
 
 export const languages = [
   {
@@ -48,7 +49,6 @@ export const parsers = {
 
 export const printers = {
   'humn-ast': {
-    // FIX: Added 'options' and 'print' arguments here
     print: (path, options, print) => {
       const node = path.getValue()
 
@@ -67,7 +67,6 @@ export const printers = {
           const doc = await textToDoc(node.content, { parser: 'babel' })
           return group([
             '<script>',
-            hardline,
             indent([hardline, doc]),
             hardline,
             '</script>',
@@ -80,7 +79,6 @@ export const printers = {
           const doc = await textToDoc(node.content, { parser: 'css' })
           return group([
             '<style>',
-            hardline,
             indent([hardline, doc]),
             hardline,
             '</style>',
@@ -90,11 +88,80 @@ export const printers = {
 
       if (node.type === 'humn-template') {
         return async (textToDoc) => {
-          return textToDoc(node.content, { parser: 'html' })
+          const doc = await textToDoc(`<>${node.content}</>`, {
+            parser: 'babel',
+            semi: false,
+          })
+
+          return stripFragmentWrapper(doc)
         }
       }
 
       return null
     },
   },
+}
+
+function stripFragmentWrapper(doc) {
+  // Remove the wrapper strings immediately.
+  // This guarantees that ;<> and </> will be gone, even if the unwrap fails.
+  const cleanDoc = mapDoc(doc, (node) => {
+    if (
+      typeof node === 'string' &&
+      (node === ';<>' || node === '<>' || node === '</>')
+    ) {
+      return ''
+    }
+    return node
+  })
+
+  // We look for the first 'indent' node, which contains the actual template.
+  const indentContent = findFirstIndentContent(cleanDoc)
+
+  if (indentContent) {
+    // The content inside the Babel fragment usually starts with a hardline.
+    // We remove it (slice 1) so the code doesn't start with an empty line.
+    if (Array.isArray(indentContent) && indentContent[0]?.type === 'line') {
+      return indentContent.slice(1)
+    }
+    return indentContent
+  }
+
+  // Fallback: If we couldn't find the indent structure, return the doc
+  // with the strings removed. It might be indented by 2 extra spaces,
+  // but at least the ugly tags are gone.
+  return cleanDoc
+}
+
+// Helper to recursively find the main content payload
+function findFirstIndentContent(node) {
+  if (!node) return null
+
+  // Found it! Return the contents.
+  if (node.type === 'indent') {
+    return node.contents
+  }
+
+  // Dig deeper into groups, aligns, or labels
+  if (node.type === 'group' || node.type === 'align' || node.type === 'label') {
+    return findFirstIndentContent(node.contents)
+  }
+
+  // Check array children
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findFirstIndentContent(child)
+      if (found) return found
+    }
+  }
+
+  // Check 'concat' parts (sometimes used in Prettier ASTs)
+  if (node.type === 'concat' && Array.isArray(node.parts)) {
+    for (const child of node.parts) {
+      const found = findFirstIndentContent(child)
+      if (found) return found
+    }
+  }
+
+  return null
 }
