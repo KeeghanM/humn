@@ -81,13 +81,14 @@ The transformation relies on a robust regex to identify top-level selectors whil
 
 Styles are injected into a single shared `<style id="humn-styles">` element in the document head.
 
-```HTML
+```html
 <head>
   <style id="humn-styles">
     .humn-1x4d2 {
       color: red;
     }
-    .humn-9k2j1 .card&, .humn-9k2j1 .card {
+    .humn-9k2j1 .card&,
+    .humn-9k2j1 .card {
       background: blue;
     }
   </style>

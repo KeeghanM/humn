@@ -35,10 +35,10 @@ The HTML template is passed to `compileTemplate()`. This function parses the HTM
 
 **Example Transformation:**
 
-```html
+```humn
 <div class="card">
   <h1>{title}</h1>
-  <button onclick="{handleClick}" />
+  <button onclick={handleClick} />
 </div>
 ```
 

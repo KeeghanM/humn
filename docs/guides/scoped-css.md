@@ -2,9 +2,9 @@
 
 In `.humn` files, you can simply use the `<style>` tag. Humn automatically scopes these styles to your component.
 
-```html
-<!-- MyComponent.humn -->
+```humn
 <script>
+  // MyComponent.humn
   // ... logic
 </script>
 

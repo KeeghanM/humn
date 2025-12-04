@@ -11,6 +11,16 @@ npm install humn
 npm install -D vite-plugin-humn
 ```
 
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite'
+import humn from 'vite-plugin-humn'
+
+export default defineConfig({
+  plugins: [humn()],
+})
+```
+
 ## Quick Start
 
 Here's a simple counter example using `.humn` files.
@@ -44,9 +54,9 @@ export const counterStore = new Cortex({
 
 Components are defined in `.humn` files, which combine logic, template, and styles.
 
-```html
-<!-- App.humn -->
+```humn
 <script>
+  // App.humn
   import { counterStore } from './store'
 
   const { count } = counterStore.memory
@@ -55,8 +65,8 @@ Components are defined in `.humn` files, which combine logic, template, and styl
 
 <div>
   <h1>Count: {count}</h1>
-  <button onclick="{increment}">+</button>
-  <button onclick="{decrement}">-</button>
+  <button onclick={increment}>+</button>
+  <button onclick={decrement}>-</button>
 </div>
 ```
 

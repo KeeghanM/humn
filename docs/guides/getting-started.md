@@ -59,9 +59,9 @@ export default config
 
 Here's a simple "Hello, World!" example to get you started:
 
-```html
-// App.humn
+```humn
 <script>
+  // App.humn
   const message = 'Hello, World!'
 </script>
 

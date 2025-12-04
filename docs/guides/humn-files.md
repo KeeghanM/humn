@@ -6,7 +6,7 @@ A `.humn` file consists of three optional sections: `<script>`, `<template>` (im
 
 ## Structure
 
-```html
+```humn
 <script>
   // Your JavaScript logic here
   import { store } from './store.js'
@@ -23,7 +23,7 @@ A `.humn` file consists of three optional sections: `<script>`, `<template>` (im
 <div>
   <h1>Hello, {name}!</h1>
   <p>Count: {count}</p>
-  <button onclick="{increment}">Increment</button>
+  <button onclick={increment}>Increment</button>
 </div>
 
 <style>
@@ -55,14 +55,12 @@ Anything outside of `<script>` and `<style>` tags is considered the template.
 - **Directives**: Use standard HTML attributes. Event listeners match the html format (e.g., `onclick`).
 - **Control Flow**: Use JavaScript logic within curly braces for conditionals and loops.
 
-```html
-{isLoading &&
-<div class="loader">Loading...</div>
-}
+```humn
+{isLoading && <div class="loader">Loading...</div>}
 
 <ul>
-  {items.map(item => (
-  <li>{item.name}</li>
+  {items.map((item) => (
+    <li>{item.name}</li>
   ))}
 </ul>
 ```

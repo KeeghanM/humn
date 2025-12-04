@@ -21,9 +21,9 @@ export const counterStore = new Cortex({
 })
 ```
 
-```html
-<!-- App.humn -->
+```humn
 <script>
+  // App.humn
   import { counterStore } from './store.js'
 
   const { count } = counterStore.memory
@@ -32,8 +32,8 @@ export const counterStore = new Cortex({
 
 <div>
   <h1>{count}</h1>
-  <button onclick="{increment}">Increment</button>
-  <button onclick="{decrement}">Decrement</button>
+  <button onclick={increment}>Increment</button>
+  <button onclick={decrement}>Decrement</button>
 </div>
 ```
 

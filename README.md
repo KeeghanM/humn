@@ -60,9 +60,9 @@ export const appStore = new Cortex({
 
 ### 2. The Body (Component)
 
-```html
-<!-- app.humn -->
+```humn
 <script>
+  // app.humn
   import { appStore } from './store'
 
   // Access the Cortex
@@ -73,7 +73,7 @@ export const appStore = new Cortex({
 <div>
   <h1>Hello, {user}</h1>
   <p>Vital Signs: {count}</p>
-  <button onclick="{increment}">Pulse</button>
+  <button onclick={increment}>Pulse</button>
 </div>
 
 <style>
