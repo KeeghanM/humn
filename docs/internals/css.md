@@ -53,7 +53,7 @@ However, because Humn scopes styles by wrapping them in a unique class (e.g., .h
 
 To solve this, when isSingleRoot is true, Humn transforms selectors using a Union Strategy. It rewrites selectors to apply to both the parent context (using the nesting selector &) and the descendant context.
 
-### Transformation Rule:selector → selector&, selector
+### Transformation Rule: selector → selector&, selector
 
 | Input Selector | Transformed       | Compiled CSS                          | Result                                  |
 | :------------- | :---------------- | :------------------------------------ | :-------------------------------------- |
