@@ -4,7 +4,7 @@ import { Cortex, css, h, mount } from '../index.js'
 
 /**
  * Compiles and executes a .humn component string in the test environment.
- * * @param {string} source - The .humn file content
+ * @param {string} source - The .humn file content
  * @param {object} imports - A map of dependencies to inject (e.g. { todoStore, TodoItem })
  * @returns {function} - The compiled Component function
  */

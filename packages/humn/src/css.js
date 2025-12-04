@@ -33,7 +33,7 @@ function minify(css) {
 /**
  * Scoped CSS Tag.
  * Wraps content in a unique class using Native CSS Nesting.
- * * Supports two signatures:
+ * Supports two signatures:
  * 1. Tagged Template: css`...`
  * 2. Function: css(string, isSingleRoot)
  */
