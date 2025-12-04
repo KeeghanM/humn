@@ -35,7 +35,6 @@
   "scripts": {
     "build": "vite build",
     "dev": "node --inspect ../../node_modules/vite/bin/vite.js --port 3000 --open /playground/",
-    "git-diff": "git log origin/main..HEAD --pretty=format:'%ad:: %s' > git-diff.txt && echo '\n----------\n' >> git-diff.txt && git diff origin/main...HEAD --color ':!*.lock' >> git-diff.txt",
     "prepublishOnly": "npm run build",
     "qa:test": "vitest run",
     "qa:test:watch": "vitest watch"

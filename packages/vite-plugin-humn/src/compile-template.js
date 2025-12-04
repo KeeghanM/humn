@@ -70,9 +70,9 @@ export function compileTemplate(htmlString) {
 
       Object.entries(node.attributes).forEach(([key, val]) => {
         if (masks.has(val)) {
-          propsParts.push(`${key}: ${masks.get(val)}`)
+          propsParts.push(`'${key}': ${masks.get(val)}`)
         } else {
-          propsParts.push(`${key}: '${val.replace(/'/g, "\\'")}'`)
+          propsParts.push(`'${key}': '${val.replace(/'/g, "\\'")}'`)
         }
       })
 
