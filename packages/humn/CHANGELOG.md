@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/KeeghanM/humn/compare/v1.3.0...v1.3.1) (2025-12-04)
+
+### Bug Fixes
+
+- **tests:** All integrations tests now pass and match the expected outputs ([110a81e](https://github.com/KeeghanM/humn/commit/110a81ef46c10d19cc8444cb179ad2858d126d6d))
+- deploy ([45d2579](https://github.com/KeeghanM/humn/commit/45d2579eddf603c49f1f0d85f481b72bf32260e5))
+- **css:** Scoped styles now work for single component & multi component files ([a5e210b](https://github.com/KeeghanM/humn/commit/a5e210bfe2060f24e82343c038789ea4d8abf20e))
+
 ## [1.1.0](https://github.com/KeeghanM/humn/compare/v1.0.1...v1.1.0) (2025-12-02)
 
 ### Features
