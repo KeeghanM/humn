@@ -52,7 +52,7 @@ export function processChildren(nodes, traverseFn) {
         const staticPart = text.slice(cursor, openIdx)
         if (staticPart) {
           results.push(
-            `'${staticPart.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'`,
+            `'${staticPart.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n')}'`,
           )
         }
 
