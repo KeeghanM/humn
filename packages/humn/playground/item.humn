@@ -11,3 +11,26 @@
 >
   {item.text}
 </div>
+
+<style>
+  background: #f8f9fa;
+  padding: 15px;
+  margin-top: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+
+  .card:hover {
+    border-color: #007bff;
+    background: #fff;
+  }
+
+  .done {
+    text-decoration: line-through;
+    opacity: 0.5;
+    background: #eee;
+  }
+</style>

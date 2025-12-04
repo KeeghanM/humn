@@ -44,7 +44,7 @@ export function compileTemplate(htmlString) {
 
   function traverse(node) {
     if (node.nodeType === 3) {
-      const text = node.rawText.trim()
+      const text = node.rawText
       if (!text) return null
 
       // Checks for a SINGLE expression (e.g. "{name}")

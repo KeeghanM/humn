@@ -41,7 +41,9 @@ export function processChildren(nodes, traverseFn) {
           // No more code blocks, rest is static string
           const remainder = text.slice(cursor)
           if (remainder) {
-            results.push(`'${remainder.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`)
+            results.push(
+              `'${remainder.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n')}'`,
+            )
           }
           break
         }
@@ -49,7 +51,9 @@ export function processChildren(nodes, traverseFn) {
         // Push static text BEFORE the brace
         const staticPart = text.slice(cursor, openIdx)
         if (staticPart) {
-          results.push(`'${staticPart.replace(/'/g, "\\'")}'`)
+          results.push(
+            `'${staticPart.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'`,
+          )
         }
 
         // START SCANNING LOGIC BLOCK
