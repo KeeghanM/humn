@@ -6,7 +6,7 @@
 
 <div
   key={item.id}
-  class={`card ${item.done ? 'done' : ''}`}
+  class={item.done ? 'done' : ''}
   onclick={() => toggle(item.id)}
 >
   {item.text}
@@ -23,7 +23,7 @@
   transition: all 0.2s;
   border: 1px solid transparent;
 
-  .card:hover {
+  :hover {
     border-color: #007bff;
     background: #fff;
   }

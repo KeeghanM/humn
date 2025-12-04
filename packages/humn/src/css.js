@@ -56,21 +56,20 @@ export function css(stringsOrStr, ...args) {
   if (!content) return ''
 
   if (isSingleRoot) {
-    // Transforms selectors to apply to BOTH the root (using &) and descendants.
-    //
+    // Transforms selectors to apply to BOTH the root (using &) AND descendants.
+    // e.g. "div" -> "div&, div"
+
     // Regex Breakdown:
-    // 1. (^|[{};,])      -> Hard Start: Line start or separator (brace, semi, comma).
-    //                       Prevents matching "header .card" (descendants).
-    // 2. (\s*)           -> Capture leading whitespace (to preserve formatting).
-    // 3. ( ... )+        -> Compound Selector (One or more atoms):
-    //    [.#][\w-]+         -> Class/ID (.card)
-    //    \[[^\]]+\]         -> Attribute ([type="text"])
-    //    :{1,2}[^:,{\s]+    -> Pseudo (:hover, ::before)
-    // 4. (?=\s*[^{;}]*\{)-> Lookahead: Must be followed by { without hitting ; or }.
+    // 1. (^|[{};,])      -> Hard Start (Line start, brace, semi, comma)
+    // 2. (\s*)           -> Whitespace
+    // 3. (?!from|to)     -> Negative Lookahead: Ignore 'from'/'to' (keyframes)
+    // 4. ( ... )+        -> Compound Selector:
+    //    (?:[.#]?[\w-]+ ... ) -> Matches tags (div), classes (.class), ids (#id)
+    // 5. (?=\s*\{)       -> Lookahead: Must be followed by {
 
     content = content.replace(
-      /(^|[{};,])(\s*)((?:[.#][\w-]+|\[[^\]]+\]|:{1,2}[^:,{\s]+)+)(?=\s*[^{;}]*\{)/gi,
-      '$1$2&$3, $3',
+      /(^|[{};,])(\s*)(?!from|to)((?:[.#]?[\w-]+|\[[^\]]+\]|:{1,2}[^:,{\s]+)+)(?=\s*\{)/gi,
+      '$1$2$3&, $3',
     )
   }
 
