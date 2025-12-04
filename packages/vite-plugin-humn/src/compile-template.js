@@ -44,7 +44,7 @@ export function compileTemplate(htmlString) {
 
   function traverse(node) {
     if (node.nodeType === 3) {
-      const text = node.rawText.trim()
+      const text = node.rawText
       if (!text) return null
 
       // Checks for a SINGLE expression (e.g. "{name}")
@@ -70,9 +70,9 @@ export function compileTemplate(htmlString) {
 
       Object.entries(node.attributes).forEach(([key, val]) => {
         if (masks.has(val)) {
-          propsParts.push(`${key}: ${masks.get(val)}`)
+          propsParts.push(`'${key}': ${masks.get(val)}`)
         } else {
-          propsParts.push(`${key}: '${val.replace(/'/g, "\\'")}'`)
+          propsParts.push(`'${key}': '${val.replace(/'/g, "\\'")}'`)
         }
       })
 

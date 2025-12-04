@@ -154,4 +154,76 @@ describe('Rendering & Reactivity', () => {
     expect(styleTag.textContent).toContain(`.${alertStyle} {`)
     expect(styleTag.textContent).toContain('background: red;')
   })
+
+  describe('Scoped CSS Runtime', () => {
+    it('should transform selectors for single-root components (Union Strategy)', () => {
+      // 1. Simulate the Compiler passing `true` for isSingleRoot
+      const className = css(
+        `
+      div { color: red; }
+      .card { background: blue; }
+      :hover { opacity: 0.8; }
+    `,
+        true,
+      )
+
+      const styleTag = document.getElementById('humn-styles')
+      const content = styleTag.textContent
+
+      // 1. Verify "div" became "div&, div"
+      expect(content).toContain('div&, div')
+
+      // 2. Verify ".card" became ".card&, .card"
+      expect(content).toContain('.card&, .card')
+
+      // 3. Verify ":hover" became ":hover&, :hover"
+      expect(content).toContain(':hover&, :hover')
+
+      // 4. Verify the class wrapper exists (roughly)
+      expect(content).toContain(`.${className} {`)
+    })
+
+    it('should handle compound selectors and attributes', () => {
+      const className = css(
+        `
+      .card.active { color: green; }
+      input[type="text"] { border: none; }
+    `,
+        true,
+      )
+
+      const styleTag = document.getElementById('humn-styles')
+
+      expect(styleTag.textContent).toContain('.card.active&, .card.active')
+      expect(styleTag.textContent).toContain(
+        'input[type="text"]&, input[type="text"]',
+      )
+    })
+
+    it('should protect descendant selectors and keyframes', () => {
+      const className = css(
+        `
+      /* Descendant selector should NOT match root */
+      header .logo { height: 50px; } 
+
+      @keyframes fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `,
+        true,
+      )
+
+      const styleTag = document.getElementById('humn-styles')
+
+      // "header .logo" starts with "header", but ".logo" is preceded by a space.
+      // The regex hard-start (^|[{};,]) prevents transforming .logo
+      expect(styleTag.textContent).toContain(`header .logo`)
+      expect(styleTag.textContent).not.toContain(`.logo.${className}`) // Should NOT apply to root
+
+      // Keyframes should be untouched
+      expect(styleTag.textContent).toContain('from { opacity: 0; }')
+      expect(styleTag.textContent).not.toContain(`from&`)
+    })
+  })
 })

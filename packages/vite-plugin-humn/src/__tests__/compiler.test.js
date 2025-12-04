@@ -34,8 +34,8 @@ describe('Humn Compiler', () => {
       const input = '<div class="container" id="main"></div>'
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain("class: 'container'")
-      expect(output[0]).toContain("id: 'main'")
+      expect(output[0]).toContain("'class': 'container'")
+      expect(output[0]).toContain("'id': 'main'")
     })
   })
 
@@ -45,15 +45,15 @@ describe('Humn Compiler', () => {
         '<button onclick={handleClick} disabled={isLoading}></button>'
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain('onclick: handleClick')
-      expect(output[0]).toContain('disabled: isLoading')
+      expect(output[0]).toContain("'onclick': handleClick")
+      expect(output[0]).toContain("'disabled': isLoading")
     })
 
     it('should handle complex expressions in props', () => {
       const input = '<div class={active ? "show" : "hide"}></div>'
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain('class: active ? "show" : "hide"')
+      expect(output[0]).toContain('\'class\': active ? "show" : "hide"')
     })
   })
 
@@ -92,8 +92,8 @@ describe('Humn Compiler', () => {
       const input = `<div class='single' id="double"></div>`
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain("class: 'single'")
-      expect(output[0]).toContain("id: 'double'")
+      expect(output[0]).toContain("'class': 'single'")
+      expect(output[0]).toContain("'id': 'double'")
     })
   })
 })

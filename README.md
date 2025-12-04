@@ -60,17 +60,16 @@ export const appStore = new Cortex({
   const { increment } = appStore.synapses
 </script>
 
-<div class="container">
+<div>
   <h1>Hello, {user}</h1>
   <p>Vital Signs: {count}</p>
   <button onclick="{increment}">Pulse</button>
 </div>
 
 <style>
-  .container {
-    padding: 2rem;
-    text-align: center;
-  }
+  /* We don't need to wrap this in div {...} but we could if we wanted */
+  padding: 2rem;
+  text-align: center;
 </style>
 ```
 

@@ -12,7 +12,7 @@ In `.humn` files, you can simply use the `<style>` tag. Humn automatically scope
 <div>Both elements are styled by top level, unwrapped, CSS</div>
 
 <style>
-  background: red; /* This applied to both the <p> and the <div> */
+  background: red; /* This applies to both the <p> and the <div> */
 
   p {
     color: blue;

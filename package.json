@@ -11,7 +11,8 @@
     "qa:test": "npm run qa:test --workspaces --if-present",
     "release": "npx semantic-release",
     "prepare": "husky",
-    "qa:format": "npx prettier . --write"
+    "qa:format": "npx prettier . --write",
+    "git-diff": "git log origin/main..HEAD --pretty=format:'%ad:: %s' > git-diff.txt && echo '\n----------\n' >> git-diff.txt && git diff origin/main...HEAD ':!*.lock' >> git-diff.txt"
   },
   "lint-staged": {
     "**/*": [

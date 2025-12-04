@@ -55,11 +55,15 @@ h('div', { class: 'card' }, [
 
 If a `<style>` block is present, the compiler:
 
-1.  Wraps the CSS in a `css` template tag (which handles scoping at runtime).
-2.  Injects logic to automatically append the scoped class to the root element of the template.
+1. **Analyses the Template:** Determines if the component has a single root element.
+2. **Generates Style Logic:** Calls the css() function with the raw styles and the isSingleRoot flag. This allows the runtime to intelligently scope selectors (using the "Union Strategy") so they apply to both the root and its descendants.
+3. **Injects Class Application:** Automatically appends the generated scoped class to the root element of the template.
 
 ```javascript
-// Injected Logic
+// Generated Logic
+const __styles = css(`...css content...`, true) // true if single root
+
+// Injected DOM Application
 if (typeof __styles !== 'undefined' && __vdom && __vdom.props) {
   __vdom.props.class =
     (__vdom.props.class ? __vdom.props.class + ' ' : '') + __styles

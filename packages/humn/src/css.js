@@ -33,21 +33,51 @@ function minify(css) {
 /**
  * Scoped CSS Tag.
  * Wraps content in a unique class using Native CSS Nesting.
+ * Supports two signatures:
+ * 1. Tagged Template: css`...`
+ * 2. Function: css(string, isSingleRoot)
  */
-export function css(strings, ...args) {
-  const raw = strings.reduce((acc, str, i) => {
-    return acc + str + (args[i] || '')
-  }, '')
+export function css(stringsOrStr, ...args) {
+  let raw = ''
+  let isSingleRoot = false
 
-  const content = minify(raw)
+  // Detect usage of Tagged Template vs Function Call
+  if (Array.isArray(stringsOrStr) && stringsOrStr.raw) {
+    raw = stringsOrStr.reduce((acc, str, i) => {
+      return acc + str + (args[i] || '')
+    }, '')
+  } else {
+    raw = stringsOrStr
+    // If called as function, the first arg is our boolean flag
+    isSingleRoot = args[0] === true
+  }
+  let content = minify(raw)
 
   if (!content) return ''
 
+  if (isSingleRoot) {
+    // Transforms selectors to apply to BOTH the root (using &) AND descendants.
+    // e.g. "div" -> "div&, div"
+
+    // Regex Breakdown:
+    // 1. (^|[{};,])      -> Hard Start (Line start, brace, semi, comma)
+    // 2. (\s*)           -> Whitespace
+    // 3. (?!from|to)     -> Negative Lookahead: Ignore 'from'/'to' (keyframes)
+    // 4. ( ... )+        -> Compound Selector:
+    //    (?:[.#]?[\w-]+ ... ) -> Matches tags (div), classes (.class), ids (#id)
+    // 5. (?=\s*\{)       -> Lookahead: Must be followed by {
+
+    content = content.replace(
+      /(^|[{};,])(\s*)(?!from|to)((?:[.#]?[\w-]+|\[[^\]]+\]|:{1,2}[^:,{\s]+)+)(?=\s*\{)/gi,
+      '$1$2$3&, $3',
+    )
+  }
+
   const hash = hashString(content)
-  const className = `humn-${hash}`
+  const hashedClassName = `humn-${hash}`
 
   if (cache.has(hash)) {
-    return className
+    return hashedClassName
   }
 
   if (!styleSheet) {
@@ -56,10 +86,10 @@ export function css(strings, ...args) {
     document.head.appendChild(styleSheet)
   }
 
-  styleSheet.textContent += `.${className} { 
+  styleSheet.textContent += `.${hashedClassName} { 
     ${content} 
   }\n`
   cache.add(hash)
 
-  return className
+  return hashedClassName
 }
