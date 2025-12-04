@@ -1,29 +1,18 @@
 # humn
 
-Humn is a minimal, human-centric reactive UI library with built-in state management. It's designed to be simple, intuitive, and powerful.
+This package is the core `humn` library. It provides the rendering engine and state management capabilities.
 
-This package is the core `humn` library.
+While you can use `humn` standalone with the `h()` syntax, we recommend using it with the `vite-plugin-humn` for the best experience with `.humn` single-file components. For more information, please see the [**root README**](../../README.md).
 
 ## Installation
 
 ```bash
 npm install humn
-npm install -D vite-plugin-humn
 ```
 
-```javascript
-// vite.config.js
-import { defineConfig } from 'vite'
-import humn from 'vite-plugin-humn'
+## Quick Start with `h()`
 
-export default defineConfig({
-  plugins: [humn()],
-})
-```
-
-## Quick Start
-
-Here's a simple counter example using `.humn` files.
+Here's a simple counter example using the `h()` syntax.
 
 ### 1. Create a Cortex (Store)
 
@@ -52,22 +41,23 @@ export const counterStore = new Cortex({
 
 ### 2. Create a Component
 
-Components are defined in `.humn` files, which combine logic, template, and styles.
+Components are functions that return a tree of `h()` calls.
 
-```humn
-<script>
-  // App.humn
-  import { counterStore } from './store'
+```javascript
+// App.js
+import { h } from 'humn'
+import { counterStore } from './store'
 
+export function App() {
   const { count } = counterStore.memory
   const { increment, decrement } = counterStore.synapses
-</script>
 
-<div>
-  <h1>Count: {count}</h1>
-  <button onclick={increment}>+</button>
-  <button onclick={decrement}>-</button>
-</div>
+  return h('div', {}, [
+    h('h1', {}, `Count: ${count}`),
+    h('button', { onclick: increment }, '+'),
+    h('button', { onclick: decrement }, '-'),
+  ])
+}
 ```
 
 ### 3. Mount
@@ -75,7 +65,7 @@ Components are defined in `.humn` files, which combine logic, template, and styl
 ```javascript
 // main.js
 import { mount } from 'humn'
-import App from './App.humn'
+import { App } from './App.js'
 
 mount(document.getElementById('root'), App)
 ```
