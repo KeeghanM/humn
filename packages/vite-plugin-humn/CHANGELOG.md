@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/KeeghanM/humn/compare/v1.3.1...v1.3.2) (2025-12-04)
+
+### Bug Fixes
+
+- release in one job ([ea40ea7](https://github.com/KeeghanM/humn/commit/ea40ea71b2ae53047f81d76667c953016cc05320))
+- simplified imports ([b14bd20](https://github.com/KeeghanM/humn/commit/b14bd2089a2af461cd1b14f663bdaac20d20f82d))
+
 ## [1.3.0](https://github.com/KeeghanM/humn/compare/v1.2.0...v1.3.0) (2025-12-03)
 
 ### Features
