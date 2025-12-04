@@ -77,7 +77,7 @@ To mount this application, you would typically have an entry point like `main.js
 import { mount } from 'humn'
 import App from './App.humn'
 
-mount(document.getElementById('app'), App)
+mount(document.getElementById('root'), App)
 ```
 
-In this example, we're creating a simple component called `App` that renders an `h1` element with the text "Hello, World!". We then mount the `App` component to the `div` with the id `app`.
+In this example, we're creating a simple component called `App` that renders an `h1` element with the text "Hello, World!". We then mount the `App` component to the `div` with the id `root`.

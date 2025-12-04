@@ -23,6 +23,16 @@ npm install humn
 npm install -D vite-plugin-humn
 ```
 
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite'
+import humn from 'vite-plugin-humn'
+
+export default defineConfig({
+  plugins: [humn()],
+})
+```
+
 ## The "Hello World" (That actually scales)
 
 Humn uses Single File Components (`.humn`) to keep your logic, view, and styles together.
@@ -51,11 +61,11 @@ export const appStore = new Cortex({
 ### 2. The Body (Component)
 
 ```html
-<!-- App.humn -->
+<!-- app.humn -->
 <script>
   import { appStore } from './store'
 
-  // 1. Read Memory (Auto-subscribes)
+  // Access the Cortex
   const { count, user } = appStore.memory
   const { increment } = appStore.synapses
 </script>
@@ -78,9 +88,9 @@ export const appStore = new Cortex({
 ```javascript
 // main.js
 import { mount } from 'humn'
-import App from './App.humn'
+import App from './app.humn'
 
-mount(document.getElementById('root'), App)
+mount(document.getElementById('app'), App)
 ```
 
 ## Contributing
