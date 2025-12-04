@@ -28,9 +28,6 @@ export default function humn() {
       const userImports = (scriptContent.match(importRegex) || []).join('\n')
       const componentLogic = scriptContent.replace(importRegex, '').trim()
 
-      const imports = [
-        `import { h${styleContent ? ', css' : ''} } from 'humn';`,
-      ]
       let styleLogic = ''
       if (styleContent) {
         const escapedStyle = styleContent
@@ -45,7 +42,7 @@ export default function humn() {
 
       return {
         code: `
-          ${imports.join('\n')}
+          ${`import { h${styleContent ? ', css' : ''} } from 'humn';`}
           ${userImports}
           ${styleLogic}
 
