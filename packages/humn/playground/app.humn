@@ -1,114 +1,64 @@
 <script>
-  import { todoStore } from './todo-store.js'
-  import TodoItem from './item.humn'
+  import ChatWindow from './components/chat-window.humn'
+  import ChatButton from './components/chat-button.humn'
+  import { appCortex } from './cortexes/app.js'
 
-  const { items, inputValue, errorMessage, isLoading } = todoStore.memory
-  const { addTodo, updateInput, fetchRandom } = todoStore.synapses
+  const { open } = appCortex.memory
 </script>
 
-<h1>Humn Todo</h1>
-<div key="inputs" class="input-group">
-  <input value={inputValue} oninput={(e) => updateInput(e.target.value)} />
-  <button onclick={addTodo}>Add</button>
-  <button class="secondary" onclick={fetchRandom} disabled={isLoading}>
-    🎲
-  </button>
-</div>
-
-{errorMessage && (
-  <div key="error" class="error">
-    {errorMessage}
-  </div>
-)}
-
-<div>
-  {items.map((item) => (
-    <TodoItem item={item} />
-  ))}
-</div>
-
-{isLoading && (
-  <div key="loader" class="loading">
-    Fetching task...
-  </div>
-)}
+<div>{open ? <ChatWindow /> : <ChatButton />}</div>
 
 <style>
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --primary: #a346ff;
+  font-family: sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  isolation: isolate;
 
-  h1 {
-    color: #333;
-    text-align: center;
-    margin-bottom: 20px;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
-
-  .input-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+  * {
+    margin: 0;
   }
 
-  input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
   }
 
-  button {
-    padding: 10px 20px;
-    cursor: pointer;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    transition: background 0.2s;
-  }
-  button:hover {
-    background: #0056b3;
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
   }
 
-  .error {
-    color: #dc3545;
-    font-size: 0.9em;
-    margin-bottom: 10px;
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
   }
 
-  .loading {
-    color: #666;
-    font-style: italic;
-    text-align: center;
-    padding: 10px;
-    animation: pulse 1s infinite;
+  p {
+    text-wrap: pretty;
   }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0.6;
-    }
-  }
-
-  /* Add a secondary button style */
-  button.secondary {
-    background: #6c757d;
-    margin-left: 5px;
-  }
-  button.secondary:hover {
-    background: #5a6268;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
   }
 </style>

@@ -1,0 +1,19 @@
+<script>
+  import { appCortex } from '../cortexes/app.js'
+  import Message from './message.humn'
+
+  const { messages } = appCortex.memory
+  const { setOpen, addMessage, setCurrentMessage } = appCortex.synapses
+</script>
+
+<div>
+  {messages.map((message) => (
+    <Message message={message} />
+  ))}
+</div>
+
+<style>
+  overflow-y: auto;
+  padding-block: 0.5rem;
+  flex: 1;
+</style>

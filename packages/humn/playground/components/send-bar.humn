@@ -1,0 +1,46 @@
+<script>
+  import { appCortex } from '../cortexes/app.js'
+
+  const { currentMessage } = appCortex.memory
+  const { addMessage, setCurrentMessage } = appCortex.synapses
+
+  const handleMessageSend = () => {
+    if (!currentMessage) return
+
+    addMessage({ text: currentMessage, sender: 'user' })
+    setCurrentMessage('')
+    addMessage({ text: 'Fake Reply', sender: 'server' })
+  }
+</script>
+
+<input
+  id="chat-input"
+  placeholder="How can we help..."
+  value={currentMessage}
+  oninput={(e) => setCurrentMessage(e.target.value)}
+/>
+<button onclick={handleMessageSend}>Send</button>
+
+<style>
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.5rem;
+  border-top: 1px solid #b4b2adff;
+
+  input {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid #b4b2adff;
+    width: 200px;
+  }
+
+  button {
+    border: 1px solid #b4b2adff;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: none;
+    outline: none;
+  }
+</style>

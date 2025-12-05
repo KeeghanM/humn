@@ -1,0 +1,35 @@
+<script>
+  import { appCortex } from '../cortexes/app.js'
+  import MessageSection from './messages.humn'
+  import HeaderBar from './header-bar.humn'
+  import SendBar from './send-bar.humn'
+
+  const { messages, currentMessage } = appCortex.memory
+  const { setOpen, addMessage, setCurrentMessage } = appCortex.synapses
+
+  const handleMessageSend = () => {
+    if (!currentMessage) return
+
+    addMessage({ text: currentMessage, sender: 'user' })
+    setCurrentMessage('')
+  }
+</script>
+
+<HeaderBar />
+<MessageSection />
+<SendBar />
+
+<style>
+  position: fixed;
+  bottom: 0;
+  right: 1rem;
+  height: 450px;
+  background: #ece9e0ff;
+  border-radius: 1rem 1rem 0 0;
+  border: 1px solid #b4b2adff;
+  border-bottom: none;
+  box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+</style>

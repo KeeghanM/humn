@@ -1,0 +1,26 @@
+<script>
+  const { message } = props
+</script>
+
+<p class={message.sender}>{message.text}</p>
+
+<style>
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #b4b2adff;
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+
+  .user {
+    border-radius: 1rem 0 0 1rem;
+    margin-left: 50px;
+    border-right: none;
+  }
+  .server {
+    border-radius: 0 1rem 1rem 0;
+    margin-right: 50px;
+    border-left: none;
+  }
+</style>
