@@ -1,5 +1,5 @@
+import { format, resolveConfig } from 'prettier'
 import * as humnPlugin from 'prettier-plugin-humn'
-import * as prettier from 'prettier'
 import * as vscode from 'vscode'
 
 /**
@@ -7,23 +7,30 @@ import * as vscode from 'vscode'
  * @param {vscode.ExtensionContext} context
  */
 export function activate(context) {
-  // Register the formatter
   const formatter = vscode.languages.registerDocumentFormattingEditProvider(
     'humn',
     {
+      /**
+       * Provides formatting edits for a given document.
+       * @param {vscode.TextDocument} document
+       * @returns {Promise<vscode.TextEdit[]>}
+       */
       async provideDocumentFormattingEdits(document) {
         const text = document.getText()
 
         try {
-          // Format the text using Prettier and this plugin
-          const formatted = await prettier.format(text, {
-            ...(await prettier.resolveConfig(document.fileName)),
+          const options = await resolveConfig(document.fileName)
+
+          // This handles differences between CommonJS and ESM imports
+          const plugin = humnPlugin.default || humnPlugin
+
+          const formatted = await format(text, {
+            ...options,
             // These must come after resolveConfig to prevent override
             parser: 'humn-parser',
-            plugins: [humnPlugin],
+            plugins: [plugin],
           })
 
-          // Calculate the range of the entire document
           const fullRange = new vscode.Range(
             document.positionAt(0),
             document.positionAt(text.length),
@@ -45,4 +52,7 @@ export function activate(context) {
   context.subscriptions.push(formatter)
 }
 
+/**
+ * This method is called when the extension is deactivated.
+ */
 export function deactivate() {}
