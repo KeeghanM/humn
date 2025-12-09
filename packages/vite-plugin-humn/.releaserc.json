@@ -1,5 +1,7 @@
 {
+  "extends": "semantic-release-monorepo",
   "branches": ["main"],
+  "tagFormat": "vite-plugin-humn-v${version}",
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
