@@ -94,9 +94,9 @@
           "include": "#interpolation"
         },
         {
-          "comment": "1. Match Standard Rules - Anything ending in {",
-          "begin": "(?=[^};]*?\\{)",
-          "end": "(?=</style>)|\\}",
+          "comment": "1. Match Standard CSS Rules",
+          "begin": "(?!\\s*[a-zA-Z-]+\\s*:)(?=.)",
+          "end": "(?=</style>)",
           "patterns": [
             {
               "include": "source.css"
