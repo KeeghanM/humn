@@ -6,6 +6,16 @@
 import { track } from './metrics.js'
 import { setInstance } from './observer.js'
 
+function getNamespace(parent) {
+  if (parent.namespaceURI === SVG_NS && parent.tagName !== 'foreignObject') {
+    return SVG_NS
+  }
+  if (parent.namespaceURI === MATH_NS) {
+    return MATH_NS
+  }
+  return null
+}
+
 /**
  * Checks if a list of children contains keys.
  * @param {Array<import("./h.js").VNode>} children - The list of VNodes.
@@ -53,26 +63,26 @@ function createElement(vNode, namespace) {
   // so 'ns' entering here is already null for the foreignObject's children.
 
   // createElementNS is slower than createElement, so only use it if we have a namespace.
-  const el = namespace
+  const element = namespace
     ? document.createElementNS(namespace, tag)
     : document.createElement(tag)
 
-  vNode.el = el
-  patchProps(el, vNode.props)
+  vNode.el = element
+  patchProps(element, vNode.props)
 
   // If we are currently at a 'foreignObject', children must exit the SVG namespace.
   const childNS = tag === 'foreignObject' ? null : namespace
 
   vNode.children.forEach((child) => {
-    el.appendChild(createElement(child, childNS))
+    element.appendChild(createElement(child, childNS))
   })
 
-  return el
+  return element
 }
 
 /**
  * Updates the properties (attributes/events) of a DOM element.
- * @param {HTMLElement} el - The DOM element to update.
+ * @param {HTMLElement} element - The DOM element to update.
  * @param {object} [newProps={}] - The new properties.
  * @param {object} [oldProps={}] - The old properties.
  *
@@ -80,8 +90,8 @@ function createElement(vNode, namespace) {
  * the "cursor jumping" bug. If we just blindly set the attribute, the browser
  * might reset the cursor position to the end of the input.
  */
-function patchProps(el, newProps = {}, oldProps = {}) {
-  if (!el) return
+function patchProps(element, newProps = {}, oldProps = {}) {
+  if (!element) return
 
   const allProps = { ...oldProps, ...newProps }
 
@@ -91,15 +101,15 @@ function patchProps(el, newProps = {}, oldProps = {}) {
 
     // Handle removed props
     if (newValue === undefined || newValue === null) {
-      el.removeAttribute(key)
+      element.removeAttribute(key)
       track('patches')
       continue
     }
 
     // We check against the LIVE DOM value to prevent cursor jumping
     if (key === 'value' || key === 'checked') {
-      if (el[key] !== newValue) {
-        el[key] = newValue
+      if (element[key] !== newValue) {
+        element[key] = newValue
         track('patches')
       }
       continue
@@ -113,16 +123,16 @@ function patchProps(el, newProps = {}, oldProps = {}) {
     // Handle Events
     if (key.startsWith('on')) {
       const eventName = key.slice(2).toLowerCase()
-      if (oldValue) el.removeEventListener(eventName, oldValue)
-      el.addEventListener(eventName, newValue)
+      if (oldValue) element.removeEventListener(eventName, oldValue)
+      element.addEventListener(eventName, newValue)
     }
     // Handle the disabled attribute
     if (key === 'disabled') {
-      el.disabled = newValue === true || newValue === 'true'
+      element.disabled = newValue === true || newValue === 'true'
     }
     // Handle standard attributes
     else {
-      el.setAttribute(key, newValue)
+      element.setAttribute(key, newValue)
     }
   }
 }
@@ -185,14 +195,14 @@ function reconcileKeyedChildren(parent, newChildren, oldChildren) {
 
       // If the DOM node isn't in the right spot, move it.
       // We use oldVNode.el because patch transfers the ref, but just to be safe:
-      const el = newChild.el || oldVNode.el
+      const element = newChild.el || oldVNode.el
 
       // Get the node currently at this index in the real DOM
       const domChildAtIndex = parent.childNodes[i]
 
       // If the element exists but is in the wrong place, move it
-      if (el && domChildAtIndex !== el) {
-        parent.insertBefore(el, domChildAtIndex)
+      if (element && domChildAtIndex !== element) {
+        parent.insertBefore(element, domChildAtIndex)
         track('patches')
       }
 
@@ -200,13 +210,13 @@ function reconcileKeyedChildren(parent, newChildren, oldChildren) {
       delete keyed[key]
     } else {
       // B. NO MATCH - This is a new item
-      const newEl = createElement(newChild)
+      const newElement = createElement(newChild, getNamespace(parent))
       const domChildAtIndex = parent.childNodes[i]
 
       if (domChildAtIndex) {
-        parent.insertBefore(newEl, domChildAtIndex)
+        parent.insertBefore(newElement, domChildAtIndex)
       } else {
-        parent.appendChild(newEl)
+        parent.appendChild(newElement)
       }
     }
   })
@@ -324,7 +334,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
 
   // Case 3: Creation - No old node exists, so we create a new one.
   if (oldVNode === undefined || oldVNode === null) {
-    parent.appendChild(createElement(newVNode))
+    parent.appendChild(createElement(newVNode, getNamespace(parent)))
     return
   }
 
@@ -335,7 +345,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   ) {
     const el = oldVNode.el || parent.childNodes[index]
     if (el) {
-      parent.replaceChild(createElement(newVNode), el)
+      parent.replaceChild(createElement(newVNode, getNamespace(parent)), el)
       track('patches')
     }
     return
