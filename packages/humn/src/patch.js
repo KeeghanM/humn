@@ -15,12 +15,15 @@ export function hasKeys(children) {
   return children && children.some((c) => c && c.props && c.props.key != null)
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const MATH_NS = 'http://www.w3.org/1998/Math/MathML'
 /**
  * Creates a real DOM element from a virtual node.
- * @param {import("./h.js").VNode | string | number} vNode - The virtual node.
- * @returns {Text | HTMLElement} The created DOM element.
+ * @param {import("./h.js").VNode | string | number} vNode
+ * @param {string} [namespace] - The current namespace URI (if any).
+ * @returns {Text | HTMLElement | SVGElement}
  */
-function createElement(vNode) {
+function createElement(vNode, namespace) {
   if (typeof vNode === 'string' || typeof vNode === 'number') {
     return document.createTextNode(String(vNode))
   }
@@ -29,12 +32,10 @@ function createElement(vNode) {
     const childVNode = renderComponent(vNode)
     vNode.child = childVNode
 
-    // Recursively create the DOM for the child
-    const el = createElement(childVNode)
-    vNode.el = el
+    const el = createElement(childVNode, namespace)
 
-    // Queue Mount Hooks
-    if (vNode.hooks && vNode.hooks.mounts.length > 0) {
+    vNode.el = el
+    if (vNode.hooks?.mounts.length > 0) {
       setTimeout(() => vNode.hooks.mounts.forEach((fn) => fn()), 0)
     }
     return el
@@ -42,12 +43,28 @@ function createElement(vNode) {
 
   track('elementsCreated')
 
-  const el = document.createElement(vNode.tag)
+  const tag = vNode.tag
+
+  // We prioritize specific tag declarations over the inherited namespace.
+  if (tag === 'svg') namespace = SVG_NS
+  else if (tag === 'math') namespace = MATH_NS
+  // NOTE: If we are inside 'foreignObject', we must NOT use the SVG NS.
+  // We handle this by resetting 'ns' in the recursion step below,
+  // so 'ns' entering here is already null for the foreignObject's children.
+
+  // createElementNS is slower than createElement, so only use it if we have a namespace.
+  const el = namespace
+    ? document.createElementNS(namespace, tag)
+    : document.createElement(tag)
+
   vNode.el = el
   patchProps(el, vNode.props)
 
+  // If we are currently at a 'foreignObject', children must exit the SVG namespace.
+  const childNS = tag === 'foreignObject' ? null : namespace
+
   vNode.children.forEach((child) => {
-    el.appendChild(createElement(child))
+    el.appendChild(createElement(child, childNS))
   })
 
   return el
@@ -292,6 +309,8 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     patch(parent, childVNode, oldChild, index)
 
     newVNode.el = childVNode.el
+
+    console.log({ newVNode })
 
     // Run mount hooks on the next tick
     if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
