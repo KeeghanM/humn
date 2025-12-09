@@ -1,25 +1,50 @@
 {
   "scopeName": "source.humn",
   "patterns": [
-    { "include": "#script-block" },
-    { "include": "#style-block" },
-    { "include": "#humn-tag" },
-    { "include": "#html-content" }
+    {
+      "include": "#script-block"
+    },
+    {
+      "include": "#style-block"
+    },
+    {
+      "include": "#humn-component"
+    },
+    {
+      "include": "#humn-html-tag"
+    },
+    {
+      "include": "#html-content"
+    }
   ],
   "repository": {
     "script-block": {
       "begin": "(<)(script)\\b([^>]*)(>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.html" },
-        "2": { "name": "entity.name.tag.html" },
-        "3": { "name": "text.html" },
-        "4": { "name": "punctuation.definition.tag.html" }
+        "1": {
+          "name": "punctuation.definition.tag.html"
+        },
+        "2": {
+          "name": "entity.name.tag.html"
+        },
+        "3": {
+          "name": "text.html"
+        },
+        "4": {
+          "name": "punctuation.definition.tag.html"
+        }
       },
       "end": "(</)(script)(>)",
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.html" },
-        "2": { "name": "entity.name.tag.html" },
-        "3": { "name": "punctuation.definition.tag.html" }
+        "1": {
+          "name": "punctuation.definition.tag.html"
+        },
+        "2": {
+          "name": "entity.name.tag.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.html"
+        }
       },
       "contentName": "source.tsx",
       "patterns": [
@@ -27,49 +52,81 @@
           "match": "([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[,}])",
           "name": "variable.other.readwrite.js"
         },
-        { "include": "source.tsx" }
+        {
+          "include": "source.tsx"
+        }
       ]
     },
     "style-block": {
       "begin": "(<)(style)\\b([^>]*)(>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.html" },
-        "2": { "name": "entity.name.tag.html" },
-        "3": { "name": "text.html" },
-        "4": { "name": "punctuation.definition.tag.html" }
+        "1": {
+          "name": "punctuation.definition.tag.html"
+        },
+        "2": {
+          "name": "entity.name.tag.html"
+        },
+        "3": {
+          "name": "text.html"
+        },
+        "4": {
+          "name": "punctuation.definition.tag.html"
+        }
       },
       "end": "(</)(style)(>)",
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.html" },
-        "2": { "name": "entity.name.tag.html" },
-        "3": { "name": "punctuation.definition.tag.html" }
+        "1": {
+          "name": "punctuation.definition.tag.html"
+        },
+        "2": {
+          "name": "entity.name.tag.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.html"
+        }
       },
       "contentName": "source.css",
       "patterns": [
-        { "include": "#comments" },
-        { "include": "#interpolation" },
-
         {
-          "comment": "1. Match Standard Rules - Anything ending in {",
-          "begin": "(?=[^};]*?\\{)",
-          "end": "\\}",
-          "patterns": [{ "include": "source.css" }]
+          "include": "#comments"
         },
-
+        {
+          "include": "#interpolation"
+        },
+        {
+          "comment": "1. Match Standard CSS Rules",
+          "begin": "(?!\\s*[a-zA-Z-]+\\s*:)(?=.)",
+          "end": "(?=</style>)",
+          "patterns": [
+            {
+              "include": "source.css"
+            }
+          ]
+        },
         {
           "comment": "2. Match Top-Level Properties (Orphans)",
           "begin": "(?<![&\\.\\#a-zA-Z0-9_-])([a-zA-Z-]+)(:)(?!:)",
           "beginCaptures": {
-            "1": { "name": "support.type.property-name.css" },
-            "2": { "name": "punctuation.separator.key-value.css" }
+            "1": {
+              "name": "support.type.property-name.css"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.css"
+            }
           },
           "end": "(;)|(?=\\})",
           "endCaptures": {
-            "1": { "name": "punctuation.terminator.rule.css" }
+            "1": {
+              "name": "punctuation.terminator.rule.css"
+            }
           },
           "patterns": [
-            { "include": "#interpolation" },
-            { "include": "#css-values" }
+            {
+              "include": "#interpolation"
+            },
+            {
+              "include": "#css-values"
+            }
           ]
         }
       ]
@@ -80,7 +137,10 @@
           "match": "#[0-9a-fA-F]{3,8}",
           "name": "constant.other.color.rgb-value.css"
         },
-        { "match": "(-?[0-9]+(\\.[0-9]+)?)", "name": "constant.numeric.css" },
+        {
+          "match": "(-?[0-9]+(\\.[0-9]+)?)",
+          "name": "constant.numeric.css"
+        },
         {
           "match": "(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)",
           "name": "keyword.other.unit.css"
@@ -89,8 +149,12 @@
           "match": "([a-zA-Z-][a-zA-Z0-9-]*)\\s*(?=\\()",
           "name": "support.function.css"
         },
-        { "include": "#string-double" },
-        { "include": "#string-single" },
+        {
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
         {
           "match": "[-a-zA-Z][a-zA-Z0-9-]*",
           "name": "support.constant.property-value.css"
@@ -101,31 +165,63 @@
         }
       ]
     },
-    "humn-tag": {
-      "begin": "(</?)([_a-zA-Z][a-zA-Z0-9:-]*)",
+    "humn-component": {
+      "begin": "(</?)([A-Z][a-zA-Z0-9:-]*)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.begin.humn" },
+        "1": {
+          "name": "punctuation.definition.tag.begin.humn"
+        },
         "2": {
-          "patterns": [
-            { "match": "^[A-Z]", "name": "support.class.component.humn" },
-            { "match": ".*", "name": "entity.name.tag.humn" }
-          ]
+          "name": "support.class.component.humn"
         }
       },
       "end": "(/?>)",
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.end.humn" }
+        "1": {
+          "name": "punctuation.definition.tag.end.humn"
+        }
       },
       "patterns": [
-        { "include": "#interpolation" },
-        { "include": "#string-double" },
-        { "include": "#string-single" },
         {
-          "match": "([a-zA-Z0-9:-]+)(=)",
-          "captures": {
-            "1": { "name": "entity.other.attribute-name.humn" },
-            "2": { "name": "punctuation.separator.key-value.humn" }
-          }
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
+        {
+          "include": "#interpolation"
+        },
+        {
+          "match": "[a-zA-Z0-9:-]+",
+          "name": "entity.other.attribute-name.humn"
+        }
+      ]
+    },
+    "humn-html-tag": {
+      "begin": "(</?)([a-z][a-zA-Z0-9:-]*)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.humn"
+        },
+        "2": {
+          "name": "entity.name.tag.humn"
+        }
+      },
+      "end": "(/?>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.end.humn"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
+        {
+          "include": "#interpolation"
         },
         {
           "match": "[a-zA-Z0-9:-]+",
@@ -135,23 +231,33 @@
     },
     "html-content": {
       "patterns": [
-        { "include": "#interpolation" },
-        { "include": "text.html.basic" }
+        {
+          "include": "#interpolation"
+        },
+        {
+          "include": "text.html.basic"
+        }
       ]
     },
     "interpolation": {
       "name": "meta.embedded.expression.humn",
       "begin": "\\{",
       "beginCaptures": {
-        "0": { "name": "punctuation.section.embedded.begin.humn" }
+        "0": {
+          "name": "punctuation.section.embedded.begin.humn"
+        }
       },
       "end": "\\}",
       "endCaptures": {
-        "0": { "name": "punctuation.section.embedded.end.humn" }
+        "0": {
+          "name": "punctuation.section.embedded.end.humn"
+        }
       },
       "contentName": "source.tsx",
       "patterns": [
-        { "include": "#smart-nesting" },
+        {
+          "include": "#smart-nesting"
+        },
         {
           "match": "=>",
           "name": "storage.type.function.arrow.ts"
@@ -160,28 +266,46 @@
           "match": "\\b[a-zA-Z_$][a-zA-Z0-9_$]*\\b",
           "name": "variable.other.readwrite.js"
         },
-        { "include": "source.tsx" }
+        {
+          "include": "source.tsx"
+        }
       ]
     },
     "smart-nesting": {
       "patterns": [
-        { "include": "#comments" },
-        { "include": "#string-double" },
-        { "include": "#string-single" },
-        { "include": "#string-template" },
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
+        {
+          "include": "#string-template"
+        },
         {
           "comment": "Recursively match nested braces so Humn owns the structure",
           "begin": "\\{",
           "beginCaptures": {
-            "0": { "name": "punctuation.section.scope.begin.ts" }
+            "0": {
+              "name": "punctuation.section.scope.begin.ts"
+            }
           },
           "end": "\\}",
           "endCaptures": {
-            "0": { "name": "punctuation.section.scope.end.ts" }
+            "0": {
+              "name": "punctuation.section.scope.end.ts"
+            }
           },
           "patterns": [
-            { "include": "#smart-nesting" },
-            { "include": "source.tsx" }
+            {
+              "include": "#smart-nesting"
+            },
+            {
+              "include": "source.tsx"
+            }
           ]
         }
       ]
@@ -206,16 +330,27 @@
           "begin": "\\$\\{",
           "end": "\\}",
           "patterns": [
-            { "include": "#smart-nesting" },
-            { "include": "source.tsx" }
+            {
+              "include": "#smart-nesting"
+            },
+            {
+              "include": "source.tsx"
+            }
           ]
         }
       ]
     },
     "comments": {
       "patterns": [
-        { "match": "//.*$", "name": "comment.line.double-slash.js" },
-        { "begin": "/\\*", "end": "\\*/", "name": "comment.block.js" }
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.js"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.js"
+        }
       ]
     }
   }
