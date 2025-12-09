@@ -1,6 +1,6 @@
 {
   "name": "humn-vscode",
-  "displayName": "Humn Language Support",
+  "displayName": "Humn",
   "version": "1.0.1",
   "repository": {
     "type": "git",
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "publisher": "HumanSideOfCode",
-  "main": "./src/extension.js",
+  "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:humn"
   ],
