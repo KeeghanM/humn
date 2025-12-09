@@ -28,12 +28,16 @@ jobs:
           filters: |
             core:
               - 'packages/humn/**'
+              - '.github/workflows/release.yml'
             prettier:
               - 'packages/prettier-plugin-humn/**'
+              - '.github/workflows/release.yml'
             vite:
               - 'packages/vite-plugin-humn/**'
+              - '.github/workflows/release.yml'
             extension:
               - 'packages/humn-vscode/**'
+              - '.github/workflows/release.yml'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

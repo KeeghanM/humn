@@ -6,6 +6,16 @@
 import { track } from './metrics.js'
 import { setInstance } from './observer.js'
 
+function getNamespace(parent) {
+  if (parent.namespaceURI === SVG_NS && parent.tagName !== 'foreignObject') {
+    return SVG_NS
+  }
+  if (parent.namespaceURI === MATH_NS) {
+    return MATH_NS
+  }
+  return null
+}
+
 /**
  * Checks if a list of children contains keys.
  * @param {Array<import("./h.js").VNode>} children - The list of VNodes.
@@ -15,12 +25,15 @@ export function hasKeys(children) {
   return children && children.some((c) => c && c.props && c.props.key != null)
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const MATH_NS = 'http://www.w3.org/1998/Math/MathML'
 /**
  * Creates a real DOM element from a virtual node.
- * @param {import("./h.js").VNode | string | number} vNode - The virtual node.
- * @returns {Text | HTMLElement} The created DOM element.
+ * @param {import("./h.js").VNode | string | number} vNode
+ * @param {string} [namespace] - The current namespace URI (if any).
+ * @returns {Text | HTMLElement | SVGElement}
  */
-function createElement(vNode) {
+function createElement(vNode, namespace) {
   if (typeof vNode === 'string' || typeof vNode === 'number') {
     return document.createTextNode(String(vNode))
   }
@@ -29,12 +42,10 @@ function createElement(vNode) {
     const childVNode = renderComponent(vNode)
     vNode.child = childVNode
 
-    // Recursively create the DOM for the child
-    const el = createElement(childVNode)
-    vNode.el = el
+    const el = createElement(childVNode, namespace)
 
-    // Queue Mount Hooks
-    if (vNode.hooks && vNode.hooks.mounts.length > 0) {
+    vNode.el = el
+    if (vNode.hooks?.mounts.length > 0) {
       setTimeout(() => vNode.hooks.mounts.forEach((fn) => fn()), 0)
     }
     return el
@@ -42,20 +53,36 @@ function createElement(vNode) {
 
   track('elementsCreated')
 
-  const el = document.createElement(vNode.tag)
-  vNode.el = el
-  patchProps(el, vNode.props)
+  const tag = vNode.tag
+
+  // We prioritize specific tag declarations over the inherited namespace.
+  if (tag === 'svg') namespace = SVG_NS
+  else if (tag === 'math') namespace = MATH_NS
+  // NOTE: If we are inside 'foreignObject', we must NOT use the SVG NS.
+  // We handle this by resetting 'ns' in the recursion step below,
+  // so 'ns' entering here is already null for the foreignObject's children.
+
+  // createElementNS is slower than createElement, so only use it if we have a namespace.
+  const element = namespace
+    ? document.createElementNS(namespace, tag)
+    : document.createElement(tag)
+
+  vNode.el = element
+  patchProps(element, vNode.props)
+
+  // If we are currently at a 'foreignObject', children must exit the SVG namespace.
+  const childNS = tag === 'foreignObject' ? null : namespace
 
   vNode.children.forEach((child) => {
-    el.appendChild(createElement(child))
+    element.appendChild(createElement(child, childNS))
   })
 
-  return el
+  return element
 }
 
 /**
  * Updates the properties (attributes/events) of a DOM element.
- * @param {HTMLElement} el - The DOM element to update.
+ * @param {HTMLElement} element - The DOM element to update.
  * @param {object} [newProps={}] - The new properties.
  * @param {object} [oldProps={}] - The old properties.
  *
@@ -63,8 +90,8 @@ function createElement(vNode) {
  * the "cursor jumping" bug. If we just blindly set the attribute, the browser
  * might reset the cursor position to the end of the input.
  */
-function patchProps(el, newProps = {}, oldProps = {}) {
-  if (!el) return
+function patchProps(element, newProps = {}, oldProps = {}) {
+  if (!element) return
 
   const allProps = { ...oldProps, ...newProps }
 
@@ -74,15 +101,15 @@ function patchProps(el, newProps = {}, oldProps = {}) {
 
     // Handle removed props
     if (newValue === undefined || newValue === null) {
-      el.removeAttribute(key)
+      element.removeAttribute(key)
       track('patches')
       continue
     }
 
     // We check against the LIVE DOM value to prevent cursor jumping
     if (key === 'value' || key === 'checked') {
-      if (el[key] !== newValue) {
-        el[key] = newValue
+      if (element[key] !== newValue) {
+        element[key] = newValue
         track('patches')
       }
       continue
@@ -96,16 +123,16 @@ function patchProps(el, newProps = {}, oldProps = {}) {
     // Handle Events
     if (key.startsWith('on')) {
       const eventName = key.slice(2).toLowerCase()
-      if (oldValue) el.removeEventListener(eventName, oldValue)
-      el.addEventListener(eventName, newValue)
+      if (oldValue) element.removeEventListener(eventName, oldValue)
+      element.addEventListener(eventName, newValue)
     }
     // Handle the disabled attribute
     if (key === 'disabled') {
-      el.disabled = newValue === true || newValue === 'true'
+      element.disabled = newValue === true || newValue === 'true'
     }
     // Handle standard attributes
     else {
-      el.setAttribute(key, newValue)
+      element.setAttribute(key, newValue)
     }
   }
 }
@@ -168,14 +195,14 @@ function reconcileKeyedChildren(parent, newChildren, oldChildren) {
 
       // If the DOM node isn't in the right spot, move it.
       // We use oldVNode.el because patch transfers the ref, but just to be safe:
-      const el = newChild.el || oldVNode.el
+      const element = newChild.el || oldVNode.el
 
       // Get the node currently at this index in the real DOM
       const domChildAtIndex = parent.childNodes[i]
 
       // If the element exists but is in the wrong place, move it
-      if (el && domChildAtIndex !== el) {
-        parent.insertBefore(el, domChildAtIndex)
+      if (element && domChildAtIndex !== element) {
+        parent.insertBefore(element, domChildAtIndex)
         track('patches')
       }
 
@@ -183,13 +210,13 @@ function reconcileKeyedChildren(parent, newChildren, oldChildren) {
       delete keyed[key]
     } else {
       // B. NO MATCH - This is a new item
-      const newEl = createElement(newChild)
+      const newElement = createElement(newChild, getNamespace(parent))
       const domChildAtIndex = parent.childNodes[i]
 
       if (domChildAtIndex) {
-        parent.insertBefore(newEl, domChildAtIndex)
+        parent.insertBefore(newElement, domChildAtIndex)
       } else {
-        parent.appendChild(newEl)
+        parent.appendChild(newElement)
       }
     }
   })
@@ -305,7 +332,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
 
   // Case 3: Creation - No old node exists, so we create a new one.
   if (oldVNode === undefined || oldVNode === null) {
-    parent.appendChild(createElement(newVNode))
+    parent.appendChild(createElement(newVNode, getNamespace(parent)))
     return
   }
 
@@ -316,7 +343,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   ) {
     const el = oldVNode.el || parent.childNodes[index]
     if (el) {
-      parent.replaceChild(createElement(newVNode), el)
+      parent.replaceChild(createElement(newVNode, getNamespace(parent)), el)
       track('patches')
     }
     return
