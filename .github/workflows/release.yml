@@ -96,7 +96,7 @@ jobs:
         if: steps.filter.outputs.extension == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
         run: |
           cd packages/humn-vscode
           npx semantic-release
