@@ -1,3 +1,10 @@
+## [humn-v1.3.3](https://github.com/KeeghanM/humn/compare/humn-v1.3.2...humn-v1.3.3) (2025-12-09)
+
+### Bug Fixes
+
+- **patch:** Added namespace to whole of patch ([246edbe](https://github.com/KeeghanM/humn/commit/246edbecda1bb285295f825681af1a3fee62c43b))
+- **patch:** Now correctly creates elements in the namespace ([8f4b03a](https://github.com/KeeghanM/humn/commit/8f4b03addf9bf6de157f87bcd55bc9245840a03f))
+
 ## [humn-v1.3.2](https://github.com/KeeghanM/humn/compare/humn-v1.3.1...humn-v1.3.2) (2025-12-09)
 
 ### Bug Fixes
