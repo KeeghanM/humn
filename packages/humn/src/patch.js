@@ -320,8 +320,6 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
 
     newVNode.el = childVNode.el
 
-    console.log({ newVNode })
-
     // Run mount hooks on the next tick
     if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
       setTimeout(() => {
