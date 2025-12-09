@@ -9,7 +9,7 @@
 
     addMessage({ text: currentMessage, sender: 'user' })
     setCurrentMessage('')
-    addMessage({ text: 'Fake Reply', sender: 'server' })
+    setTimeout(() => addMessage({ text: 'Fake Reply', sender: 'server' }), 1000)
   }
 </script>
 
