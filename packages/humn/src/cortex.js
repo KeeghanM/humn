@@ -1,5 +1,5 @@
-import { getObserver } from './observer.js'
 import { isDev } from './metrics.js'
+import { getObserver } from './observer.js'
 
 /**
  * @typedef {object} Synapses
@@ -207,9 +207,6 @@ export class Cortex {
       this._listeners.set(currentObserver, new Set())
 
     const accessedPaths = this._listeners.get(currentObserver)
-
-    // This gives us fresh tracking each render
-    accessedPaths.clear()
 
     return this._createAccessTrackingProxy(this._memory, accessedPaths)
   }
