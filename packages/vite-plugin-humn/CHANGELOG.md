@@ -1,3 +1,9 @@
+## [vite-plugin-humn-v1.3.1](https://github.com/KeeghanM/humn/compare/vite-plugin-humn-v1.3.0...vite-plugin-humn-v1.3.1) (2025-12-09)
+
+### Bug Fixes
+
+- **releases:** Configured semantic release for monorepo ([9820888](https://github.com/KeeghanM/humn/commit/9820888292beee7f1fc12508760b3aca00a12f50))
+
 ## [1.3.0](https://github.com/KeeghanM/humn/compare/v1.2.0...v1.3.0) (2025-12-03)
 
 ### Features
