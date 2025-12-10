@@ -1,3 +1,10 @@
+## [humn-vscode-v1.0.3](https://github.com/KeeghanM/humn/compare/humn-vscode-v1.0.2...humn-vscode-v1.0.3) (2025-12-10)
+
+### Bug Fixes
+
+- **extension:** Changed import syntax to support prettier v3 ([9a478cd](https://github.com/KeeghanM/humn/commit/9a478cdfb54816b2883d6c78f115d34bbbb47505))
+- **prettier:** Extension and Prettier Plugin now updated to work ([9165305](https://github.com/KeeghanM/humn/commit/9165305ae8c02f55cd3babfeb4e47302f9348da1))
+
 ## [humn-vscode-v1.0.2](https://github.com/KeeghanM/humn/compare/humn-vscode-v1.0.1...humn-vscode-v1.0.2) (2025-12-09)
 
 ### Bug Fixes

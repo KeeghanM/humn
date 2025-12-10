@@ -1,5 +1,5 @@
-import { format, resolveConfig } from 'prettier'
-import * as humnPlugin from 'prettier-plugin-humn'
+import * as prettier from 'prettier'
+import humnPlugin from 'prettier-plugin-humn'
 import * as vscode from 'vscode'
 
 /**
@@ -24,7 +24,7 @@ export function activate(context) {
           // This handles differences between CommonJS and ESM imports
           const plugin = humnPlugin.default || humnPlugin
 
-          const formatted = await format(text, {
+          const formatted = await prettier.format(text, {
             ...options,
             // These must come after resolveConfig to prevent override
             parser: 'humn-parser',

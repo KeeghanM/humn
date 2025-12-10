@@ -1,7 +1,7 @@
 {
   "name": "humn-vscode",
   "displayName": "Humn",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KeeghanM/humn.git"
@@ -61,7 +61,7 @@
     "vite": "^7.2.6",
     "prettier-plugin-humn": "*"
   },
-  "peerDependencies": {
+  "dependencies": {
     "prettier": "^3.7.3"
   }
 }

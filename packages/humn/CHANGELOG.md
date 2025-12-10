@@ -1,3 +1,9 @@
+## [humn-v1.3.4](https://github.com/KeeghanM/humn/compare/humn-v1.3.3...humn-v1.3.4) (2025-12-09)
+
+### Bug Fixes
+
+- **cortext:** Multiple state updates now happen ([ad69b24](https://github.com/KeeghanM/humn/commit/ad69b24a0691c84c1f75f7f7a741d8c87341605f))
+
 ## [humn-v1.3.3](https://github.com/KeeghanM/humn/compare/humn-v1.3.2...humn-v1.3.3) (2025-12-09)
 
 ### Bug Fixes

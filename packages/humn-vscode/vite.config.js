@@ -10,8 +10,7 @@ export default defineConfig({
       formats: ['cjs'], // VS Code extensions must be CommonJS
     },
     rollupOptions: {
-      // Vital: 'vscode' module is provided by the host, never bundle it.
-      external: ['vscode'],
+      external: ['vscode', 'prettier'],
     },
     target: 'node16',
     minify: true,
