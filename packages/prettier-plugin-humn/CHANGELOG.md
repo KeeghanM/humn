@@ -1,3 +1,9 @@
+## [prettier-plugin-humn-v0.0.4](https://github.com/KeeghanM/humn/compare/prettier-plugin-humn-v0.0.3...prettier-plugin-humn-v0.0.4) (2025-12-10)
+
+### Bug Fixes
+
+- **prettier:** Extension and Prettier Plugin now updated to work ([8577e0c](https://github.com/KeeghanM/humn/commit/8577e0cad36238337a16892baf7180ebb3ddbe64))
+
 ## [prettier-plugin-humn-v0.0.3](https://github.com/KeeghanM/humn/compare/prettier-plugin-humn-v0.0.2...prettier-plugin-humn-v0.0.3) (2025-12-09)
 
 ### Bug Fixes
