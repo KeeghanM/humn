@@ -61,7 +61,7 @@
     "vite": "^7.2.6",
     "prettier-plugin-humn": "*"
   },
-  "peerDependencies": {
+  "dependencies": {
     "prettier": "^3.7.3"
   }
 }
