@@ -60,10 +60,13 @@ synapses: (set, get) => ({
 
   logout: () => set({ user: null }),
 
-  toggleTheme: () =>
+  toggleTheme: () => {
+    const currentState = get()
+    const newTheme = currentState.settings.theme === 'light' ? 'dark' : 'light'
     set((state) => {
-      state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light'
-    }),
+      state.settings.theme = newTheme
+    })
+  },
 })
 ```
 

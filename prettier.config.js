@@ -1,7 +1,5 @@
-import * as humnPlugin from './packages/prettier-plugin-humn/src/index.js'
-
 const config = {
-  plugins: [humnPlugin],
+  plugins: ['prettier-plugin-humn'],
   semi: false,
   printWidth: 80,
   singleQuote: true,

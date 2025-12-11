@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "build": "vite build",
-    "dev": "node --inspect ../../node_modules/vite/bin/vite.js --port 3000 --open /playground/",
+    "dev": "concurrently 'yarn vite build --watch' 'node --inspect ../../node_modules/vite/bin/vite.js --port 3000 --open /playground/'",
     "prepublishOnly": "npm run build",
     "qa:test": "vitest run",
     "qa:test:watch": "vitest watch"
@@ -46,6 +46,7 @@
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
     "@types/node": "^24.10.1",
+    "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "jsdom": "^27.2.0",
     "semantic-release": "^25.0.2",
