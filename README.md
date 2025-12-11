@@ -43,7 +43,7 @@ Humn uses Single File Components (`.humn`) to keep your logic, view, and styles 
 // store.js
 import { Cortex } from 'humn'
 
-export const appStore = new Cortex({
+export const appCortex = new Cortex({
   memory: {
     count: 0,
     user: 'Guest',
@@ -63,11 +63,11 @@ export const appStore = new Cortex({
 ```humn
 <script>
   // app.humn
-  import { appStore } from './store'
+  import { appCortex } from './store'
 
   // Access the Cortex
-  const { count, user } = appStore.memory
-  const { increment } = appStore.synapses
+  const { count, user } = appCortex.memory
+  const { increment } = appCortex.synapses
 </script>
 
 <div>
