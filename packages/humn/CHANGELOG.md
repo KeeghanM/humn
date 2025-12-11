@@ -1,3 +1,9 @@
+## [humn-v1.4.0](https://github.com/KeeghanM/humn/compare/humn-v1.3.4...humn-v1.4.0) (2025-12-11)
+
+### Features
+
+- **cortex:** Added full typescript generic support to Cortex ([5c7c8d1](https://github.com/KeeghanM/humn/commit/5c7c8d1d52fecc1633aff0a8662c887b78c48bec))
+
 ## [humn-v1.3.4](https://github.com/KeeghanM/humn/compare/humn-v1.3.3...humn-v1.3.4) (2025-12-09)
 
 ### Bug Fixes
