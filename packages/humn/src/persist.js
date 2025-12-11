@@ -1,8 +1,10 @@
 /**
- * @typedef {object} HumnPersist
+ * Represents a value wrapped by the persist() function.
+ * @template T
+ * @typedef {object} Persisted
+ * @property {T} initial
  * @property {boolean} __humn_persist
- * @property {any} initial
- * @property {PersistConfig} config
+ * @property {PersistConfig} [config]
  */
 
 /**
@@ -12,10 +14,10 @@
 
 /**
  * Marks a section of the state for persistence in localStorage.
- *
- * @param {any} initial - The initial value of the state.
- * @param {PersistConfig} config - The configuration for persistence.
- * @returns {HumnPersist}
+ * @template T
+ * @param {T} initial
+ * @param {PersistConfig} [config]
+ * @returns {Persisted<T>}
  */
 export const persist = (initial, config = {}) => ({
   __humn_persist: true,

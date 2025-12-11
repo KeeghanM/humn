@@ -7,12 +7,23 @@ Mounts a component to a target DOM element.
 - `target`: The DOM element to mount the component to.
 - `Component`: The root component to render.
 
-## `Cortex({ memory, synapses })`
+## `Cortex<Memory, Synapses>({ memory, synapses })`
 
-Creates a `Cortex` instance for state management.
+Creates a strongly-typed `Cortex` instance for state management.
 
-- `memory`: The initial state of your application.
-- `synapses`: A function that receives `set` and `get` functions to interact with the state.
+- **Generics**:
+  - `Memory`: The shape of your state object.
+  - `Synapses`: The shape of your actions object.
+- **Arguments**:
+  - `memory`: The initial state. Values can be raw or wrapped in `persist()`.
+  - `synapses`: A builder function `(set, get) => Synapses`.
+
+### The `set` function
+
+When typing is applied, `set` supports two modes:
+
+1. **Partial Update**: `set({ count: 1 })` — validated against `Memory`.
+2. **Functional Update**: `set(state => { state.count++ })` — `state` is inferred as `Memory`.
 
 ### `persist(initial, config)`
 

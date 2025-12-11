@@ -2,31 +2,56 @@ import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
 
 /**
- * @typedef {object} Synapses
- * @property {function} set - Function to update the memory
- * @property {function} get - Function to get the memory
+ * Mapped type for the Memory configuration object.
+ * Allows each property to be the raw value OR a persisted wrapper.
+ * @template T
+ * @typedef { { [K in keyof T]: T[K] | import('./persist.js').Persisted<T[K]> } } MemoryInput
  */
 
 /**
- * @typedef {object} CortexParams
- * @property {object} memory - The initial state
- * @property {function(function, function): object} synapses - The synapses function
+ * Deeply unwraps persisted values from the memory shape.
+ * @template {object} T
+ * @typedef {{ [K in keyof T]: T[K] extends import('./persist.js').Persisted<infer I> ? I : T[K] }} UnwrappedMemory
+ */
+
+/**
+ * @template T
+ * @callback Getter
+ * @returns {T}
+ */
+
+/**
+ * @template T
+ * @callback Setter
+ * @param {Partial<T> | ((state: T) => void | Partial<T> | unknown)} updater
+ * @returns {void}
+ */
+
+/**
+ * @template M, S
+ * @callback SynapsesBuilder
+ * @param {Setter<M>} set
+ * @param {Getter<M>} get
+ * @returns {S}
+ */
+
+/**
+ * @template M, S
+ * @typedef {object} CortexConfig
+ * @property {MemoryInput<M>} memory - The initial state configuration
+ * @property {SynapsesBuilder<M, S>} synapses - The synapses builder function
  */
 
 /**
  * The Cortex class manages the state of the application.
- * This uses a Proxy for fine-grained reactivity, ensuring only those components
- * which use the updated value get re-rendered.
  *
- * WHY: We use Proxies instead of simple getters/setters because it allows us to
- * detect access to nested properties dynamically without needing to declare
- * dependencies upfront. This "magic" auto-subscription is what makes Humn's
- * DX so clean.
+ * @template {object} MemoryType The shape of the application state
+ * @template {object} SynapsesType The shape of the actions/methods
  */
 export class Cortex {
   /**
    * Creates an instance of Cortex.
-   * @param {CortexParams} CortexParams - The parameters for the Cortex.
+   * @param {CortexConfig<MemoryType, SynapsesType>} config
    */
   constructor({ memory, synapses }) {
     const liveMemory = { ...memory }
@@ -34,8 +59,8 @@ export class Cortex {
 
     // Load in any existing values from local-storage
     for (const [key, value] of Object.entries(memory)) {
-      if (value && value.__humn_persist) {
-        const storageKey = value.config.key || key
+      if (value && typeof value === 'object' && value.__humn_persist) {
+        const storageKey = value.config?.key || key
         this._persistenceMap.set(key, storageKey)
 
         try {
@@ -53,11 +78,14 @@ export class Cortex {
       }
     }
 
+    /** @type {UnwrappedMemory<MemoryType>} */
     this._memory = liveMemory
     this._listeners = new Map()
 
+    /** @type {Getter<UnwrappedMemory<MemoryType>>} */
     const get = () => this._memory
 
+    /** @type {Setter<UnwrappedMemory<MemoryType>>} */
     const set = (updater) => {
       let nextState
       let changedPaths = new Set()
@@ -80,8 +108,7 @@ export class Cortex {
 
       this._memory = nextState
 
-      // If we need to persist any of the values
-      // we save them to localStorage here
+      // Persistence logic
       if (this._persistenceMap.size > 0) {
         this._persistenceMap.forEach((storageKey, stateKey) => {
           const isDirty = Array.from(changedPaths).some(
@@ -103,6 +130,7 @@ export class Cortex {
       this._notifyRelevantListeners(changedPaths)
     }
 
+    /** @type {SynapsesType} */
     this.synapses = synapses(set, get)
   }
 
@@ -196,7 +224,7 @@ export class Cortex {
   }
 
   /**
-   * Returns memory wrapped in a tracking Proxy
+   * @returns {UnwrappedMemory<MemoryType>}
    */
   get memory() {
     const currentObserver = getObserver()
