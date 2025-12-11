@@ -319,7 +319,7 @@ const Timer = () => {
         }),
     }),
   })
-
+****
   onMount(() => {
     const timer = setInterval(local.synapses.tick, 1000)
     onCleanup(() => clearInterval(timer))
@@ -328,6 +328,233 @@ const Timer = () => {
   return h('div', {}, `Elapsed: ${local.memory.seconds}s`)
 }
 ```
+
+### TypeScript/JSDoc Typing
+
+Humn's **Cortex** is implemented in vanilla JavaScript but offers **first‑class TypeScript support** through JSDoc generics.  
+This means developers get **autocompletion, type safety, and IntelliSense** — even in JavaScript files - without a separate TypeScript build step.
+
+---
+
+## Typing Overview
+
+When creating a Cortex instance, you define two types:
+
+1. **Memory** – the shape of your application state
+2. **Synapses** – the functions (actions) that modify that state
+
+```ts
+import { Cortex, persist } from 'humn'
+
+type AppMemory = {
+  user: {
+    name: string | null
+    email: string | null
+    mobile: string | null
+  }
+  settings: {
+    theme: 'light' | 'dark'
+  }
+  open: boolean
+  messages: { text: string; sender: 'user' | 'server' }[]
+  currentMessage: string
+}
+
+type AppSynapses = {
+  setName: (name: string | null) => void
+  setEmail: (email: string | null) => void
+  setMobile: (mobile: string | null) => void
+  toggleTheme: () => void
+  setOpen: (open: boolean) => void
+  addMessage: (message: { text: string; sender: 'user' | 'server' }) => void
+  setCurrentMessage: (currentMessage: string) => void
+}
+```
+
+Then instantiate a fully‑typed Cortex:
+
+```ts
+export const appCortex = new Cortex<AppMemory, AppSynapses>({
+  memory: {
+    user: persist({
+      name: null,
+      email: null,
+      mobile: null,
+    }),
+    settings: persist({
+      theme: 'light',
+    }),
+    open: persist(false),
+    messages: persist([]),
+    currentMessage: '',
+  },
+
+  synapses: (set, get) => ({
+    setName: (name) => set((state) => (state.user.name = name)),
+    setEmail: (email) => set((state) => (state.user.email = email)),
+    setMobile: (mobile) => set((state) => (state.user.mobile = mobile)),
+    toggleTheme: () => {
+      const currentState = get()
+      const newTheme =
+        currentState.settings.theme === 'light' ? 'dark' : 'light'
+      set((state) => {
+        state.settings.theme = newTheme
+      })
+    },
+    setOpen: (open) => set({ open }),
+    addMessage: ({ text, sender }) =>
+      set((state) => state.messages.push({ text, sender })),
+    setCurrentMessage: (currentMessage) => set({ currentMessage }),
+  }),
+})
+```
+
+---
+
+## IntelliSense Magic ✨
+
+TypeScript users now get perfect typings throughout:
+
+```ts
+// ✅ Typed access to memory
+appCortex.memory.user.name // string | null
+appCortex.memory.settings.theme // "light" | "dark"
+appCortex.memory.messages[0].text // string
+
+// ✅ Typed actions
+appCortex.synapses.setName('Keeghan')
+appCortex.synapses.toggleTheme()
+```
+
+Inside synapses, typings flow automatically:
+
+```ts
+const toggleTheme = () => {
+  const current = get() // type: AppMemory
+  const theme = current.settings.theme // "light" | "dark"
+
+  set((state) => {
+    state.settings.theme = theme === 'light' ? 'dark' : 'light'
+  })
+}
+```
+
+---
+
+## Persisted Fields
+
+Any key can be persisted simply by wrapping it with `persist()`.  
+Cortex automatically unwraps persisted types, so the public API remains identical:
+
+```ts
+appCortex.memory.settings.theme // "light" | "dark"
+```
+
+No `.initial` or other metadata is exposed in typings.
+
+---
+
+## Type‑Safe `set()` and `get()`
+
+`set()` supports two fully‑typed update modes:
+
+### 1. Object Merge
+
+```ts
+set({ open: true })
+```
+
+Only keys from your memory type are allowed.
+
+### 2. Functional Update
+
+```ts
+set((state) => {
+  state.user.name = 'Alice'
+  state.settings.theme = 'dark'
+})
+```
+
+Assignments that return values are safe — their return type is ignored by the type system.
+
+---
+
+## Derived Data
+
+Derived values stay strongly typed:
+
+```ts
+const messageCount = appCortex.memory.messages.length
+const isDark = appCortex.memory.settings.theme === 'dark'
+```
+
+No separate selector types or mapping functions required.
+
+---
+
+## Error Checking Example
+
+TypeScript validation prevents invalid mutations:
+
+```ts
+set((state) => (state.users.email = 'oops'))
+// ❌ Property 'users' does not exist on type 'AppMemory'
+```
+
+---
+
+## Using Cortex in JavaScript (with JSDoc)
+
+Even in plain `.js` files, you can get autocompletion and static checking by using JSDoc annotations:
+
+```js
+/**
+ * @typedef {object} User
+ * @property {string|null} name
+ * @property {string|null} email
+ * @property {string|null} mobile
+ */
+
+/** @typedef {'light'|'dark'} Theme */
+
+/**
+ * @typedef {object} AppMemory
+ * @property {User} user
+ * @property {{ theme: Theme }} settings
+ * @property {boolean} open
+ * @property {{ text: string, sender: 'user'|'server' }[]} messages
+ * @property {string} currentMessage
+ */
+
+/**
+ * @typedef {object} AppSynapses
+ * @property {(name: string|null) => void} setName
+ * @property {() => void} toggleTheme
+ */
+
+/** @type {import('humn').Cortex<AppMemory, AppSynapses>} */
+export const appCortex = new Cortex({
+  memory: {
+    user: persist({ name: null, email: null, mobile: null }),
+    settings: persist({ theme: 'light' }),
+    open: false,
+    messages: [],
+    currentMessage: '',
+  },
+  synapses: (set, get) => ({
+    setName: (name) => set((s) => (s.user.name = name)),
+    toggleTheme: () => {
+      const { settings } = get()
+      set(
+        (s) =>
+          (s.settings.theme = settings.theme === 'light' ? 'dark' : 'light'),
+      )
+    },
+  }),
+})
+```
+
+VSCode and other modern editors will give you full IntelliSense with this approach.
 
 ## Best Practices
 
