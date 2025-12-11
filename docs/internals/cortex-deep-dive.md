@@ -303,32 +303,6 @@ export const cartStore = new Cortex({
 })
 ```
 
-### Local Component State
-
-You can create local stores inside components:
-
-```javascript
-const Timer = () => {
-  // Create a local Cortex (not global)
-  const local = new Cortex({
-    memory: { seconds: 0 },
-    synapses: (set) => ({
-      tick: () =>
-        set((s) => {
-          s.seconds++
-        }),
-    }),
-  })
-****
-  onMount(() => {
-    const timer = setInterval(local.synapses.tick, 1000)
-    onCleanup(() => clearInterval(timer))
-  })
-
-  return h('div', {}, `Elapsed: ${local.memory.seconds}s`)
-}
-```
-
 ### TypeScript/JSDoc Typing
 
 Humn's **Cortex** is implemented in vanilla JavaScript but offers **first‑class TypeScript support** through JSDoc generics.  
@@ -593,8 +567,6 @@ VSCode and other modern editors will give you full IntelliSense with this approa
      // Only triggers one re-render
    }
    ```
-
-3. **Use local state**: For component-specific data, use local Cortex instances
 
 ## Next Steps
 

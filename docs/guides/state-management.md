@@ -93,3 +93,11 @@ const todoStore = new Cortex({
   // ...
 })
 ```
+
+## Type Safety (TS & JSDoc)
+
+Cortex supports strong typing out of the box. By defining your Memory and Synapse types, you ensure that your `set` updates are valid and your components receive the correct data types.
+
+Cortex automatically handles the complexity of unwrapping `persist()` values in your types, so your API remains clean.
+
+> For a detailed guide on how to type your store using TypeScript or JSDoc, see the **[TypeScript Support](./typescript.md)** guide.

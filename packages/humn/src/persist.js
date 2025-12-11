@@ -4,7 +4,7 @@
  * @typedef {object} Persisted
  * @property {T} initial
  * @property {boolean} __humn_persist
- * @property {object} [config]
+ * @property {PersistConfig} [config]
  */
 
 /**
@@ -16,7 +16,7 @@
  * Marks a section of the state for persistence in localStorage.
  * @template T
  * @param {T} initial
- * @param {object} [config]
+ * @param {PersistConfig} [config]
  * @returns {Persisted<T>}
  */
 export const persist = (initial, config = {}) => ({

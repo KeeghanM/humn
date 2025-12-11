@@ -78,7 +78,7 @@ export class Cortex {
       }
     }
 
-    /** @type {MemoryType} */
+    /** @type {UnwrappedMemory<MemoryType>} */
     this._memory = liveMemory
     this._listeners = new Map()
 
@@ -133,8 +133,6 @@ export class Cortex {
     /** @type {SynapsesType} */
     this.synapses = synapses(set, get)
   }
-
-  // ... (Rest of your methods like _createChangeTrackingProxy, etc.)
 
   /**
    * Creates a Proxy that tracks which properties are being mutated.

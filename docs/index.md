@@ -12,10 +12,10 @@ This section is for you if you want to build applications with Humn. It covers t
 
 - **[Getting Started](./guides/getting-started.md)**: Install Humn and build your first app.
 - **[Humn Files](./guides/humn-files.md)**: Learn about the `.humn` single-file component format.
-- **[Components](./guides/components.md)**: Build reusable UI components.
 - **[State Management](./guides/state-management.md)**: Manage application state with Cortex.
-- **[Examples](./guides/examples.md)**: Real-world patterns and examples.
-- **[Testing](./guides/testing.md)**: Test your Humn applications.
+- **[TypeScript Support](./guides/typescript.md)**: Using Humn with TypeScript and JSDoc.
+- **[Scoped CSS](./guides/scoped-css.md)**: How to use the scoped styles.
+- **[Lifecycle Hooks](./guides/lifecycle-hooks.md)**: onMount() & onCleanup()
 - **[API Reference](./guides/api-reference.md)**: Public API documentation.
 
 ### [Underlying Mechanics](./internals/cortex-deep-dive.md)
@@ -26,6 +26,7 @@ This section explains how Humn works under the hood. It covers the Virtual DOM, 
 - **[Virtual DOM](./internals/virtual-dom.md)**: Understanding the diffing and patching algorithm.
 - **[The Compiler](./internals/compiler.md)**: How `.humn` files are transformed into JavaScript.
 - **[Reactivity System](./internals/reactivity.md)**: The Observer pattern and dependency tracking.
+- **[Scoped CSS](./internals/css.md)**: How the scoped CSS and hashing works.
 - **[Runtime & Metrics](./internals/runtime.md)**: Component instantiation and performance monitoring.
 
 ## Philosophy
