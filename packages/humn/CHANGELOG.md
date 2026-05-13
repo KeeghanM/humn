@@ -1,3 +1,9 @@
+## [humn-v1.5.0](https://github.com/KeeghanM/humn/compare/humn-v1.4.1...humn-v1.5.0) (2026-05-13)
+
+### Features
+
+- **humn:** add interaction helper props and event modifiers ([402b6ff](https://github.com/KeeghanM/humn/commit/402b6ffdea2e85f3a5493dacffc681c08f9a85fa))
+
 ## [humn-v1.4.1](https://github.com/KeeghanM/humn/compare/humn-v1.4.0...humn-v1.4.1) (2026-05-13)
 
 ### Bug Fixes
