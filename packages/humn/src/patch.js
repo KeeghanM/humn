@@ -6,12 +6,56 @@
 import { track } from './metrics.js'
 import { setInstance } from './observer.js'
 
+const helperState = new WeakMap()
+const HELPER_EVENTS = new Set(['onenter', 'onescape', 'onkeys', 'oncommit'])
+const MODIFIER_FLAGS = new Set([
+  'prevent',
+  'stop',
+  'once',
+  'capture',
+  'passive',
+])
+
 function invokeHookSafely(fn, errorMessage) {
   try {
     fn()
   } catch (error) {
     console.error(errorMessage, error)
   }
+}
+
+function getHelperRecord(element) {
+  const existing = helperState.get(element)
+  if (existing) return existing
+
+  const record = {
+    debounceTimers: new Map(),
+    asyncPending: new Map(),
+    composition: new Map(),
+    commitLocks: new Map(),
+  }
+  helperState.set(element, record)
+  return record
+}
+
+function normalizeKeyCombo(combo = '') {
+  return combo
+    .split('+')
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean)
+    .map((part) =>
+      part === 'mod'
+        ? navigator.platform.includes('Mac')
+          ? 'meta'
+          : 'ctrl'
+        : part,
+    )
+    .sort()
+    .join('+')
+}
+
+function shouldIgnoreKeyboardEvent(event, compositionState) {
+  return event.isComposing || compositionState === true
 }
 
 function getNamespace(parent) {
@@ -23,102 +67,88 @@ function getNamespace(parent) {
   }
   return null
 }
-
-/**
- * Checks if a list of children contains keys.
- * @param {Array<import("./h.js").VNode>} children - The list of VNodes.
- * @returns {boolean} True if keys are present.
- */
 export function hasKeys(children) {
   return children && children.some((c) => c && c.props && c.props.key != null)
 }
-
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const MATH_NS = 'http://www.w3.org/1998/Math/MathML'
-/**
- * Creates a real DOM element from a virtual node.
- * @param {import("./h.js").VNode | string | number} vNode
- * @param {string} [namespace] - The current namespace URI (if any).
- * @returns {Text | HTMLElement | SVGElement}
- */
-function createElement(vNode, namespace) {
-  if (typeof vNode === 'string' || typeof vNode === 'number') {
-    return document.createTextNode(String(vNode))
-  }
 
+function createElement(vNode, namespace) {
+  if (typeof vNode === 'string' || typeof vNode === 'number')
+    return document.createTextNode(String(vNode))
   if (typeof vNode.tag === 'function') {
     const childVNode = renderComponent(vNode)
     vNode.child = childVNode
-
     const el = createElement(childVNode, namespace)
-
     vNode.el = el
     if (vNode.hooks?.mounts.length > 0) {
-      setTimeout(() => {
-        vNode.hooks.mounts.forEach((fn) => {
-          invokeHookSafely(fn, 'Error in mount hook:')
-        })
-      }, 0)
+      setTimeout(
+        () =>
+          vNode.hooks.mounts.forEach((fn) =>
+            invokeHookSafely(fn, 'Error in mount hook:'),
+          ),
+        0,
+      )
     }
     return el
   }
 
   track('elementsCreated')
-
   const tag = vNode.tag
-
-  // We prioritize specific tag declarations over the inherited namespace.
   if (tag === 'svg') namespace = SVG_NS
   else if (tag === 'math') namespace = MATH_NS
-  // NOTE: If we are inside 'foreignObject', we must NOT use the SVG NS.
-  // We handle this by resetting 'ns' in the recursion step below,
-  // so 'ns' entering here is already null for the foreignObject's children.
-
-  // createElementNS is slower than createElement, so only use it if we have a namespace.
   const element = namespace
     ? document.createElementNS(namespace, tag)
     : document.createElement(tag)
-
   vNode.el = element
   patchProps(element, vNode.props)
-
-  // If we are currently at a 'foreignObject', children must exit the SVG namespace.
   const childNS = tag === 'foreignObject' ? null : namespace
-
-  vNode.children.forEach((child) => {
-    element.appendChild(createElement(child, childNS))
-  })
-
+  vNode.children.forEach((child) =>
+    element.appendChild(createElement(child, childNS)),
+  )
   return element
 }
 
-/**
- * Updates the properties (attributes/events) of a DOM element.
- * @param {HTMLElement} element - The DOM element to update.
- * @param {object} [newProps={}] - The new properties.
- * @param {object} [oldProps={}] - The old properties.
- *
- * WHY: We check against the LIVE DOM value for inputs (value/checked) to prevent
- * the "cursor jumping" bug. If we just blindly set the attribute, the browser
- * might reset the cursor position to the end of the input.
- */
+function parseEventKey(key) {
+  const parts = key.split('|')
+  const eventKey = parts[0]
+  const modifiers = parts
+    .slice(1)
+    .filter((modifier) => MODIFIER_FLAGS.has(modifier))
+  return { eventKey, modifiers }
+}
+
+function addManagedListener(
+  element,
+  eventName,
+  listener,
+  options,
+  oldListener,
+) {
+  if (oldListener) element.removeEventListener(eventName, oldListener, options)
+  element.addEventListener(eventName, listener, options)
+}
+
 function patchProps(element, newProps = {}, oldProps = {}) {
   if (!element) return
-
   const allProps = { ...oldProps, ...newProps }
+  const record = getHelperRecord(element)
 
   for (const key in allProps) {
     const oldValue = oldProps[key]
     const newValue = newProps[key]
 
-    // Handle removed props
     if (newValue === undefined || newValue === null) {
       element.removeAttribute(key)
+      if (key === 'oninputdebounced') {
+        const timer = record.debounceTimers.get(key)
+        if (timer) clearTimeout(timer)
+        record.debounceTimers.delete(key)
+      }
       track('patches')
       continue
     }
 
-    // We check against the LIVE DOM value to prevent cursor jumping
     if (key === 'value' || key === 'checked') {
       if (element[key] !== newValue) {
         element[key] = newValue
@@ -127,247 +157,277 @@ function patchProps(element, newProps = {}, oldProps = {}) {
       continue
     }
 
-    // If prop hasn't changed, skip
     if (oldValue === newValue) continue
-
     track('patches')
 
-    // Handle Events
     if (key.startsWith('on')) {
-      const eventName = key.slice(2).toLowerCase()
-      if (oldValue) element.removeEventListener(eventName, oldValue)
-      element.addEventListener(eventName, newValue)
+      const { eventKey, modifiers } = parseEventKey(key)
+      const eventName = eventKey.slice(2).toLowerCase()
+
+      if (HELPER_EVENTS.has(eventKey)) {
+        continue
+      }
+
+      if (eventKey === 'oninputdebounced') {
+        continue
+      }
+
+      if (eventKey === 'onclickasync') {
+        const wrapped = async (event) => {
+          if (newProps.disabledwhilepending && record.asyncPending.get('click'))
+            return
+          try {
+            record.asyncPending.set('click', true)
+            if (newProps.disabledwhilepending) element.disabled = true
+            await newValue(event)
+          } finally {
+            record.asyncPending.set('click', false)
+            if (newProps.disabledwhilepending) element.disabled = false
+          }
+        }
+        addManagedListener(element, 'click', wrapped, false, oldValue)
+        continue
+      }
+
+      const listener = (event) => {
+        if (modifiers.includes('prevent')) event.preventDefault()
+        if (modifiers.includes('stop')) event.stopPropagation()
+        return newValue(event)
+      }
+
+      addManagedListener(
+        element,
+        eventName,
+        listener,
+        {
+          once: modifiers.includes('once'),
+          capture: modifiers.includes('capture'),
+          passive: modifiers.includes('passive'),
+        },
+        oldValue,
+      )
+      continue
     }
-    // Handle the disabled attribute
+
+    if (key === 'debounce') continue
     if (key === 'disabled') {
       element.disabled = newValue === true || newValue === 'true'
+      continue
     }
-    // Handle standard attributes
-    else {
-      element.setAttribute(key, newValue)
+
+    element.setAttribute(key, newValue)
+  }
+
+  const debounceMs = Number(newProps.debounce)
+  if (newProps.oninputdebounced) {
+    const debouncedHandler = (event) => {
+      const previous = record.debounceTimers.get('oninputdebounced')
+      if (previous) clearTimeout(previous)
+      const timer = setTimeout(
+        () => {
+          record.debounceTimers.delete('oninputdebounced')
+          newProps.oninputdebounced({
+            ...event,
+            target: element,
+            currentTarget: element,
+          })
+        },
+        Number.isFinite(debounceMs) ? debounceMs : 250,
+      )
+      record.debounceTimers.set('oninputdebounced', timer)
     }
+    addManagedListener(
+      element,
+      'input',
+      debouncedHandler,
+      false,
+      oldProps.oninputdebounced,
+    )
+  }
+
+  if (
+    newProps.onenter ||
+    newProps.onescape ||
+    newProps.onkeys ||
+    newProps.oncommit
+  ) {
+    const keyHandler = (event) => {
+      const composing = record.composition.get('active') === true
+      if (shouldIgnoreKeyboardEvent(event, composing)) return
+
+      const comboParts = []
+      if (event.ctrlKey) comboParts.push('ctrl')
+      if (event.metaKey) comboParts.push('meta')
+      if (event.altKey) comboParts.push('alt')
+      if (event.shiftKey) comboParts.push('shift')
+      comboParts.push(event.key.toLowerCase())
+      const combo = comboParts.sort().join('+')
+
+      if (event.key === 'Enter' && newProps.onenter) newProps.onenter(event)
+      if (event.key === 'Escape' && newProps.onescape) newProps.onescape(event)
+      if (newProps.onkeys) {
+        Object.entries(newProps.onkeys).forEach(([keyCombo, handler]) => {
+          if (normalizeKeyCombo(keyCombo) === combo) handler(event)
+        })
+      }
+
+      if (event.key === 'Enter' && newProps.oncommit) {
+        record.commitLocks.set('enter', true)
+        newProps.oncommit(event)
+        setTimeout(() => record.commitLocks.delete('enter'), 0)
+      }
+    }
+
+    const blurHandler = (event) => {
+      if (!newProps.oncommit) return
+      if (record.commitLocks.get('enter')) return
+      newProps.oncommit(event)
+    }
+
+    const startComposition = () => record.composition.set('active', true)
+    const endComposition = () => record.composition.set('active', false)
+
+    addManagedListener(
+      element,
+      'compositionstart',
+      startComposition,
+      false,
+      oldProps.__compositionstart,
+    )
+    addManagedListener(
+      element,
+      'compositionend',
+      endComposition,
+      false,
+      oldProps.__compositionend,
+    )
+    addManagedListener(
+      element,
+      'keydown',
+      keyHandler,
+      false,
+      oldProps.__keyhelper,
+    )
+    addManagedListener(
+      element,
+      'blur',
+      blurHandler,
+      false,
+      oldProps.__oncommitblur,
+    )
   }
 }
 
-/**
- * Reconciles the children of a node, handling both simple lists and keyed reordering.
- * @param {HTMLElement} parent - The parent DOM element.
- * @param {Array<import("./h.js").VNode>} newChildren - The new list of children.
- * @param {Array<import("./h.js").VNode>} oldChildren - The old list of children.
- *
- * WHY: This is the most complex part of the VDOM. We need to efficiently update
- * a list of items. Without keys, we just update index-by-index, which is fast
- * but causes issues if items are reordered (state gets mixed up).
- * With keys, we can track items as they move around, preserving their state
- * and minimizing DOM operations.
- */
 function reconcileChildren(parent, newChildren, oldChildren) {
   const isKeyed = hasKeys(newChildren) || hasKeys(oldChildren)
-
-  // If no keys are used, use the fast index-based simple loop.
-  // This is faster for static lists or simple text replacements.
   if (!isKeyed) {
     const maxLen = Math.max(newChildren.length, oldChildren.length)
-    for (let i = 0; i < maxLen; i++) {
+    for (let i = 0; i < maxLen; i++)
       patch(parent, newChildren[i], oldChildren[i], i)
-    }
     return
   }
-
   reconcileKeyedChildren(parent, newChildren, oldChildren)
 }
-
-/**
- * Handles the complex logic of reconciling keyed children.
- *
- * WHY: When keys are present, we can't just iterate by index. We need to map
- * existing children by their key so we can find them even if they've moved.
- * This allows us to re-use DOM nodes (preserving focus/state) instead of
- * destroying and re-creating them.
- */
 function reconcileKeyedChildren(parent, newChildren, oldChildren) {
-  // Map existing children by Key for O(1) lookup
   const keyed = {}
   oldChildren.forEach((child, i) => {
     const key = (child.props && child.props.key) != null ? child.props.key : i
     keyed[key] = { vNode: child, index: i }
   })
-
   newChildren.forEach((newChild, i) => {
     const key =
       (newChild.props && newChild.props.key) != null ? newChild.props.key : i
     const existingChildMatch = keyed[key]
-
     if (existingChildMatch) {
-      // A. MATCH FOUND - The item existed before
       const oldVNode = existingChildMatch.vNode
-
-      // Update the node's content recursively
       patch(parent, newChild, oldVNode, i)
-
-      // If the DOM node isn't in the right spot, move it.
-      // We use oldVNode.el because patch transfers the ref, but just to be safe:
       const element = newChild.el || oldVNode.el
-
-      // Get the node currently at this index in the real DOM
       const domChildAtIndex = parent.childNodes[i]
-
-      // If the element exists but is in the wrong place, move it
       if (element && domChildAtIndex !== element) {
         parent.insertBefore(element, domChildAtIndex)
         track('patches')
       }
-
-      // Remove from map so we know it was re-used
       delete keyed[key]
     } else {
-      // B. NO MATCH - This is a new item
       const newElement = createElement(newChild, getNamespace(parent))
       const domChildAtIndex = parent.childNodes[i]
-
-      if (domChildAtIndex) {
-        parent.insertBefore(newElement, domChildAtIndex)
-      } else {
-        parent.appendChild(newElement)
-      }
+      if (domChildAtIndex) parent.insertBefore(newElement, domChildAtIndex)
+      else parent.appendChild(newElement)
     }
   })
-
-  // Remove any old keys that weren't used in the new list
   Object.values(keyed).forEach(({ vNode }) => {
     if (vNode.el && vNode.el.parentNode === parent) {
-      runUnmount(vNode) // Clean up hooks
+      runUnmount(vNode)
       parent.removeChild(vNode.el)
       track('elementsRemoved')
     }
   })
 }
-
-/**
- * Executes a Functional Component, tracks hooks, and returns the VNode.
- * @param {import("./h.js").VNode} vNode - The component vNode.
- * @returns {import("./h.js").VNode} The rendered child vNode.
- */
 function renderComponent(vNode) {
   track('componentsRendered')
-
-  // 1. Prepare Hook Container
-  const hooks = {
-    mounts: [],
-    cleanups: [],
-  }
-
-  // 2. Set Global Scope
+  const hooks = { mounts: [], cleanups: [] }
   setInstance(hooks)
-
-  // 3. Run the User's Component Function
-  // We pass props as the first argument
   const renderedVNode = vNode.tag(vNode.props)
-
-  // 4. Clear Global Scope
   setInstance(null)
-
-  // 5. Attach hooks to the VNode so we can run them later
   vNode.hooks = hooks
-
   return renderedVNode
 }
-
-/**
- * Helper to recursively run cleanup hooks when a tree is removed.
- * @param {import("./h.js").VNode} vNode - The vNode to unmount.
- */
 function runUnmount(vNode) {
   if (!vNode) return
-
-  // 1. Run hooks for this node
-  if (vNode.hooks && vNode.hooks.cleanups) {
-    vNode.hooks.cleanups.forEach((fn) => {
-      invokeHookSafely(fn, 'Error in cleanup hook:')
-    })
-  }
-
-  // 2. Recurse into child (if component)
-  if (vNode.child) {
-    runUnmount(vNode.child)
-  }
-
-  // 3. Recurse into children (if element)
-  if (vNode.children) {
-    vNode.children.forEach(runUnmount)
-  }
+  if (vNode.hooks && vNode.hooks.cleanups)
+    vNode.hooks.cleanups.forEach((fn) =>
+      invokeHookSafely(fn, 'Error in cleanup hook:'),
+    )
+  if (vNode.child) runUnmount(vNode.child)
+  if (vNode.children) vNode.children.forEach(runUnmount)
 }
 
-/**
- * The main diffing function. Compares V-DOM trees and updates the real DOM.
- * @param {HTMLElement} parent - The parent DOM element.
- * @param {import("./h.js").VNode | string | number} newVNode - The new virtual node.
- * @param {import("./h.js").VNode | string | number} oldVNode - The old virtual node.
- * @param {number} [index=0] - The index of the child node (used for simple diffing).
- */
 export function patch(parent, newVNode, oldVNode, index = 0) {
   track('diffs')
-
-  // Case 1: Removal - The new node is null/undefined, so we remove the old one.
   if (newVNode === undefined || newVNode === null) {
     const el = oldVNode.el || parent.childNodes[index]
-
-    // Recursive Cleanup
     runUnmount(oldVNode)
-
     if (el) {
       parent.removeChild(el)
       track('elementsRemoved')
     }
     return
   }
-
-  // Case 2: Component - If it's a function, we delegate to the component logic.
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
     const hasPreviousHooks = Boolean(oldVNode?.hooks?.cleanups?.length)
-
     const childVNode = renderComponent(newVNode)
     newVNode.child = childVNode
-
     const oldChild = oldVNode ? oldVNode.child : undefined
     patch(parent, childVNode, oldChild, index)
-
     newVNode.el = childVNode.el
-
-    // Run mount hooks on the next tick
-    if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
-      setTimeout(() => {
-        newVNode.hooks.mounts.forEach((fn) => {
-          invokeHookSafely(fn, 'Error in mount hook:')
-        })
-      }, 0)
-    }
-
+    if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0)
+      setTimeout(
+        () =>
+          newVNode.hooks.mounts.forEach((fn) =>
+            invokeHookSafely(fn, 'Error in mount hook:'),
+          ),
+        0,
+      )
     if (!isNew && hasPreviousHooks) {
-      oldVNode.hooks.cleanups.forEach((fn) => {
-        invokeHookSafely(fn, 'Error in cleanup hook:')
-      })
-
-      if (newVNode.hooks?.mounts?.length > 0) {
-        setTimeout(() => {
-          newVNode.hooks.mounts.forEach((fn) => {
-            invokeHookSafely(fn, 'Error in mount hook:')
-          })
-        }, 0)
-      }
+      oldVNode.hooks.cleanups.forEach((fn) =>
+        invokeHookSafely(fn, 'Error in cleanup hook:'),
+      )
+      if (newVNode.hooks?.mounts?.length > 0)
+        setTimeout(
+          () =>
+            newVNode.hooks.mounts.forEach((fn) =>
+              invokeHookSafely(fn, 'Error in mount hook:'),
+            ),
+          0,
+        )
     }
-
     return
   }
-
-  // Case 3: Creation - No old node exists, so we create a new one.
   if (oldVNode === undefined || oldVNode === null) {
     parent.appendChild(createElement(newVNode, getNamespace(parent)))
     return
   }
-
-  // Case 4: Replacement - The node type changed (e.g. div -> span), so we replace it entirely.
   if (
     typeof newVNode !== typeof oldVNode ||
     (typeof newVNode !== 'string' && newVNode.tag !== oldVNode.tag)
@@ -379,31 +439,19 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
     return
   }
-
-  // Case 5: Text Update - It's a text node, so we just update the text content.
   if (typeof newVNode === 'string' || typeof newVNode === 'number') {
     if (newVNode !== oldVNode) {
       const el = parent.childNodes[index]
       if (el) {
         el.nodeValue = String(newVNode)
         track('patches')
-      } else {
-        // Self healing: if text node missing, append it
-        parent.appendChild(document.createTextNode(String(newVNode)))
-      }
+      } else parent.appendChild(document.createTextNode(String(newVNode)))
     }
     return
   }
-
-  // Case 6: Update - Same tag, so we update props and recurse into children.
   const el = oldVNode.el || parent.childNodes[index]
-
   if (!el) return
-
-  // Transfer DOM reference to the new VNode
   newVNode.el = el
-
   patchProps(el, newVNode.props, oldVNode.props)
-
   reconcileChildren(el, newVNode.children, oldVNode.children)
 }
