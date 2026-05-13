@@ -3,7 +3,7 @@
  * @module mount
  */
 import { setObserver } from './observer.js'
-import { patch } from './patch.js'
+import { patch } from './runtime/patch.js'
 
 /**
  * Mounts a component to a target DOM element.

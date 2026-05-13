@@ -52,7 +52,7 @@ The `<script>` block is where you define your component's logic.
 Anything outside of `<script>` and `<style>` tags is considered the template.
 
 - **JSX-like Syntax**: Use `{expression}` to embed JavaScript values.
-- **Directives**: Use standard HTML attributes. Event listeners match the html format (e.g., `onclick`).
+- **Directives**: Use standard HTML attributes. Event listeners match the HTML format, such as `onclick`, and runtime interaction helpers such as `onenter`, `oncommit`, and `oninputdebounced` are available on base elements.
 - **Control Flow**: Use JavaScript logic within curly braces for conditionals and loops.
 
 ```humn
@@ -64,6 +64,20 @@ Anything outside of `<script>` and `<style>` tags is considered the template.
   ))}
 </ul>
 ```
+
+Interaction helpers can remove common event boilerplate from templates:
+
+```humn
+<script>
+  const save = (event) => {
+    const value = event.target.value
+  }
+</script>
+
+<input debounce={300} oninputdebounced={save} oncommit={save} />
+```
+
+See the [Interaction Helpers guide](./interaction-helpers.md) for keyboard helpers, debounce behavior, commit semantics, async click handling, and event modifiers.
 
 ## The Style Section
 
