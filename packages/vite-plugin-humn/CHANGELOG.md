@@ -1,3 +1,10 @@
+## [vite-plugin-humn-v1.3.2](https://github.com/KeeghanM/humn/compare/vite-plugin-humn-v1.3.1...vite-plugin-humn-v1.3.2) (2026-05-13)
+
+### Bug Fixes
+
+- **issues-10-13-16:** address template root expressions and vscode language behavior ([9506415](https://github.com/KeeghanM/humn/commit/95064159652857ebe7ce03717f338215f40d8121))
+- **lifecycle:** guard hook execution and clarify cleanup predicate ([38f8fd1](https://github.com/KeeghanM/humn/commit/38f8fd1dbfe4d3b700ccd27bb3341fdee7f6b85a))
+
 ## [vite-plugin-humn-v1.3.1](https://github.com/KeeghanM/humn/compare/vite-plugin-humn-v1.3.0...vite-plugin-humn-v1.3.1) (2025-12-09)
 
 ### Bug Fixes
