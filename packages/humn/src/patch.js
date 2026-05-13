@@ -331,7 +331,9 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
 
     if (!isNew && hasPreviousHooks) {
-      oldVNode.hooks.cleanups.forEach((fn) => fn())
+      if (oldVNode.hooks?.cleanups?.length > 0) {
+        oldVNode.hooks.cleanups.forEach((fn) => fn())
+      }
 
       if (newVNode.hooks?.mounts?.length > 0) {
         setTimeout(() => {
