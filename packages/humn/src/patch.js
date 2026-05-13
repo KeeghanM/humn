@@ -311,6 +311,9 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   // Case 2: Component - If it's a function, we delegate to the component logic.
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
+    const hasPreviousHooks =
+      Boolean(oldVNode?.hooks?.cleanups?.length) ||
+      Boolean(oldVNode?.hooks?.mounts?.length)
 
     const childVNode = renderComponent(newVNode)
     newVNode.child = childVNode
@@ -326,7 +329,17 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
         newVNode.hooks.mounts.forEach((fn) => fn())
       }, 0)
     }
-    // TODO: Handle updates (running old cleanups if necessary) for Phase 2
+
+    if (!isNew && hasPreviousHooks) {
+      oldVNode.hooks.cleanups.forEach((fn) => fn())
+
+      if (newVNode.hooks?.mounts?.length > 0) {
+        setTimeout(() => {
+          newVNode.hooks.mounts.forEach((fn) => fn())
+        }, 0)
+      }
+    }
+
     return
   }
 

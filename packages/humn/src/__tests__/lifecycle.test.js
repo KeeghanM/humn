@@ -50,4 +50,39 @@ describe('lifecycle', () => {
     expect(target.innerHTML).not.toContain('Child')
     expect(onCleanupSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('should fire cleanup and remount hooks when a component updates', async () => {
+    const cleanupSpy = vi.fn()
+    const mountSpy = vi.fn()
+    const store = new Cortex({
+      memory: { count: 0 },
+      synapses: (set) => ({
+        increment: () =>
+          set((state) => {
+            state.count += 1
+          }),
+      }),
+    })
+
+    const Counter = () => {
+      const { count } = store.memory
+      onMount(mountSpy)
+      onCleanup(cleanupSpy)
+      return h('div', {}, String(count))
+    }
+
+    const target = document.createElement('div')
+    mount(target, Counter)
+
+    await new Promise((r) => setTimeout(r, 0))
+    expect(mountSpy).toHaveBeenCalledTimes(1)
+    expect(cleanupSpy).toHaveBeenCalledTimes(0)
+
+    store.synapses.increment()
+
+    await new Promise((r) => setTimeout(r, 0))
+    expect(target.textContent).toBe('1')
+    expect(cleanupSpy).toHaveBeenCalledTimes(1)
+    expect(mountSpy).toHaveBeenCalledTimes(2)
+  })
 })
