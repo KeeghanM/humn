@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { h, mount } from '../index'
+import { Cortex, h, mount } from '../index'
 
 describe('Interaction helpers', () => {
   it('supports onenter and onescape keyboard helpers', () => {
@@ -100,5 +100,65 @@ describe('Interaction helpers', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(submit).toHaveBeenCalledTimes(1)
     expect(parent).toHaveBeenCalledTimes(0)
+  })
+
+  it('replaces wrapped event listeners when handler props change', () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const store = new Cortex({
+      memory: { handler: firstHandler },
+      synapses: (set) => ({
+        setHandler: (handler) => set({ handler }),
+      }),
+    })
+    const App = () => h('button', { onclick: store.memory.handler }, 'Run')
+    const target = document.createElement('div')
+
+    mount(target, App)
+    const button = target.querySelector('button')
+
+    button.click()
+    store.synapses.setHandler(secondHandler)
+    button.click()
+
+    expect(firstHandler).toHaveBeenCalledTimes(1)
+    expect(secondHandler).toHaveBeenCalledTimes(1)
+  })
+
+  it('replaces and removes keyboard helper listeners across patches', () => {
+    const onEnter = vi.fn()
+    const store = new Cortex({
+      memory: { enabled: true, version: 0 },
+      synapses: (set) => ({
+        bump: () =>
+          set((state) => {
+            state.version++
+          }),
+        disable: () => set({ enabled: false }),
+      }),
+    })
+    const App = () => {
+      const { enabled, version } = store.memory
+      const props = enabled
+        ? { 'data-version': version, onenter: onEnter }
+        : { 'data-version': version }
+
+      return h('input', props)
+    }
+    const target = document.createElement('div')
+
+    mount(target, App)
+    const input = target.querySelector('input')
+
+    store.synapses.bump()
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    )
+    store.synapses.disable()
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    )
+
+    expect(onEnter).toHaveBeenCalledTimes(1)
   })
 })
