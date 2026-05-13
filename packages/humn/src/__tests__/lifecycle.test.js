@@ -85,4 +85,77 @@ describe('lifecycle', () => {
     expect(cleanupSpy).toHaveBeenCalledTimes(1)
     expect(mountSpy).toHaveBeenCalledTimes(2)
   })
+
+  it('should continue running cleanup hooks when one throws', async () => {
+    const cleanupError = new Error('cleanup failed')
+    const throwingCleanup = vi.fn(() => {
+      throw cleanupError
+    })
+    const stableCleanup = vi.fn()
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const store = new Cortex({
+      memory: { show: true },
+      synapses: (set) => ({
+        hide: () => set({ show: false }),
+      }),
+    })
+
+    const Child = () => {
+      onCleanup(throwingCleanup)
+      onCleanup(stableCleanup)
+      return h('div', {}, 'Child')
+    }
+
+    const App = () => {
+      const { show } = store.memory
+      return h('div', {}, [show ? h(Child) : null])
+    }
+
+    const target = document.createElement('div')
+    mount(target, App)
+
+    store.synapses.hide()
+
+    expect(throwingCleanup).toHaveBeenCalledTimes(1)
+    expect(stableCleanup).toHaveBeenCalledTimes(1)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error in cleanup hook:',
+      cleanupError,
+    )
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('should continue running mount hooks when one throws', async () => {
+    const mountError = new Error('mount failed')
+    const throwingMount = vi.fn(() => {
+      throw mountError
+    })
+    const stableMount = vi.fn()
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+
+    const Child = () => {
+      onMount(throwingMount)
+      onMount(stableMount)
+      return h('div', {}, 'Child')
+    }
+
+    const target = document.createElement('div')
+    mount(target, Child)
+
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(throwingMount).toHaveBeenCalledTimes(1)
+    expect(stableMount).toHaveBeenCalledTimes(1)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error in mount hook:',
+      mountError,
+    )
+
+    consoleErrorSpy.mockRestore()
+  })
 })
