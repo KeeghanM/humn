@@ -30,6 +30,8 @@
         "path": "./syntaxes/humn.tmLanguage.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
+          "source.tsx": "typescriptreact",
+          "source.ts": "typescript",
           "source.js": "javascript",
           "source.css": "css"
         }
