@@ -1,4 +1,4 @@
-import { track } from './metrics.js'
+import { track } from '../metrics.js'
 import { patchProps } from './patch-props.js'
 import { renderComponent, scheduleMountHooks } from './component-lifecycle.js'
 

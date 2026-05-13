@@ -1,5 +1,5 @@
 import { createElement, getNamespace } from './create-element.js'
-import { track } from './metrics.js'
+import { track } from '../metrics.js'
 
 export function hasKeys(children) {
   return children && children.some((child) => child?.props?.key != null)

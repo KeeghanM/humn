@@ -1,5 +1,5 @@
-import { track } from './metrics.js'
-import { setInstance } from './observer.js'
+import { track } from '../metrics.js'
+import { setInstance } from '../observer.js'
 
 export function invokeHookSafely(fn, errorMessage) {
   try {

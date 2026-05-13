@@ -1,4 +1,4 @@
-import { track } from './metrics.js'
+import { track } from '../metrics.js'
 import {
   addManagedListener,
   parseEventKey,

@@ -5,7 +5,7 @@ import {
   scheduleMountHooks,
 } from './component-lifecycle.js'
 import { createElement, getNamespace } from './create-element.js'
-import { track } from './metrics.js'
+import { track } from '../metrics.js'
 import { patchProps } from './patch-props.js'
 import { hasKeys, reconcileChildren } from './reconcile-children.js'
 
