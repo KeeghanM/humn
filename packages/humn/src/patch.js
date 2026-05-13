@@ -6,6 +6,14 @@
 import { track } from './metrics.js'
 import { setInstance } from './observer.js'
 
+function invokeHookSafely(fn, errorMessage) {
+  try {
+    fn()
+  } catch (error) {
+    console.error(errorMessage, error)
+  }
+}
+
 function getNamespace(parent) {
   if (parent.namespaceURI === SVG_NS && parent.tagName !== 'foreignObject') {
     return SVG_NS
@@ -46,7 +54,11 @@ function createElement(vNode, namespace) {
 
     vNode.el = el
     if (vNode.hooks?.mounts.length > 0) {
-      setTimeout(() => vNode.hooks.mounts.forEach((fn) => fn()), 0)
+      setTimeout(() => {
+        vNode.hooks.mounts.forEach((fn) => {
+          invokeHookSafely(fn, 'Error in mount hook:')
+        })
+      }, 0)
     }
     return el
   }
@@ -270,7 +282,9 @@ function runUnmount(vNode) {
 
   // 1. Run hooks for this node
   if (vNode.hooks && vNode.hooks.cleanups) {
-    vNode.hooks.cleanups.forEach((fn) => fn())
+    vNode.hooks.cleanups.forEach((fn) => {
+      invokeHookSafely(fn, 'Error in cleanup hook:')
+    })
   }
 
   // 2. Recurse into child (if component)
@@ -311,6 +325,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   // Case 2: Component - If it's a function, we delegate to the component logic.
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
+    const hasPreviousHooks = Boolean(oldVNode?.hooks?.cleanups?.length)
 
     const childVNode = renderComponent(newVNode)
     newVNode.child = childVNode
@@ -323,10 +338,26 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     // Run mount hooks on the next tick
     if (isNew && newVNode.hooks && newVNode.hooks.mounts.length > 0) {
       setTimeout(() => {
-        newVNode.hooks.mounts.forEach((fn) => fn())
+        newVNode.hooks.mounts.forEach((fn) => {
+          invokeHookSafely(fn, 'Error in mount hook:')
+        })
       }, 0)
     }
-    // TODO: Handle updates (running old cleanups if necessary) for Phase 2
+
+    if (!isNew && hasPreviousHooks) {
+      oldVNode.hooks.cleanups.forEach((fn) => {
+        invokeHookSafely(fn, 'Error in cleanup hook:')
+      })
+
+      if (newVNode.hooks?.mounts?.length > 0) {
+        setTimeout(() => {
+          newVNode.hooks.mounts.forEach((fn) => {
+            invokeHookSafely(fn, 'Error in mount hook:')
+          })
+        }, 0)
+      }
+    }
+
     return
   }
 

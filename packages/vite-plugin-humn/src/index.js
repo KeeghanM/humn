@@ -22,7 +22,7 @@ export default function humn() {
         .trim()
 
       const renderNodes = compileTemplate(templateHTML)
-      const isSingleRoot = renderNodes.length === 1
+      const hasSingleTemplateNode = renderNodes.length === 1
 
       const importRegex = /import\s+(?:[\s\S]*?from\s+)?['"][^'"]+['"];?/g
       const userImports = (scriptContent.match(importRegex) || []).join('\n')
@@ -33,11 +33,14 @@ export default function humn() {
         const escapedStyle = styleContent
           .replace(/`/g, '\\`')
           .replace(/\$\{/g, '\\${')
-        styleLogic = `const __styles = css(\`${escapedStyle}\`, ${isSingleRoot});`
+        styleLogic = `const __styles = css(\`${escapedStyle}\`, ${hasSingleTemplateNode});`
       }
 
-      const vdomAssignment = isSingleRoot
-        ? `const __vdom = ${renderNodes[0]};`
+      const vdomAssignment = hasSingleTemplateNode
+        ? `const __templateNode = ${renderNodes[0]};
+           const __vdom = Array.isArray(__templateNode)
+             ? h('div', {}, __templateNode)
+             : __templateNode;`
         : `const __vdom = h('div', {}, [${renderNodes.join(',')}]);`
 
       return {
