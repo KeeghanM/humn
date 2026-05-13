@@ -13,6 +13,7 @@ This section is for you if you want to build applications with Humn. It covers t
 - **[Getting Started](./guides/getting-started.md)**: Install Humn and build your first app.
 - **[Humn Files](./guides/humn-files.md)**: Learn about the `.humn` single-file component format.
 - **[State Management](./guides/state-management.md)**: Manage application state with Cortex.
+- **[Interaction Helpers](./guides/interaction-helpers.md)**: Use keyboard, debounce, commit, async click, and event modifier helpers.
 - **[TypeScript Support](./guides/typescript.md)**: Using Humn with TypeScript and JSDoc.
 - **[Scoped CSS](./guides/scoped-css.md)**: How to use the scoped styles.
 - **[Lifecycle Hooks](./guides/lifecycle-hooks.md)**: onMount() & onCleanup()

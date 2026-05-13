@@ -67,6 +67,7 @@ function getNamespace(parent) {
   }
   return null
 }
+
 export function hasKeys(children) {
   return children && children.some((c) => c && c.props && c.props.key != null)
 }
@@ -95,13 +96,19 @@ function createElement(vNode, namespace) {
 
   track('elementsCreated')
   const tag = vNode.tag
+
+  // A nested <svg> or <math> starts a fresh namespace regardless of its parent.
   if (tag === 'svg') namespace = SVG_NS
   else if (tag === 'math') namespace = MATH_NS
+
+  // createElementNS is slower than createElement, so only use it when needed.
   const element = namespace
     ? document.createElementNS(namespace, tag)
     : document.createElement(tag)
   vNode.el = element
   patchProps(element, vNode.props)
+
+  // Children of SVG foreignObject must return to the HTML namespace.
   const childNS = tag === 'foreignObject' ? null : namespace
   vNode.children.forEach((child) =>
     element.appendChild(createElement(child, childNS)),
@@ -149,6 +156,7 @@ function patchProps(element, newProps = {}, oldProps = {}) {
       continue
     }
 
+    // Avoid resetting browser-managed input state, such as cursor position.
     if (key === 'value' || key === 'checked') {
       if (element[key] !== newValue) {
         element[key] = newValue
@@ -319,6 +327,8 @@ function patchProps(element, newProps = {}, oldProps = {}) {
 }
 
 function reconcileChildren(parent, newChildren, oldChildren) {
+  // Unkeyed children are cheap to patch by index; keyed children preserve DOM
+  // identity across reorders so state and focus do not move to the wrong item.
   const isKeyed = hasKeys(newChildren) || hasKeys(oldChildren)
   if (!isKeyed) {
     const maxLen = Math.max(newChildren.length, oldChildren.length)
@@ -328,6 +338,7 @@ function reconcileChildren(parent, newChildren, oldChildren) {
   }
   reconcileKeyedChildren(parent, newChildren, oldChildren)
 }
+
 function reconcileKeyedChildren(parent, newChildren, oldChildren) {
   const keyed = {}
   oldChildren.forEach((child, i) => {
@@ -363,6 +374,7 @@ function reconcileKeyedChildren(parent, newChildren, oldChildren) {
     }
   })
 }
+
 function renderComponent(vNode) {
   track('componentsRendered')
   const hooks = { mounts: [], cleanups: [] }
@@ -372,6 +384,7 @@ function renderComponent(vNode) {
   vNode.hooks = hooks
   return renderedVNode
 }
+
 function runUnmount(vNode) {
   if (!vNode) return
   if (vNode.hooks && vNode.hooks.cleanups)
@@ -384,6 +397,8 @@ function runUnmount(vNode) {
 
 export function patch(parent, newVNode, oldVNode, index = 0) {
   track('diffs')
+
+  // Removal must clean up recursively so component hooks cannot leak.
   if (newVNode === undefined || newVNode === null) {
     const el = oldVNode.el || parent.childNodes[index]
     runUnmount(oldVNode)
@@ -393,6 +408,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
     return
   }
+
   if (typeof newVNode.tag === 'function') {
     const isNew = !oldVNode
     const hasPreviousHooks = Boolean(oldVNode?.hooks?.cleanups?.length)
@@ -424,10 +440,13 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
     return
   }
+
   if (oldVNode === undefined || oldVNode === null) {
     parent.appendChild(createElement(newVNode, getNamespace(parent)))
     return
   }
+
+  // Different node types cannot be safely patched in place.
   if (
     typeof newVNode !== typeof oldVNode ||
     (typeof newVNode !== 'string' && newVNode.tag !== oldVNode.tag)
@@ -439,6 +458,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
     return
   }
+
   if (typeof newVNode === 'string' || typeof newVNode === 'number') {
     if (newVNode !== oldVNode) {
       const el = parent.childNodes[index]
@@ -449,6 +469,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
     }
     return
   }
+
   const el = oldVNode.el || parent.childNodes[index]
   if (!el) return
   newVNode.el = el
