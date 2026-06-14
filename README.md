@@ -95,7 +95,7 @@ mount(document.getElementById('app'), App)
 
 ## Contributing
 
-We are building a library for humans, by humans. Please read CODING_STANDARDS.md before pushing code.
+We are building a library for humans, by humans. Please read coding-standards.md before pushing code.
 
 ## Packages
 

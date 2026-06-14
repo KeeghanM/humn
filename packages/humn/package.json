@@ -33,28 +33,25 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build",
-    "dev": "concurrently 'yarn vite build --watch' 'node --inspect ../../node_modules/vite/bin/vite.js --port 3000 --open /playground/'",
+    "bench": "node benchmarks/large-app.js",
+    "build": "vite build && tsc -p tsconfig.json",
+    "dev": "vite --port 3000 --open /playground/",
     "prepublishOnly": "npm run build",
     "qa:test": "vitest run",
     "qa:test:watch": "vitest watch"
   },
   "devDependencies": {
-    "@rollup/plugin-terser": "^0.4.4",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
     "@types/node": "^24.10.1",
-    "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "jsdom": "^27.2.0",
     "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
-    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-humn": "*",
     "vitest": "^4.0.15"
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  }
 }

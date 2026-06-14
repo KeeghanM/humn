@@ -41,6 +41,61 @@ describe('Cortex (State Management)', () => {
     expect(store.memory.user.profile.theme).toBe('dark')
   })
 
+  it('should preserve unchanged references during mutative updates', () => {
+    const store = new Cortex({
+      memory: {
+        settings: { locale: 'en' },
+        user: { profile: { theme: 'light' } },
+      },
+      synapses: (set) => ({
+        goDark: () =>
+          set((state) => {
+            state.user.profile.theme = 'dark'
+          }),
+      }),
+    })
+
+    const settings = store.memory.settings
+    const user = store.memory.user
+    const profile = store.memory.user.profile
+
+    store.synapses.goDark()
+
+    expect(store.memory.settings).toBe(settings)
+    expect(store.memory.user).not.toBe(user)
+    expect(store.memory.user.profile).not.toBe(profile)
+    expect(store.memory.user.profile.theme).toBe('dark')
+  })
+
+  it('should handle array mutation and delete operations in mutative updates', () => {
+    const store = new Cortex({
+      memory: {
+        items: [
+          { id: 1, name: 'One' },
+          { id: 2, name: 'Two' },
+        ],
+        user: { profile: { avatar: 'avatar.png', name: 'Keeghan' } },
+      },
+      synapses: (set) => ({
+        update: () =>
+          set((state) => {
+            state.items.push({ id: 3, name: 'Three' })
+            state.items.splice(1, 1)
+            state.items[0].name = 'Changed'
+            delete state.user.profile.avatar
+          }),
+      }),
+    })
+
+    store.synapses.update()
+
+    expect(store.memory.items).toEqual([
+      { id: 1, name: 'Changed' },
+      { id: 3, name: 'Three' },
+    ])
+    expect(store.memory.user.profile).toEqual({ name: 'Keeghan' })
+  })
+
   it('should use initial value if storage is empty', () => {
     const store = new Cortex({
       memory: {

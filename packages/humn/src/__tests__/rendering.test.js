@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { Cortex, css, h, mount } from '../index'
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 describe('Rendering & Reactivity', () => {
   it('should render a simple component', () => {
     const App = () => h('div', {}, 'Hello, World!')
@@ -10,7 +14,7 @@ describe('Rendering & Reactivity', () => {
     expect(target.innerHTML).toBe('<div>Hello, World!</div>')
   })
 
-  it('should update DOM text when cortex changes', () => {
+  it('should update DOM text when cortex changes', async () => {
     const user = new Cortex({
       memory: { name: 'Keeghan' },
       synapses: (set) => ({
@@ -24,10 +28,11 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.innerHTML).toBe('<div>Hello, Keeghan!</div>')
     user.synapses.changeName('McGarry')
+    await flushUpdates()
     expect(target.innerHTML).toBe('<div>Hello, McGarry!</div>')
   })
 
-  it('should reorder keyed elements (Keyed Diffing)', () => {
+  it('should reorder keyed elements (Keyed Diffing)', async () => {
     const store = new Cortex({
       memory: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] },
       synapses: (set) => ({
@@ -56,6 +61,7 @@ describe('Rendering & Reactivity', () => {
     expect(target.firstChild.firstChild.id).toBe('li-1')
 
     store.synapses.reverse()
+    await flushUpdates()
 
     expect(target.firstChild.firstChild.id).toBe('li-3')
 
@@ -67,7 +73,7 @@ describe('Rendering & Reactivity', () => {
 
   // --- EDGE CASES ---
 
-  it('should handle conditional rendering', () => {
+  it('should handle conditional rendering', async () => {
     const ui = new Cortex({
       memory: { show: false },
       synapses: (set) => ({ toggle: () => set((s) => ({ show: !s.show })) }),
@@ -86,12 +92,14 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.querySelector('#msg')).toBeNull()
     ui.synapses.toggle()
+    await flushUpdates()
     expect(target.querySelector('#msg').innerHTML).toBe('Visible')
     ui.synapses.toggle()
+    await flushUpdates()
     expect(target.querySelector('#msg')).toBeNull()
   })
 
-  it('should sync input values even if DOM is dirty', () => {
+  it('should sync input values even if DOM is dirty', async () => {
     const store = new Cortex({
       memory: { text: '' },
       synapses: (set) => ({
@@ -109,11 +117,12 @@ describe('Rendering & Reactivity', () => {
 
     // Force reset from State
     store.synapses.reset()
+    await flushUpdates()
 
     expect(input.value).toBe('')
   })
 
-  it('should update styles on state change', () => {
+  it('should update styles on state change', async () => {
     // This also tests "Deep Nested Updates" but verifies via CSS class application
     const store = new Cortex({
       memory: { user: { profile: { theme: 'light' } } },
@@ -135,7 +144,89 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.firstChild.className).toBe('light')
     store.synapses.goDark()
+    await flushUpdates()
     expect(target.firstChild.className).toBe('dark')
+  })
+
+  it('should update nested components created during initial DOM creation', async () => {
+    const store = new Cortex({
+      memory: { count: 0 },
+      synapses: (set) => ({
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }),
+    })
+    const Child = () => h('span', {}, String(store.memory.count))
+    const App = () => h('div', {}, [h(Child)])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.increment()
+    await flushUpdates()
+
+    expect(target.textContent).toBe('1')
+  })
+
+  it('should update keyed components after reorder', async () => {
+    const store = new Cortex({
+      memory: {
+        items: [
+          { id: 1, label: 'One' },
+          { id: 2, label: 'Two' },
+          { id: 3, label: 'Three' },
+        ],
+      },
+      synapses: (set) => ({
+        rename: (id, label) =>
+          set((state) => {
+            const item = state.items.find((candidate) => candidate.id === id)
+            if (item) item.label = label
+          }),
+        reverse: () => set((state) => ({ items: [...state.items].reverse() })),
+      }),
+    })
+    const Row = ({ id }) => {
+      const item = store.memory.items.find((candidate) => candidate.id === id)
+      return h('li', { 'data-id': String(id) }, item.label)
+    }
+    const App = () =>
+      h(
+        'ul',
+        {},
+        store.memory.items.map((item) => h(Row, { id: item.id, key: item.id })),
+      )
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.reverse()
+    await flushUpdates()
+    store.synapses.rename(1, 'Moved')
+    await flushUpdates()
+
+    expect(target.querySelector('[data-id="1"]').textContent).toBe('Moved')
+    expect(target.firstChild.lastChild.dataset.id).toBe('1')
+  })
+
+  it('should ignore queued updates for components removed in the same tick', async () => {
+    const store = new Cortex({
+      memory: { mode: 'span', show: true },
+      synapses: (set) => ({
+        hide: () => set({ show: false }),
+        switchMode: () => set({ mode: 'strong' }),
+      }),
+    })
+    const Child = () =>
+      store.memory.mode === 'span'
+        ? h('span', {}, 'child')
+        : h('strong', {}, 'child')
+    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.hide()
+    store.synapses.switchMode()
+    await flushUpdates()
+
+    expect(target.innerHTML).toBe('<div></div>')
   })
 
   it('should render components with scoped styles', () => {

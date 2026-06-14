@@ -38,11 +38,35 @@ function isComponent(tagName) {
   )
 }
 
+function isStaticNode(node, masks, htmlSource) {
+  if (node.nodeType === 3) return !node.rawText.includes('{')
+  if (node.nodeType !== 1) return true
+
+  const rawTag = getRawTagName(node, htmlSource)
+  if (isComponent(rawTag)) return false
+
+  const hasDynamicAttribute = Object.values(node.attributes).some((value) =>
+    masks.has(value),
+  )
+  if (hasDynamicAttribute) return false
+
+  return node.childNodes.every((child) =>
+    isStaticNode(child, masks, htmlSource),
+  )
+}
+
 export function compileTemplate(htmlString) {
   const { html: safeHTML, masks } = protectAttributes(htmlString)
   const root = parse(safeHTML)
+  const hoists = []
 
-  function traverse(node) {
+  function hoistStaticExpression(expression) {
+    const name = `__humn_static_${hoists.length}`
+    hoists.push(`const ${name} = ${expression};`)
+    return `cloneVNode(${name})`
+  }
+
+  function traverse(node, { hoist = true } = {}) {
     if (node.nodeType === 3) {
       const text = node.rawText
       if (!text) return null
@@ -62,6 +86,7 @@ export function compileTemplate(htmlString) {
     }
 
     if (node.nodeType === 1) {
+      const isStatic = hoist && isStaticNode(node, masks, safeHTML)
       const rawTag = getRawTagName(node, safeHTML)
       const isComp = isComponent(rawTag)
       const tagOutput = isComp ? rawTag : `'${rawTag.toLowerCase()}'`
@@ -77,12 +102,17 @@ export function compileTemplate(htmlString) {
       })
 
       const propsString = `{ ${propsParts.join(', ')} }`
-      const children = processChildren(node.childNodes, traverse)
+      const children = processChildren(node.childNodes, (child) =>
+        traverse(child, { hoist: !isStatic }),
+      )
+      const expression = `h(${tagOutput}, ${propsString}, [${children.join(', ')}])`
 
-      return `h(${tagOutput}, ${propsString}, [${children.join(', ')}])`
+      return isStatic ? hoistStaticExpression(expression) : expression
     }
     return null
   }
 
-  return processChildren(root.childNodes, traverse)
+  const nodes = processChildren(root.childNodes, traverse)
+  nodes.hoists = hoists
+  return nodes
 }

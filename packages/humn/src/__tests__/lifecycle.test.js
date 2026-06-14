@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { Cortex, h, mount, onCleanup, onMount } from '../index'
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 describe('lifecycle', () => {
   it('should fire onMount when component appears', async () => {
     const onMountSpy = vi.fn()
@@ -46,12 +50,13 @@ describe('lifecycle', () => {
 
     // 2. Remove Child
     store.synapses.toggle()
+    await flushUpdates()
 
     expect(target.innerHTML).not.toContain('Child')
     expect(onCleanupSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('should fire cleanup and remount hooks when a component updates', async () => {
+  it('should not fire mount or cleanup hooks when a component updates', async () => {
     const cleanupSpy = vi.fn()
     const mountSpy = vi.fn()
     const store = new Cortex({
@@ -79,11 +84,41 @@ describe('lifecycle', () => {
     expect(cleanupSpy).toHaveBeenCalledTimes(0)
 
     store.synapses.increment()
+    await flushUpdates()
 
     await new Promise((r) => setTimeout(r, 0))
     expect(target.textContent).toBe('1')
+    expect(cleanupSpy).toHaveBeenCalledTimes(0)
+    expect(mountSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('should preserve original cleanup hooks across updates', async () => {
+    const cleanupSpy = vi.fn()
+    const mountedResource = { id: 'mounted-resource' }
+    const store = new Cortex({
+      memory: { count: 0, show: true },
+      synapses: (set) => ({
+        hide: () => set({ show: false }),
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }),
+    })
+
+    const Child = () => {
+      onMount(() => mountedResource)
+      onCleanup(() => cleanupSpy(mountedResource))
+      return h('span', {}, String(store.memory.count))
+    }
+    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.increment()
+    await flushUpdates()
+    store.synapses.hide()
+    await flushUpdates()
+
     expect(cleanupSpy).toHaveBeenCalledTimes(1)
-    expect(mountSpy).toHaveBeenCalledTimes(2)
+    expect(cleanupSpy).toHaveBeenCalledWith(mountedResource)
   })
 
   it('should continue running cleanup hooks when one throws', async () => {
@@ -117,6 +152,7 @@ describe('lifecycle', () => {
     mount(target, App)
 
     store.synapses.hide()
+    await flushUpdates()
 
     expect(throwingCleanup).toHaveBeenCalledTimes(1)
     expect(stableCleanup).toHaveBeenCalledTimes(1)

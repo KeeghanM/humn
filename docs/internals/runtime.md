@@ -1,65 +1,38 @@
-# Runtime & Metrics
+# Runtime
 
-The Humn runtime is responsible for bootstrapping the application, managing the component lifecycle, and monitoring performance.
+The Humn runtime is responsible for bootstrapping the application, rendering components, patching the DOM, and managing component lifecycle hooks.
 
 ## The Mount Process (`mount.js`)
 
-The entry point for any Humn application is the `mount()` function. It establishes the reactive root of your application.
+The entry point for any Humn application is the `mount()` function. It creates a root VNode and patches it into the target element.
 
 ```javascript
 export const mount = (target, Component) => {
   let prevVNode = null
 
   const lifecycle = () => {
-    // 1. Set the current observer to this update function
-    setObserver(lifecycle)
-
-    // 2. Create the root VNode
     const nextVNode = {
       tag: Component,
       props: {},
       children: [],
     }
 
-    // 3. Patch the DOM
     patch(target, nextVNode, prevVNode)
-
-    // 4. Cleanup
-    setObserver(null)
     prevVNode = nextVNode
   }
 
-  // Initial render
   lifecycle()
 }
 ```
 
 ### How Reactivity Connects to the Runtime
 
-Because `lifecycle` sets itself as the observer before rendering, any reactive state accessed during the render (inside `Component` or its children) will register `lifecycle` as a dependency.
+Each component instance owns an update observer. Before a component renders, Humn clears that observer's previous Cortex dependencies, sets it as the current observer, and then runs the component function.
 
-When that state changes, `lifecycle` is called again, triggering a re-render of the entire tree (which is then efficiently diffed by the Virtual DOM).
+Any Cortex state read during that render is registered against that component observer. When a later state update changes a related path, Cortex queues that observer in a microtask. Multiple state updates in the same tick collapse into one render for each affected component.
 
-## Performance Metrics (`metrics.js`)
+The queued component update creates a fresh child VNode for that component and patches only that component's subtree against its previous child VNode.
 
-Humn includes a development-only metrics module to help you understand performance characteristics.
+### Lifecycle Hooks
 
-### Tracked Metrics
-
-- **Diff Checks**: How many VNodes were compared.
-- **DOM Updates**: How many actual DOM manipulations occurred.
-- **Components Rendered**: How many component functions were executed.
-- **Elements Created**: New DOM nodes created.
-- **Elements Removed**: DOM nodes removed.
-
-### Usage
-
-In development mode (`import.meta.env.DEV` is true), metrics are automatically logged to the console once per animation frame if any activity occurred.
-
-```javascript
-import { track } from './metrics'
-
-// Inside the runtime
-track('diffs')
-track('patches')
-```
+`onMount` callbacks run once after the component is first inserted. `onCleanup` callbacks run when the component is removed. Updating a mounted component does not run cleanup and remount hooks.

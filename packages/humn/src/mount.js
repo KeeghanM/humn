@@ -2,7 +2,6 @@
  * @file Mounts the application to the DOM.
  * @module mount
  */
-import { setObserver } from './observer.js'
 import { patch } from './runtime/patch.js'
 
 /**
@@ -14,8 +13,6 @@ export const mount = (target, Component) => {
   let prevVNode = null
 
   const lifecycle = () => {
-    setObserver(lifecycle)
-
     const nextVNode = {
       tag: Component,
       props: {},
@@ -23,7 +20,6 @@ export const mount = (target, Component) => {
     }
 
     patch(target, nextVNode, prevVNode)
-    setObserver(null)
     prevVNode = nextVNode
   }
 

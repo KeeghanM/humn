@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import humnPlugin from '../../../vite-plugin-humn/src/index.js'
-import { Cortex, css, h, mount } from '../index.js'
+import { cloneVNode, Cortex, css, h, mount } from '../index.js'
 
 /**
  * Compiles and executes a .humn component string in the test environment.
@@ -26,12 +26,16 @@ const compile = (source, imports = {}) => {
     .replace('export default function', 'return function')
 
   // We inject 'h' and 'css' (core) + any user provided imports (store, sub-components)
-  const dependencyNames = ['h', 'css', ...Object.keys(imports)]
-  const dependencyValues = [h, css, ...Object.values(imports)]
+  const dependencyNames = ['h', 'css', 'cloneVNode', ...Object.keys(imports)]
+  const dependencyValues = [h, css, cloneVNode, ...Object.values(imports)]
 
   // new Function(deps..., body)(values...)
   const factory = new Function(...dependencyNames, runnableCode)
   return factory(...dependencyValues)
+}
+
+async function flushUpdates() {
+  await Promise.resolve()
 }
 
 // Mock Store Logic
@@ -174,6 +178,7 @@ describe('Integration: Compiler + Runtime', () => {
 
     // 2. Click Add
     btn.click()
+    await flushUpdates()
 
     // 3. Verify Update
     // Reactivity should trigger a re-render of App
@@ -181,7 +186,7 @@ describe('Integration: Compiler + Runtime', () => {
     expect(input.value).toBe('')
   })
 
-  it('should apply scoped styles correctly to sub-components', () => {
+  it('should apply scoped styles correctly to sub-components', async () => {
     mount(container, App)
 
     const item = container.querySelector('[data-testid="item"]')
@@ -192,6 +197,7 @@ describe('Integration: Compiler + Runtime', () => {
 
     // Trigger toggle (tests interactivity passed down to children)
     item.click()
+    await flushUpdates()
     expect(item.className).toContain('done')
   })
 })

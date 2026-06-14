@@ -1,5 +1,10 @@
-import { track } from '../metrics.js'
-import { setInstance } from '../observer.js'
+import {
+  clearObserverDependencies,
+  getInstance,
+  getObserver,
+  setInstance,
+  setObserver,
+} from '../observer.js'
 
 export function invokeHookSafely(fn, errorMessage) {
   try {
@@ -9,21 +14,34 @@ export function invokeHookSafely(fn, errorMessage) {
   }
 }
 
-export function renderComponent(vNode) {
-  track('componentsRendered')
+export function renderComponent(vNode, observer) {
   const hooks = { mounts: [], cleanups: [] }
+  const previousInstance = getInstance()
+  const previousObserver = getObserver()
+
+  clearObserverDependencies(observer)
+  setObserver(observer)
   setInstance(hooks)
 
-  const renderedVNode = vNode.tag(vNode.props)
-
-  setInstance(null)
-  vNode.hooks = hooks
-  return renderedVNode
+  try {
+    const renderedVNode = vNode.tag(vNode.props)
+    vNode.hooks = hooks
+    return renderedVNode
+  } finally {
+    setInstance(previousInstance)
+    setObserver(previousObserver)
+  }
 }
 
 export function runUnmount(vNode) {
   if (!vNode) return
 
+  clearObserverDependencies(vNode.instance?.update)
+  if (vNode.instance) {
+    vNode.instance.isMounted = false
+    vNode.instance.parent = null
+    vNode.instance.vNode = null
+  }
   if (vNode.hooks?.cleanups)
     vNode.hooks.cleanups.forEach((fn) =>
       invokeHookSafely(fn, 'Error in cleanup hook:'),
@@ -45,10 +63,5 @@ export function scheduleMountHooks(hooks) {
 }
 
 export function runComponentUpdateHooks({ newHooks, oldHooks }) {
-  if (!oldHooks?.cleanups?.length) return
-
-  oldHooks.cleanups.forEach((fn) =>
-    invokeHookSafely(fn, 'Error in cleanup hook:'),
-  )
-  scheduleMountHooks(newHooks)
+  if (!oldHooks) return
 }

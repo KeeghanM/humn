@@ -28,7 +28,7 @@ This section explains how Humn works under the hood. It covers the Virtual DOM, 
 - **[The Compiler](./internals/compiler.md)**: How `.humn` files are transformed into JavaScript.
 - **[Reactivity System](./internals/reactivity.md)**: The Observer pattern and dependency tracking.
 - **[Scoped CSS](./internals/css.md)**: How the scoped CSS and hashing works.
-- **[Runtime & Metrics](./internals/runtime.md)**: Component instantiation and performance monitoring.
+- **[Runtime](./internals/runtime.md)**: Component instantiation and lifecycle handling.
 
 ## Philosophy
 

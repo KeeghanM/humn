@@ -1,5 +1,4 @@
 import { createElement, getNamespace } from './create-element.js'
-import { track } from '../metrics.js'
 
 export function hasKeys(children) {
   return children && children.some((child) => child?.props?.key != null)
@@ -99,10 +98,8 @@ function patchExistingKeyedChild({
 
   const element = newChild.el || oldVNode.el
   const domChildAtIndex = parent.childNodes[index]
-  if (element && domChildAtIndex !== element) {
+  if (element && domChildAtIndex !== element)
     parent.insertBefore(element, domChildAtIndex)
-    track('patches')
-  }
 }
 
 function insertNewKeyedChild({ index, newChild, parent }) {
@@ -123,6 +120,5 @@ function removeStaleKeyedChildren({ keyedChildren, parent, runUnmount }) {
 
     runUnmount(vNode)
     parent.removeChild(vNode.el)
-    track('elementsRemoved')
   })
 }

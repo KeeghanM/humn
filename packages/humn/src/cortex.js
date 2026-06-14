@@ -1,5 +1,30 @@
-import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
+
+const isDev = import.meta.env?.DEV || false
+const pendingRenderFns = new Set()
+let isRenderFlushQueued = false
+
+function queueRender(renderFn) {
+  pendingRenderFns.add(renderFn)
+
+  scheduleRenderFlush()
+}
+
+function scheduleRenderFlush() {
+  if (isRenderFlushQueued) return
+
+  isRenderFlushQueued = true
+  queueMicrotask(flushQueuedRenders)
+}
+
+function flushQueuedRenders() {
+  isRenderFlushQueued = false
+  const renderFns = Array.from(pendingRenderFns)
+  pendingRenderFns.clear()
+
+  renderFns.forEach((renderFn) => renderFn())
+  if (pendingRenderFns.size > 0) scheduleRenderFlush()
+}
 
 /**
  * Mapped type for the Memory configuration object.
@@ -91,15 +116,14 @@ export class Cortex {
       let changedPaths = new Set()
 
       if (typeof updater === 'function') {
-        const clone = structuredClone(this._memory)
-        const proxy = this._createChangeTrackingProxy(clone, changedPaths)
-        const result = updater(proxy)
+        const draft = this._createMutationDraft(this._memory, changedPaths)
+        const result = updater(draft.memory)
 
         if (result && typeof result === 'object') {
           nextState = { ...this._memory, ...result }
           Object.keys(result).forEach((key) => changedPaths.add(key))
         } else {
-          nextState = clone
+          nextState = draft.getNextState()
         }
       } else {
         nextState = { ...this._memory, ...updater }
@@ -135,48 +159,79 @@ export class Cortex {
   }
 
   /**
-   * Creates a Proxy that tracks which properties are being mutated.
-   * Includes a GET trap to recursively proxy nested objects for deep mutation tracking.
-   *
-   * WHY: We need to know exactly which paths were changed so we can notify ONLY
-   * the components that care about those specific paths. If we just knew "something changed",
-   * we'd have to re-render the whole app (like Redux) or rely on manual optimization.
+   * Creates a copy-on-write mutation draft that tracks changed paths without
+   * cloning the whole store before every mutative update.
    */
-  _createChangeTrackingProxy(obj, changedPaths, path = '') {
-    return new Proxy(obj, {
-      get: (target, prop) => {
-        if (typeof prop === 'symbol' || prop === '__proto__')
-          return target[prop]
+  _createMutationDraft(base, changedPaths) {
+    const clones = new WeakMap()
 
-        const value = target[prop]
-        const fullPath = path ? `${path}.${prop}` : prop
+    const getClone = ({ parent, parentProp, target }) => {
+      const existing = clones.get(target)
+      if (existing) return existing
 
-        // Recursively proxy nested objects so we can trap their sets too
-        if (typeof value === 'object' && value !== null) {
-          return this._createChangeTrackingProxy(value, changedPaths, fullPath)
-        }
-        return value
-      },
-      set: (target, prop, value) => {
-        if (typeof prop === 'symbol' || prop === '__proto__') {
-          target[prop] = value
+      const clone = Array.isArray(target) ? target.slice() : { ...target }
+      clones.set(target, clone)
+
+      if (parent) getClone(parent)[parentProp] = clone
+      return clone
+    }
+
+    const createProxy = (
+      target,
+      path = '',
+      parent = null,
+      parentProp = null,
+    ) => {
+      const proxy = new Proxy(target, {
+        deleteProperty: (draftTarget, prop) => {
+          const clone = getClone({ parent, parentProp, target: draftTarget })
+          delete clone[prop]
+
+          if (typeof prop !== 'symbol')
+            changedPaths.add(path ? `${path}.${prop}` : String(prop))
           return true
-        }
+        },
+        get: (draftTarget, prop) => {
+          const source = clones.get(draftTarget) || draftTarget
+          const value = source[prop]
 
-        const fullPath = path ? `${path}.${prop}` : prop
-        changedPaths.add(fullPath)
+          if (typeof prop === 'symbol' || prop === '__proto__') return value
+          if (typeof value !== 'object' || value === null) return value
 
-        target[prop] = value
-        return true
-      },
-    })
+          const fullPath = path ? `${path}.${prop}` : String(prop)
+          return createProxy(
+            value,
+            fullPath,
+            { parent, parentProp, target: draftTarget },
+            prop,
+          )
+        },
+        set: (draftTarget, prop, value) => {
+          const clone = getClone({ parent, parentProp, target: draftTarget })
+          clone[prop] = value
+
+          if (typeof prop !== 'symbol')
+            changedPaths.add(path ? `${path}.${prop}` : String(prop))
+          return true
+        },
+      })
+
+      return proxy
+    }
+
+    return {
+      getNextState: () => clones.get(base) || base,
+      memory: createProxy(base),
+    }
   }
 
   /**
    * Only notify listeners that read properties which changed
    */
   _notifyRelevantListeners(changedPaths) {
-    this._listeners.forEach((accessedPaths, renderFn) => {
+    const listeners = Array.from(this._listeners.entries())
+
+    listeners.forEach(([renderFn, accessedPaths]) => {
       const shouldNotify = Array.from(accessedPaths).some((accessedPath) => {
         return Array.from(changedPaths).some((changedPath) => {
           // Check for exact match or parent/child relationship
@@ -188,7 +243,7 @@ export class Cortex {
         })
       })
 
-      if (shouldNotify) renderFn()
+      if (shouldNotify) queueRender(renderFn)
     })
   }
 
@@ -233,6 +288,10 @@ export class Cortex {
 
     if (!this._listeners.has(currentObserver))
       this._listeners.set(currentObserver, new Set())
+
+    if (!currentObserver.__humnCortexes)
+      currentObserver.__humnCortexes = new Set()
+    currentObserver.__humnCortexes.add(this)
 
     const accessedPaths = this._listeners.get(currentObserver)
 

@@ -1,6 +1,5 @@
-import { track } from '../metrics.js'
+import { mountComponent } from './patch.js'
 import { patchProps } from './patch-props.js'
-import { renderComponent, scheduleMountHooks } from './component-lifecycle.js'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const MATH_NS = 'http://www.w3.org/1998/Math/MathML'
@@ -15,15 +14,14 @@ export function getNamespace(parent) {
   return null
 }
 
-export function createElement(vNode, namespace) {
+export function createElement(vNode, namespace, parent = null, index = 0) {
   if (typeof vNode === 'string' || typeof vNode === 'number') {
     return document.createTextNode(String(vNode))
   }
 
   if (typeof vNode.tag === 'function')
-    return createComponentElement(vNode, namespace)
+    return createComponentElement({ index, namespace, parent, vNode })
 
-  track('elementsCreated')
   const tag = vNode.tag
   const elementNamespace = getElementNamespace(tag, namespace)
   const element = elementNamespace
@@ -36,15 +34,20 @@ export function createElement(vNode, namespace) {
   return element
 }
 
-function createComponentElement(vNode, namespace) {
-  const childVNode = renderComponent(vNode)
-  const element = createElement(childVNode, namespace)
+function createComponentElement({ index, namespace, parent, vNode }) {
+  if (parent) {
+    mountComponent({ index, newVNode: vNode, oldVNode: null, parent })
+    return vNode.el
+  }
 
-  vNode.child = childVNode
-  vNode.el = element
-  scheduleMountHooks(vNode.hooks)
-
-  return element
+  const fragment = document.createDocumentFragment()
+  mountComponent({
+    index: 0,
+    newVNode: vNode,
+    oldVNode: null,
+    parent: fragment,
+  })
+  return vNode.el || fragment.firstChild
 }
 
 function appendChildren({ element, namespace, tag, vNode }) {
@@ -52,7 +55,13 @@ function appendChildren({ element, namespace, tag, vNode }) {
   const childNamespace = tag === 'foreignObject' ? null : namespace
 
   vNode.children.forEach((child) => {
-    element.appendChild(createElement(child, childNamespace))
+    const childElement = createElement(
+      child,
+      childNamespace,
+      element,
+      element.childNodes.length,
+    )
+    if (childElement.parentNode !== element) element.appendChild(childElement)
   })
 }
 

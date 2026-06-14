@@ -1,4 +1,3 @@
-import { track } from '../metrics.js'
 import {
   addManagedListener,
   parseEventKey,
@@ -41,7 +40,6 @@ function patchProp({ element, key, newProps, oldProps }) {
 
   if (oldValue === newValue && key !== 'onclickasync') return
 
-  track('patches')
   if (key.startsWith('on')) {
     patchEventProp({ element, handler: newValue, key, newProps })
     return
@@ -61,14 +59,12 @@ function removeProp({ element, key }) {
   if (key === 'oninputdebounced') clearDebouncedInput(element)
 
   element.removeAttribute(key)
-  track('patches')
 }
 
 function patchLiveDomProp({ element, key, value }) {
   if (element[key] === value) return
 
   element[key] = value
-  track('patches')
 }
 
 function patchEventProp({ element, handler, key, newProps }) {

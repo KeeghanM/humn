@@ -28,3 +28,15 @@ export const h = (tag, props = {}, children = []) => {
     children: cleanChildren,
   }
 }
+
+export function cloneVNode(vNode) {
+  if (typeof vNode !== 'object' || vNode === null) return vNode
+
+  const children = Array.isArray(vNode.children) ? vNode.children : []
+
+  return {
+    tag: vNode.tag,
+    props: { ...vNode.props },
+    children: children.map(cloneVNode),
+  }
+}

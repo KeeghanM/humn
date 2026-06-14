@@ -12,8 +12,25 @@ permissions:
 
 jobs:
   release:
-    name: Release All Packages
+    name: Release ${{ matrix.workspace }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - filter: core
+            workspace: packages/humn
+            needs-vsce: false
+          - filter: prettier
+            workspace: packages/prettier-plugin-humn
+            needs-vsce: false
+          - filter: vite
+            workspace: packages/vite-plugin-humn
+            needs-vsce: false
+          - filter: extension
+            workspace: packages/humn-vscode
+            needs-vsce: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,61 +63,24 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Release Core
-      - name: Build Humn
-        if: steps.filter.outputs.core == 'true'
-        run: npm run build -w packages/humn
+      - name: Build package
+        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
+        run: npm run build --if-present -w ${{ matrix.workspace }}
 
-      - name: Test Humn
-        if: steps.filter.outputs.core == 'true'
-        run: npm run qa:test -w packages/humn
+      - name: Test package
+        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
+        run: npm run qa:test --if-present -w ${{ matrix.workspace }}
 
-      - name: Release Humn
-        if: steps.filter.outputs.core == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd packages/humn
-          npx semantic-release
-
-      # Release Prettier Plugin
-      - name: Test Prettier Plugin
-        if: steps.filter.outputs.prettier == 'true'
-        run: npm run qa:test -w packages/prettier-plugin-humn
-
-      - name: Release Prettier Plugin
-        if: steps.filter.outputs.prettier == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd packages/prettier-plugin-humn
-          npx semantic-release
-
-      # Release Vite Plugin
-      - name: Test Vite Plugin
-        if: steps.filter.outputs.vite == 'true'
-        run: npm run qa:test -w packages/vite-plugin-humn
-
-      - name: Release Vite Plugin
-        if: steps.filter.outputs.vite == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd packages/vite-plugin-humn
-          npx semantic-release
-
-      # Release Extension
       - name: Install vsce
-        if: steps.filter.outputs.extension == 'true'
+        if: ${{ steps.filter.outputs[matrix.filter] == 'true' && matrix.needs-vsce }}
         run: npm install -g @vscode/vsce
 
-      - name: Release Extension
-        if: steps.filter.outputs.extension == 'true'
+      - name: Release package
+        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
+        working-directory: ${{ matrix.workspace }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
-        run: |
-          cd packages/humn-vscode
-          npx semantic-release
+        run: npx semantic-release
