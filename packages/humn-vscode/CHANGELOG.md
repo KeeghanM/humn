@@ -1,3 +1,20 @@
+## [humn-vscode-v1.1.0](https://github.com/KeeghanM/humn/compare/humn-vscode-v1.0.4...humn-vscode-v1.1.0) (2026-06-14)
+
+### Features
+
+- **vscode:** add Humn language server ([8cc2833](https://github.com/KeeghanM/humn/commit/8cc28335430ff3ebb011c6c00fae3aeb94b1d468))
+
+### Bug Fixes
+
+- **vscode:** avoid semantic tokens in Humn strings ([3a755ed](https://github.com/KeeghanM/humn/commit/3a755ed05dd44c9553983469e16ff5f60e3f97c6))
+- **vscode:** delegate humn highlighting to embedded languages ([a729118](https://github.com/KeeghanM/humn/commit/a7291180b8fa89e7d199aebcd632249b025912df))
+- **vscode:** delegate Humn script highlighting to TSX grammar ([d2bac55](https://github.com/KeeghanM/humn/commit/d2bac5532c8f08b26517a9d90076b5cfad437e51))
+- **vscode:** highlight root-level scoped css declarations ([adda8d7](https://github.com/KeeghanM/humn/commit/adda8d73e3286be16cd5510a0cbe22679fc0d81c))
+- **vscode:** improve Humn highlighting and component auto-imports ([bb569ec](https://github.com/KeeghanM/humn/commit/bb569ecb8bdd393e1a436caba6aeac7244428be9))
+- **vscode:** package typescript lib files and detect tsconfig ([fcc70d1](https://github.com/KeeghanM/humn/commit/fcc70d1fccd1bba08b988e1e0b6b179b8e65796e))
+- **lsp:** resolve parsing, validation, and project workspace issues ([204b9d5](https://github.com/KeeghanM/humn/commit/204b9d569258c816eabae81b5c2ddc357a23ab22))
+- **vscode:** surface language server startup failures ([83adfd7](https://github.com/KeeghanM/humn/commit/83adfd739742883ca5e6cf580433e800c87d6602))
+
 ## [humn-vscode-v1.0.4](https://github.com/KeeghanM/humn/compare/humn-vscode-v1.0.3...humn-vscode-v1.0.4) (2026-06-14)
 
 ### Bug Fixes

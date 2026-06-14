@@ -1,7 +1,7 @@
 {
   "name": "humn-vscode",
   "displayName": "Humn",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KeeghanM/humn.git"
