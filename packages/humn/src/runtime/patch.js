@@ -61,6 +61,8 @@ export function mountComponent({ index, newVNode, oldVNode, parent }) {
       oldHooks: previousVNode.hooks,
     })
 
+  if (!isNew) newVNode.hooks = previousVNode.hooks
+
   instance.vNode = newVNode
 }
 

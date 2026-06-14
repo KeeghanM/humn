@@ -58,10 +58,6 @@ export function scheduleMountHooks(hooks) {
 }
 
 export function runComponentUpdateHooks({ newHooks, oldHooks }) {
-  if (!oldHooks?.cleanups?.length) return
-
-  oldHooks.cleanups.forEach((fn) =>
-    invokeHookSafely(fn, 'Error in cleanup hook:'),
-  )
-  scheduleMountHooks(newHooks)
+  if (!oldHooks) return
+  oldHooks.cleanups = newHooks.cleanups
 }

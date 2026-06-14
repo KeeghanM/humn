@@ -56,7 +56,7 @@ describe('lifecycle', () => {
     expect(onCleanupSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('should fire cleanup and remount hooks when a component updates', async () => {
+  it('should not fire mount or cleanup hooks when a component updates', async () => {
     const cleanupSpy = vi.fn()
     const mountSpy = vi.fn()
     const store = new Cortex({
@@ -88,8 +88,8 @@ describe('lifecycle', () => {
 
     await new Promise((r) => setTimeout(r, 0))
     expect(target.textContent).toBe('1')
-    expect(cleanupSpy).toHaveBeenCalledTimes(1)
-    expect(mountSpy).toHaveBeenCalledTimes(2)
+    expect(cleanupSpy).toHaveBeenCalledTimes(0)
+    expect(mountSpy).toHaveBeenCalledTimes(1)
   })
 
   it('should continue running cleanup hooks when one throws', async () => {
