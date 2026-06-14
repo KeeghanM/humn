@@ -1,6 +1,10 @@
 const vscode = require('vscode')
 const path = require('node:path')
-const { LanguageClient, TransportKind } = require('vscode-languageclient/node')
+const {
+  LanguageClient,
+  State,
+  TransportKind,
+} = require('vscode-languageclient/node')
 const {
   getRegionAtOffset,
   parseHumn,
@@ -8,8 +12,15 @@ const {
 
 let client
 
-function activate(context) {
+async function activate(context) {
   const serverModule = path.join(__dirname, 'server.cjs')
+  const outputChannel = vscode.window.createOutputChannel(
+    'Humn Language Server',
+  )
+
+  context.subscriptions.push(outputChannel)
+  outputChannel.appendLine(`Starting Humn language server: ${serverModule}`)
+
   client = new LanguageClient(
     'humnLanguageServer',
     'Humn Language Server',
@@ -23,6 +34,8 @@ function activate(context) {
     },
     {
       documentSelector: [{ scheme: 'file', language: 'humn' }],
+      outputChannel,
+      traceOutputChannel: outputChannel,
       synchronize: {
         fileEvents: vscode.workspace.createFileSystemWatcher('**/*.humn'),
       },
@@ -30,14 +43,49 @@ function activate(context) {
   )
 
   context.subscriptions.push(client)
-  client.start()
+  context.subscriptions.push(
+    client.onDidChangeState((event) => {
+      outputChannel.appendLine(
+        `Language server state: ${stateName(event.oldState)} -> ${stateName(
+          event.newState,
+        )}`,
+      )
+    }),
+  )
+
+  try {
+    await client.start()
+    outputChannel.appendLine('Humn language server started.')
+  } catch (error) {
+    const message = formatError(error)
+    outputChannel.appendLine(
+      `Failed to start Humn language server:\n${message}`,
+    )
+    outputChannel.show(true)
+    void vscode.window.showErrorMessage(
+      'Humn language server failed to start. See the Humn Language Server output for details.',
+    )
+    throw error
+  }
+
   context.subscriptions.push(
     vscode.commands.registerCommand('humn.toggleComment', toggleComment),
   )
 }
 
 function deactivate() {
-  return client?.stop()
+  const currentClient = client
+  client = undefined
+  return currentClient?.stop()
+}
+
+function stateName(state) {
+  return State[state] || String(state)
+}
+
+function formatError(error) {
+  if (error instanceof Error) return error.stack || error.message
+  return String(error)
 }
 
 async function toggleComment() {
