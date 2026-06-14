@@ -12,3 +12,4 @@ yarn.lock
 git-diff.txt
 .vscode
 *.vsix
+packages/humn/docs/

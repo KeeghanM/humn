@@ -1,134 +1,2143 @@
 # Humn full LLM context
 
-## Mental model
 
-Humn is a minimal, reactive UI framework with built-in state management. It relies on a Virtual DOM.
-You author components in `.humn` single file components, or manually using `h()` factory functions.
+
+> This file is generated from the Humn package README and docs. Do not edit it directly.
+
+
+
+# Source: README.md
+
+# humn
+
+This package is the core `humn` library. It provides the rendering engine and state management capabilities.
+
+While you can use `humn` standalone with the `h()` syntax, we recommend using it with the `vite-plugin-humn` for the best experience with `.humn` single-file components. For more information, please see the [**root README**](../../README.md).
 
 ## Installation
 
 ```bash
 npm install humn
-npm install -D vite-plugin-humn
 ```
 
-## .humn file format
+## AI & Agent Support
 
-A `.humn` file contains three optional sections:
-- `<script>`: Component logic. Imports, state connections, and derived values.
-- `<style>`: Scoped CSS for the component.
-- The rest of the file is the template markup.
+Humn includes built-in instructions to help AI coding agents (like Cursor, Claude Code, GitHub Copilot) understand its conventions and write idiomatic code.
 
-## Cortex
+To initialize the AI instructions in your project, run:
 
-Cortex is Humn's state management primitive.
+```bash
+npx humn init-ai
+```
 
-```js
+This will create `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/humn.mdc` in your workspace, ensuring coding agents don't confuse Humn with React or Svelte.
+
+## Quick Start with `h()`
+
+Here's a simple counter example using the `h()` syntax.
+
+### 1. Create a Cortex (Cortex)
+
+The `Cortex` holds your application's state (`memory`) and the actions that can modify it (`synapses`).
+
+```javascript
+// cortex.js
 import { Cortex } from 'humn'
 
-export const cortex = new Cortex({
+export const counterCortex = new Cortex({
   memory: {
-    count: 0
+    count: 0,
   },
   synapses: (set) => ({
-    increment() {
+    increment: () =>
       set((state) => {
-        state.count += 1
-      })
-    }
-  })
+        state.count++
+      }),
+    decrement: () =>
+      set((state) => {
+        state.count--
+      }),
+  }),
 })
 ```
 
-## Common mistakes
+### 2. Create a Component
 
-### Do not instantiate Cortex with positional arguments
+Components are functions that return a tree of `h()` calls.
 
-Incorrect:
-```js
-new Cortex(memory, synapses)
+```javascript
+// App.js
+import { h } from 'humn'
+import { counterCortex } from './cortex'
+
+export function App() {
+  const { count } = counterCortex.memory
+  const { increment, decrement } = counterCortex.synapses
+
+  return h('div', {}, [
+    h('h1', {}, `Count: ${count}`),
+    h('button', { onclick: increment }, '+'),
+    h('button', { onclick: decrement }, '-'),
+  ])
+}
 ```
 
-Correct:
-```js
-new Cortex({
-  memory: { count: 0 },
-  synapses: (set) => ({ /* ... */ })
+### 3. Mount
+
+```javascript
+// main.js
+import { mount } from 'humn'
+import { App } from './App.js'
+
+mount(document.getElementById('root'), App)
+```
+
+## Learn More
+
+For a complete guide, including information on lifecycle hooks, scoped CSS, `.humn` files, and more, please see the [**full documentation in the docs**](../../docs/guides/getting-started.md).
+
+# Source: docs/guides/api-reference.md
+
+# API Reference
+
+## `mount(target, Component)`
+
+Mounts a component to a target DOM element.
+
+- `target`: The DOM element to mount the component to.
+- `Component`: The root component to render.
+
+## `Cortex<Memory, Synapses>({ memory, synapses })`
+
+Creates a strongly-typed `Cortex` instance for state management.
+
+- **Generics**:
+  - `Memory`: The shape of your state object.
+  - `Synapses`: The shape of your actions object.
+- **Arguments**:
+  - `memory`: The initial state. Values can be raw or wrapped in `persist()`.
+  - `synapses`: A builder function `(set, get) => Synapses`.
+
+### The `set` function
+
+When typing is applied, `set` supports two modes:
+
+1. **Partial Update**: `set({ count: 1 })` — validated against `Memory`.
+2. **Functional Update**: `set(state => { state.count++ })` — `state` is inferred as `Memory`.
+
+### `persist(initial, config)`
+
+Marks a section of the state for persistence in localStorage.
+
+- `initial`: The initial value of the state.
+- `config`: (Optional) The configuration for persistence.
+  - `key`: A custom key to use in `localStorage`.
+
+## `onMount(callback)`
+
+Registers a callback to be called after a component is mounted.
+
+- `callback`: The function to be called.
+
+## `onCleanup(callback)`
+
+Registers a callback to be called when a component is unmounted.
+
+- `callback`: The function to be called.
+
+## Interaction Helper Props
+
+Interaction helpers are optional props for common DOM interaction boilerplate. Existing event behavior is unchanged when these props are not used. See the [Interaction Helpers guide](./interaction-helpers.md) for examples and edge-case details.
+
+### Keyboard Helpers
+
+- `onenter(event)`: runs when `Enter` is pressed.
+- `onescape(event)`: runs when `Escape` is pressed.
+- `onkeys`: object map of key combinations to handlers, such as `{ 'Mod+Enter': save, Escape: close }`.
+
+Keyboard helpers are composition-aware and ignore key handling while IME composition is active. `Mod` maps to `Meta` on macOS and `Ctrl` elsewhere.
+
+### Debounced Input
+
+- `debounce={number}`: debounce delay in milliseconds. Defaults to `250` when omitted or invalid.
+- `oninputdebounced(event)`: runs once input settles for the configured delay.
+
+Each input event clears the previous pending timer. The callback receives an event-like object with `target` and `currentTarget` set to the element, so `event.target.value` reflects the latest value when the timer fires.
+
+### Commit Semantics
+
+- `oncommit(event)`: runs when a field is committed by `Enter` or blur.
+
+If pressing `Enter` causes blur, `oncommit` fires once for that user intent instead of firing for both events. The Enter path is IME-safe.
+
+### Async Click Helpers
+
+- `onclickasync(event)`: async click handler.
+- `disabledwhilepending`: when true, disables the element and blocks repeated clicks while `onclickasync` is pending.
+
+The element is re-enabled after the async handler settles, including rejection. Without `disabledwhilepending`, repeated async clicks are allowed.
+
+### Event Modifiers
+
+Use pipe syntax on event prop keys for explicit modifiers:
+
+- `'onclick|prevent'`
+- `'onclick|stop'`
+- `'onsubmit|prevent|stop'`
+- `'onclick|once'`
+- `'onclick|capture'`
+- `'onscroll|passive'`
+
+`prevent` and `stop` run before the handler. `once`, `capture`, and `passive` are passed as listener options. Modifiers are opt-in and local to the specific handler prop.
+
+# Source: docs/guides/getting-started.md
+
+# Getting Started
+
+This guide will walk you through the process of creating a simple "Hello, World!" application with Humn.
+
+## Installation
+
+### Humn Core
+
+You can install Humn using npm or yarn:
+
+```bash
+npm install humn
+# or
+yarn add humn
+```
+
+### The Vite Plugin
+
+To use `.humn` files, you need to use the `vite-plugin-humn` in your Vite configuration.
+
+```bash
+npm install --save-dev vite-plugin-humn
+# or
+yarn add vite-plugin-humn -D
+```
+
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite'
+import humn from 'vite-plugin-humn'
+
+export default defineConfig({
+  plugins: [humn()],
 })
 ```
 
-### Do not use React hooks
+### Prettier
 
-Incorrect:
-```js
-const [count, setCount] = useState(0)
+We also have, and recommend, a Prettier Plugin which can be installed like any other
+
+```bash
+npm install --save-dev prettier-plugin-humn
+# or
+yarn add prettier-plugin-humn -D
 ```
 
-Correct:
-```js
-const { count } = counter.memory
-const { increment } = counter.synapses
+```javascript
+// prettier.config.js
+import humn from 'prettier-plugin-humn'
+
+const config = {
+  plugins: [humn],
+}
+
+export default config
 ```
 
-### Do not use Svelte $: reactive declarations
+## Hello, World
 
-Use normal JavaScript derived values inside the script block.
+Here's a simple "Hello, World!" example to get you started:
 
-### Do not start fetches or side effects in the script block
-
-Incorrect:
-```js
+```humn
 <script>
-  const users = await api.getUsers() // Runs on every render!
+  // App.humn
+  const message = 'Hello, World!'
 </script>
+
+<h1>{message}</h1>
 ```
 
-Correct:
-```js
+In this example, we're creating a simple component that renders an `h1` element with the text "Hello, World!".
+
+To mount this application, you would typically have an entry point like `main.js`:
+
+```javascript
+// main.js
+import { mount } from 'humn'
+import App from './App.humn'
+
+mount(document.getElementById('root'), App)
+```
+
+In this example, we're creating a simple component called `App` that renders an `h1` element with the text "Hello, World!". We then mount the `App` component to the `div` with the id `root`.
+
+# Source: docs/guides/humn-files.md
+
+# .humn Files
+
+Humn introduces a dedicated file format `.humn` to make writing components even more intuitive. It feels a lot like Svelte, but with Humn's unique flavour.
+
+A `.humn` file consists of three optional sections: `<script>`, `<template>` (implicit), and `<style>`.
+
+## Structure
+
+```humn
+<script>
+  // Your JavaScript logic here
+  import { cortex } from './cortex.js'
+
+  // Props are available via the `props` variable
+  const { name } = props
+
+  // Access cortex state
+  const { count } = cortex.memory
+  const { increment } = cortex.synapses
+</script>
+
+<!-- The template is the main content of the file -->
+<div>
+  <h1>Hello, {name}!</h1>
+  <p>Count: {count}</p>
+  <button onclick={increment}>Increment</button>
+</div>
+
+<style>
+  /* Scoped CSS */
+  div {
+    padding: 20px;
+    border: 1px solid #ccc;
+  }
+
+  h1 {
+    color: blue;
+  }
+</style>
+```
+
+## The Script Section
+
+The `<script>` block is where you define your component's logic.
+
+- **Imports**: Import other components, cortexes, or utilities.
+- **Props**: `props` is a magic variable available in the script scope containing the properties passed to the component.
+- **Reactivity**: Destructuring from `Cortex` memory creates reactive subscriptions.
+
+## The Template
+
+Anything outside of `<script>` and `<style>` tags is considered the template.
+
+- **JSX-like Syntax**: Use `{expression}` to embed JavaScript values.
+- **Directives**: Use standard HTML attributes. Event listeners match the HTML format, such as `onclick`, and runtime interaction helpers such as `onenter`, `oncommit`, and `oninputdebounced` are available on base elements.
+- **Control Flow**: Use JavaScript logic within curly braces for conditionals and loops.
+
+```humn
+{isLoading && <div class="loader">Loading...</div>}
+
+<ul>
+  {items.map((item) => (
+    <li>{item.name}</li>
+  ))}
+</ul>
+```
+
+Interaction helpers can remove common event boilerplate from templates:
+
+```humn
+<script>
+  const save = (event) => {
+    const value = event.target.value
+  }
+</script>
+
+<input debounce={300} oninputdebounced={save} oncommit={save} />
+```
+
+See the [Interaction Helpers guide](./interaction-helpers.md) for keyboard helpers, debounce behavior, commit semantics, async click handling, and event modifiers.
+
+## The Style Section
+
+The `<style>` block contains CSS that is **scoped** to the component.
+
+- **Isolation**: Styles defined here will not leak out to other components.
+- **No Config**: It works out of the box with the Humn compiler.
+
+# Source: docs/guides/interaction-helpers.md
+
+# Interaction Helpers
+
+Humn includes small runtime helper props for common UI interactions. They are regular props on base DOM elements, so existing event handling behavior is unchanged unless you opt into one of these helpers.
+
+## Keyboard Helpers
+
+Use keyboard helpers when you want common key handling without writing the same `keydown` branching code in every component.
+
+```humn
+<script>
+  const save = () => {
+    // Save the current field value.
+  }
+
+  const close = () => {
+    // Close a dialog or clear focus.
+  }
+</script>
+
+<input
+  onenter={save}
+  onescape={close}
+  onkeys={{ 'Mod+Enter': save, 'Shift+Escape': close }}
+/>
+```
+
+- `onenter`: runs when `Enter` is pressed.
+- `onescape`: runs when `Escape` is pressed.
+- `onkeys`: maps key combinations to handlers.
+
+Key combinations use `event.key` names plus optional `Ctrl`, `Meta`, `Alt`, and `Shift` modifiers. `Mod` maps to `Meta` on macOS and `Ctrl` elsewhere.
+
+Keyboard helpers are IME-safe. They ignore keyboard events while composition is active, including native `event.isComposing` events and the period between `compositionstart` and `compositionend`.
+
+## Debounced Input
+
+Use `oninputdebounced` when input should wait until typing settles before running work such as filtering, validation, or search.
+
+```humn
+<script>
+  const search = (event) => {
+    const query = event.target.value
+    // Run the search with the latest value.
+  }
+</script>
+
+<input debounce={300} oninputdebounced={search} />
+```
+
+- `debounce`: delay in milliseconds.
+- `oninputdebounced`: runs after the delay has passed without another input event.
+
+If `debounce` is omitted or cannot be converted to a finite number, Humn uses `250` milliseconds. Each input event clears the previous pending timer, and the callback receives an event-like object whose `target` and `currentTarget` point at the input element so the latest value is available when the timer fires.
+
+## Commit Semantics
+
+Use `oncommit` when a field should commit on either `Enter` or blur.
+
+```humn
+<script>
+  const commitName = (event) => {
+    const name = event.target.value
+    // Persist the committed value.
+  }
+</script>
+
+<input oncommit={commitName} />
+```
+
+`oncommit` runs when the element receives `Enter` or loses focus. If pressing `Enter` also causes blur, Humn treats that as one user intent and fires `oncommit` once instead of double-firing. The Enter path uses the same IME safety as the keyboard helpers.
+
+## Async Click Helpers
+
+Use `onclickasync` for async submit-style actions, and add `disabledwhilepending` when repeated clicks should be blocked while the promise is pending.
+
+```humn
+<script>
+  const save = async () => {
+    await api.save()
+  }
+</script>
+
+<button onclickasync={save} disabledwhilepending={true}>
+  Save
+</button>
+```
+
+- `onclickasync`: async click handler.
+- `disabledwhilepending`: when true, disables the element and blocks repeated clicks until the async handler settles.
+
+The disabled state is restored in a `finally` step, so the element is re-enabled whether the promise resolves or rejects. Without `disabledwhilepending`, `onclickasync` behaves like an async click listener and repeated clicks are allowed.
+
+## Event Modifiers
+
+Event modifiers are explicit, local opt-ins on handler prop names. They use pipe syntax on the prop key.
+
+```javascript
+import { h } from 'humn'
+
+export function Link() {
+  return h(
+    'a',
+    { href: '#', 'onclick|prevent|stop': (event) => navigate(event) },
+    'Open',
+  )
+}
+```
+
+- `prevent`: calls `event.preventDefault()` before the handler.
+- `stop`: calls `event.stopPropagation()` before the handler.
+- `once`: installs the listener with `{ once: true }`.
+- `capture`: installs the listener with `{ capture: true }`.
+- `passive`: installs the listener with `{ passive: true }`.
+
+Modifiers apply only to the specific handler prop where they are declared. Unknown modifier names are ignored.
+
+Pipe-named modifiers are runtime prop keys. When using `h()`, quote the key as shown above. Current `.humn` templates support the helper props in this guide, but do not parse `|` inside attribute names; use standard event handlers in templates or generate a quoted prop key through `h()` for modifier behavior.
+
+# Source: docs/guides/lifecycle-hooks.md
+
+# Lifecycle Hooks
+
+Humn provides two lifecycle hooks: `onMount` and `onCleanup`.
+
+## Side Effects & Data Fetching (Important)
+
+**Do not start fetches, timers, subscriptions or DOM listeners directly in a `.humn` script block.** The `<script>` block is part of the component's render logic, which means it may run multiple times (on every re-render).
+
+Always use `onMount` for component-owned side effects to ensure they run only once when the component appears in the DOM.
+
+```humn
 <script>
   import { onMount } from 'humn'
-  
+  import { api } from '../api.js'
+
+  // ❌ BAD: This will trigger an infinite loop of fetches and re-renders!
+  // api.fetchData()
+
+  // ✅ GOOD: Runs only once when the component mounts
   onMount(() => {
-    // Component-owned side effect runs once
-    myCortex.synapses.loadUsers()
+    api.fetchData()
   })
 </script>
 ```
 
-### Do not manage request lifecycle manually
+_(Note: For robust data fetching, we recommend using Cortex's built-in `resource` primitives instead of manual API calls. See the [Data Fetching guide](./state-management.md#data-fetching) for the best practices.)_
 
-Use `resource` and `resourceSynapse` for server state.
+## Overview
 
-Incorrect:
-```js
-export const dataCortex = new Cortex({
+The `onMount` hook is called after a component is mounted to the DOM. You can use it to perform any setup that you need to do.
+
+The `onCleanup` hook is called when a component is unmounted from the DOM. You can use it to perform any cleanup that you need to do, such as removing event listeners.
+
+Here's an example of how to use the lifecycle hooks:
+
+```humn
+<script>
+  // MyComponent.humn
+  import { onMount, onCleanup } from 'humn'
+
+  onMount(() => {
+    console.log('Component mounted!')
+  })
+
+  onCleanup(() => {
+    console.log('Component unmounted!')
+  })
+</script>
+
+<p>My component</p>
+```
+
+# Source: docs/guides/scoped-css.md
+
+# Scoped CSS
+
+In `.humn` files, you can simply use the `<style>` tag. Humn automatically scopes these styles to your component.
+
+```humn
+<script>
+  // MyComponent.humn
+  // ... logic
+</script>
+
+<p>This component has scoped styles, no need for classes!</p>
+<div>Both elements are styled by top level, unwrapped, CSS</div>
+
+<style>
+  background: red; /* This applies to both the <p> and the <div> */
+
+  p {
+    color: blue;
+    font-size: 20px;
+  }
+</style>
+```
+
+# Source: docs/guides/state-management.md
+
+# State Management
+
+Humn's state management system is called `Cortex`. It is a simple yet powerful way to manage the state of your application.
+
+To create a `Cortex` instance, you need to provide an initial `memory` (state) and a `synapses` function. The `synapses` function receives `set` and `get` functions that you can use to interact with the state.
+
+Here's an example of a simple counter:
+
+```javascript
+// cortex.js
+import { Cortex } from 'humn'
+
+export const counterCortex = new Cortex({
   memory: {
-    loading: false,
-    users: [],
-    error: null
+    count: 0,
   },
   synapses: (set) => ({
-    loadUsers: async () => { /* ... manual loading/error boilerplate ... */ }
-  })
+    increment: () => set((state) => ({ count: state.count + 1 })),
+    decrement: () => set((state) => ({ count: state.count - 1 })),
+  }),
 })
 ```
 
-Correct:
-```js
-import { Cortex, resource, resourceSynapse } from 'humn'
+```humn
+<script>
+  // App.humn
+  import { counterCortex } from './cortex.js'
 
-export const dataCortex = new Cortex({
+  const { count } = counterCortex.memory
+  const { increment, decrement } = counterCortex.synapses
+</script>
+
+<div>
+  <h1>{count}</h1>
+  <button onclick={increment}>Increment</button>
+  <button onclick={decrement}>Decrement</button>
+</div>
+```
+
+To mount the app:
+
+```javascript
+// main.js
+import { mount } from 'humn'
+import App from './App.humn'
+
+mount(document.getElementById('app'), App)
+```
+
+In this example, we're creating a `Cortex` instance called `counterCortex` with an initial count of 0. We're also defining two synapses, `increment` and `decrement`, that update the count.
+
+The `App` component gets the `count` from the `counterCortex.memory` and the `increment` and `decrement` functions from the `counterCortex.synapses`. It then renders the count and two buttons to increment and decrement the count.
+
+## State Persistence
+
+You can persist the state of your application to `localStorage` using the `persist` utility. This is useful for keeping the state of your application across page reloads.
+
+To use it, wrap the value you want to persist with the `persist` function.
+
+```javascript
+import { Cortex, persist } from 'humn'
+
+const todoCortex = new Cortex({
   memory: {
-    users: resource([]) // Creates { data, status, loading, error, etc. }
+    items: persist([
+      { id: 1, text: 'Create Humn Library', done: true },
+      { id: 2, text: 'Write first app', done: false },
+    ]),
+    inputValue: '',
+    errorMessage: '',
+    isLoading: false,
+  },
+  // ...
+})
+```
+
+By default, the key used in `localStorage` will be the same as the key in the `memory` object. In the example above, the key will be `items`.
+
+You can also provide a custom key by passing a configuration object to the `persist` function:
+
+```javascript
+const todoCortex = new Cortex({
+  memory: {
+    items: persist(
+      [
+        { id: 1, text: 'Create Humn Library', done: true },
+        { id: 2, text: 'Write first app', done: false },
+      ],
+      { key: 'my-custom-key' },
+    ),
+    // ...
+  },
+  // ...
+})
+```
+
+## Type Safety (TS & JSDoc)
+
+Cortex supports strong typing out of the box. By defining your Memory and Synapse types, you ensure that your `set` updates are valid and your components receive the correct data types.
+
+Cortex automatically handles the complexity of unwrapping `persist()` values in your types, so your API remains clean.
+
+> For a detailed guide on how to type your cortex using TypeScript or JSDoc, see the **[TypeScript Support](./typescript.md)** guide.
+
+## Data Fetching
+
+Do not start fetches directly in a `.humn` script block. The script block runs during render and may run many times.
+
+Use `onMount` to trigger component-owned loading, and use a Cortex resource synapse to own the async workflow.
+
+Components should read resource state and render the right UI. They should not manage request lifecycle manually.
+
+### The `resource` primitive
+
+Humn comes with built-in primitives to handle server state, similar to React Query or Solid's resources: `resource` and `resourceSynapse`.
+
+```javascript
+// cortexes/crmCortex.js
+import { Cortex, resource, resourceSynapse } from 'humn'
+import { api } from '../api/api.js'
+
+export const crmCortex = new Cortex({
+  memory: {
+    // Automatically creates { data: [], status: 'idle', loading: false, error: null }
+    accounts: resource([]),
+  },
+
+  synapses: (set, get) => ({
+    // Automatically manages loading/error states, race conditions, and deduplication
+    loadAccounts: resourceSynapse(set, get, 'accounts', async (params) => {
+      return api.accounts.list(params)
+    }),
+  }),
+})
+```
+
+Usage in a component:
+
+```humn
+<script>
+  import { onMount } from 'humn'
+  import { crmCortex } from '../cortexes/crmCortex.js'
+
+  const { accounts } = crmCortex.memory
+  const { loadAccounts } = crmCortex.synapses
+
+  // Trigger the fetch safely on mount
+  onMount(() => loadAccounts())
+</script>
+
+<div>
+  {#if accounts.loading}
+    <p>Loading accounts...</p>
+  {/if}
+  
+  {#if accounts.error}
+    <p>Could not load accounts: {accounts.error.message}</p>
+  {/if}
+
+  {#if accounts.status === 'success'}
+    <ul>
+      {accounts.data.map(acc => <li>{acc.name}</li>)}
+    </ul>
+  {/if}
+</div>
+```
+
+`resourceSynapse` supports fetching options like `force`:
+
+```javascript
+crmCortex.synapses.loadAccounts(null, { force: true })
+```
+
+# Source: docs/guides/typescript.md
+
+# TypeScript & JSDoc Support
+
+Humn is built to be type-safe by default. Whether you use `.ts` files or standard `.js`, you can get full autocompletion and error checking for your Cortex state.
+
+## Typing a Cortex
+
+To get full type safety, you need to define two shapes:
+
+1. **Memory**: The structure of your state.
+2. **Synapses**: The function signatures of your actions.
+
+### In TypeScript
+
+Pass your types as Generics to the `Cortex` class.
+
+```typescript
+import { Cortex, persist } from 'humn'
+
+type AppMemory = {
+  count: number
+  user: { name: string } | null
+}
+
+type AppSynapses = {
+  increment: () => void
+  login: (name: string) => void
+}
+
+export const cortex = new Cortex<AppMemory, AppSynapses>({
+  memory: {
+    count: persist(0), // Types are automatically unwrapped!
+    user: null,
   },
   synapses: (set, get) => ({
-    loadUsers: resourceSynapse(set, get, 'users', async () => {
-      return api.getUsers()
-    })
-  })
+    increment: () =>
+      set((state) => {
+        state.count++
+      }),
+    login: (name) => set({ user: { name } }),
+  }),
 })
 ```
 
-### Do not put all state in one global Cortex
+### In JavaScript (JSDoc)
 
-Use multiple Cortexes for separate domains such as UI, CRM, finance, auth and notifications.
+You can achieve the exact same result using JSDoc @typedef and @type.
+
+```javascript
+/**
+ * @typedef {object} AppMemory
+ * @property {number} count
+ * @property {{ name: string } | null} user
+ */
+
+/**
+ * @typedef {object} AppSynapses
+ * @property {() => void} increment
+ * @property {(name: string) => void} login
+ */
+
+/** @type {import('humn').Cortex<AppMemory, AppSynapses>} */
+export const cortex = new Cortex({
+  memory: {
+    count: persist(0),
+    user: null,
+  },
+  synapses: (set, get) => ({
+    increment: () =>
+      set((state) => {
+        state.count++
+      }),
+    login: (name) => set({ user: { name } }),
+  }),
+})
+```
+
+Automatic Inference
+Once typed, your cortex will provide intellisense everywhere:
+
+```javascript
+// ✅ Autocomplete works here
+cortex.synapses.login('Keeghan')
+
+// ❌ Type Error: Argument of type 'number' is not assignable to parameter of type 'string'.
+cortex.synapses.login(123)
+
+// ✅ Correctly typed as 'number' (persistence is hidden)
+const count = cortex.memory.count
+```
+
+# Source: docs/index.md
+
+# Humn Documentation
+
+Welcome to the documentation for **Humn**, a modern, lightweight JavaScript framework for building user interfaces.
+
+Humn is designed with a clear separation between the **user experience** (how you build apps) and the **underlying mechanics** (how the framework works).
+
+## 📚 Documentation Sections
+
+### [User Guides](./guides/getting-started.md)
+
+This section is for you if you want to build applications with Humn. It covers the `.humn` file format, component syntax, state management, and best practices.
+
+- **[Getting Started](./guides/getting-started.md)**: Install Humn and build your first app.
+- **[Humn Files](./guides/humn-files.md)**: Learn about the `.humn` single-file component format.
+- **[State Management](./guides/state-management.md)**: Manage application state with Cortex.
+- **[Interaction Helpers](./guides/interaction-helpers.md)**: Use keyboard, debounce, commit, async click, and event modifier helpers.
+- **[TypeScript Support](./guides/typescript.md)**: Using Humn with TypeScript and JSDoc.
+- **[Scoped CSS](./guides/scoped-css.md)**: How to use the scoped styles.
+- **[Lifecycle Hooks](./guides/lifecycle-hooks.md)**: onMount() & onCleanup()
+- **[API Reference](./guides/api-reference.md)**: Public API documentation.
+
+### [Underlying Mechanics](./internals/cortex-deep-dive.md)
+
+This section explains how Humn works under the hood. It covers the Virtual DOM, the Compiler, and the Reactivity system. Read this if you want to understand the magic or contribute to the framework.
+
+- **[Cortex Deep Dive](./internals/cortex-deep-dive.md)**: How the state management system works.
+- **[Virtual DOM](./internals/virtual-dom.md)**: Understanding the diffing and patching algorithm.
+- **[The Compiler](./internals/compiler.md)**: How `.humn` files are transformed into JavaScript.
+- **[Reactivity System](./internals/reactivity.md)**: The Observer pattern and dependency tracking.
+- **[Scoped CSS](./internals/css.md)**: How the scoped CSS and hashing works.
+- **[Runtime](./internals/runtime.md)**: Component instantiation and lifecycle handling.
+
+## Philosophy
+
+Humn believes in:
+
+1. **Simplicity**: A small API surface area that is easy to learn.
+2. **Transparency**: Clear separation between user code and framework internals.
+3. **Performance**: Efficient updates via a lightweight Virtual DOM and granular reactivity.
+
+# Source: docs/internals/compiler.md
+
+# The Compiler
+
+Humn uses a Vite plugin (`vite-plugin-humn`) to transform `.humn` files into standard JavaScript modules. This compilation step is what allows you to use the convenient Single File Component (SFC) format.
+
+## Overview
+
+The compiler performs three main tasks:
+
+1.  **Extraction**: Separates the `<script>`, `<template>`, and `<style>` blocks.
+2.  **Transformation**: Converts the HTML template into Virtual DOM render logic.
+3.  **Assembly**: Combines everything into a JavaScript module that exports a component function.
+
+## The Transformation Pipeline
+
+### 1. Parsing
+
+When Vite requests a `.humn` file, the plugin intercepts the request. It uses regex to extract the content of the three main blocks.
+
+```javascript
+// Input
+<script>
+  let count = 0;
+</script>
+
+<button>Count: {count}</button>
+```
+
+### 2. Template Compilation
+
+The HTML template is passed to `compileTemplate()`. This function parses the HTML and converts it into nested `h()` calls.
+
+- **Components**: Tags starting with an uppercase letter (e.g., `<MyComponent>`) are treated as variables, not strings.
+- **Expressions**: Text inside curly braces `{}` is treated as JavaScript expressions.
+- **Props**: Attributes are converted into a props object.
+
+**Example Transformation:**
+
+```humn
+<div class="card">
+  <h1>{title}</h1>
+  <button onclick={handleClick} />
+</div>
+```
+
+Becomes:
+
+```javascript
+h('div', { class: 'card' }, [
+  h('h1', {}, title),
+  h(Button, { onclick: handleClick }),
+])
+```
+
+### 3. CSS Scoping
+
+If a `<style>` block is present, the compiler:
+
+1. **Analyses the Template:** Determines if the component has a single root element.
+2. **Generates Style Logic:** Calls the css() function with the raw styles and the isSingleRoot flag. This allows the runtime to intelligently scope selectors (using the "Union Strategy") so they apply to both the root and its descendants.
+3. **Injects Class Application:** Automatically appends the generated scoped class to the root element of the template.
+
+```javascript
+// Generated Logic
+const __styles = css(`...css content...`, true) // true if single root
+
+// Injected DOM Application
+if (typeof __styles !== 'undefined' && __vdom && __vdom.props) {
+  __vdom.props.class =
+    (__vdom.props.class ? __vdom.props.class + ' ' : '') + __styles
+}
+```
+
+### 4. Module Assembly
+
+Finally, the compiler assembles the JavaScript module:
+
+1.  Imports `h` (and `css` if needed) from `humn`.
+2.  Adds the user's `<script>` content.
+3.  Adds the compiled template logic.
+4.  Exports the component function.
+
+## Compiler Internals
+
+The compiler is located in `packages/vite-plugin-humn`.
+
+- **`index.js`**: The main Vite plugin definition. Handles the `transform` hook.
+- **`compile-template.js`**: Recursive function that traverses the HTML AST and generates code.
+- **`protect-attributes.js`**: Helper to safely handle JavaScript expressions inside HTML attributes during parsing.
+
+# Source: docs/internals/cortex-deep-dive.md
+
+# Cortex: Deep Dive
+
+The Cortex is Humn's state management system. It's named after the cerebral cortex because it's the "brain" of your application - the centralised location for all logic and data.
+
+## Architecture
+
+```mermaid
+graph LR
+    subgraph "Cortex Instance"
+        Memory["📦 Memory<br/>(State)"]
+        Synapses["⚡ Synapses<br/>(Actions)"]
+        Listeners["👂 Listeners<br/>(Components)"]
+
+        Synapses -->|"set()"| Memory
+        Memory -->|"notify"| Listeners
+        Listeners -->|"call"| Synapses
+    end
+
+    style Memory fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style Synapses fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style Listeners fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+```
+
+## Core Concepts
+
+### Memory (State)
+
+The Memory is the single source of truth for your application. It's a plain JavaScript object that holds all your data.
+
+```javascript
+const cortex = new Cortex({
+  memory: {
+    user: null,
+    posts: [],
+    isLoading: false,
+    settings: {
+      theme: 'light',
+      notifications: true,
+    },
+  },
+  synapses: (set, get) => ({
+    // ... actions
+  }),
+})
+```
+
+**Key Principles:**
+
+- Immutable updates (handled automatically)
+- Can be deeply nested
+- Always serialisable (no functions or symbols)
+
+### Synapses (Actions)
+
+Synapses are functions that modify the Memory. They're called "synapses" because they're the connections that trigger changes in the Cortex.
+
+```javascript
+synapses: (set, get) => ({
+  login: (username) => set({ user: { username, loggedIn: true } }),
+
+  logout: () => set({ user: null }),
+
+  toggleTheme: () => {
+    const currentState = get()
+    const newTheme = currentState.settings.theme === 'light' ? 'dark' : 'light'
+    set((state) => {
+      state.settings.theme = newTheme
+    })
+  },
+})
+```
+
+**The `set` Function:**
+
+The `set` function has two forms:
+
+#### 1. Object Merge (Shallow)
+
+```javascript
+set({ count: 10, loading: false })
+```
+
+Shallow merges the object into the existing state.
+
+#### 2. Functional Update (Deep)
+
+```javascript
+set((state) => {
+  state.user.name = 'Alice'
+  state.user.posts.push(newPost)
+})
+```
+
+Receives a **mutable clone** of the state. You can mutate it directly, and Humn handles the immutability.
+
+**The `get` Function:**
+
+Returns the current state snapshot:
+
+```javascript
+addTodo: (text) => {
+  const currentState = get()
+  if (currentState.todos.length >= 100) {
+    throw new Error('Too many todos!')
+  }
+  set((state) => {
+    state.todos.push({ id: Date.now(), text, done: false })
+  })
+}
+```
+
+## Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Component
+    participant Cortex
+    participant Memory
+
+    User->>Component: Click Button
+    Component->>Cortex: Call Synapse (e.g., increment)
+    Cortex->>Memory: Update State
+    Memory->>Cortex: State Changed
+    Cortex->>Component: Notify Listener
+    Component->>Component: Re-render
+    Component->>User: Display New State
+```
+
+## Subscription System
+
+When a component reads from `cortex.memory`, it automatically subscribes to updates:
+
+```javascript
+const Counter = () => {
+  const { count } = cortex.memory // ← Auto-subscribes!
+  const { increment } = cortex.synapses
+
+  return h('button', { onclick: increment }, count)
+}
+```
+
+**How it works:**
+
+```mermaid
+graph TB
+    subgraph "Subscription Flow"
+        A["Component Renders"]
+        B["Reads cortex.memory"]
+        C["Cortex Registers Component"]
+        D["State Updates"]
+        E["Cortex Notifies Component"]
+        F["Component Re-renders"]
+
+        A --> B
+        B --> C
+        D --> E
+        E --> F
+        F --> B
+    end
+
+    style C fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
+    style E fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+```
+
+### Selective Subscription
+
+Only components that **read** from the Cortex will re-render:
+
+```javascript
+const ComponentA = () => {
+  const { count } = cortex.memory // Subscribes to 'count'
+  return h('div', {}, count)
+}
+
+const ComponentB = () => {
+  const { user } = cortex.memory // Subscribes to 'user'
+  return h('div', {}, user.name)
+}
+
+// If you update 'count', only ComponentA re-renders!
+```
+
+## Async Actions
+
+Async logic is handled naturally in synapses:
+
+```javascript
+const userCortex = new Cortex({
+  memory: {
+    user: null,
+    loading: false,
+    error: null,
+  },
+
+  synapses: (set) => ({
+    fetchUser: async (id) => {
+      // 1. Set loading
+      set({ loading: true, error: null })
+
+      try {
+        // 2. Fetch data
+        const res = await fetch(`/api/users/${id}`)
+        const data = await res.json()
+
+        // 3. Update with result
+        set({ user: data, loading: false })
+      } catch (err) {
+        // 4. Handle error
+        set({ error: err.message, loading: false })
+      }
+    },
+  }),
+})
+```
+
+**Async Flow:**
+
+```mermaid
+sequenceDiagram
+    participant UI
+    participant Synapse
+    participant API
+    participant Memory
+
+    UI->>Synapse: fetchUser(123)
+    Synapse->>Memory: set({ loading: true })
+    Memory->>UI: Re-render (show loader)
+
+    Synapse->>API: GET /users/123
+    API-->>Synapse: User Data
+
+    Synapse->>Memory: set({ user: data, loading: false })
+    Memory->>UI: Re-render (show user)
+```
+
+## Advanced Patterns
+
+### Computed Values
+
+You can derive values in your components:
+
+```javascript
+const TodoList = () => {
+  const { todos } = cortex.memory
+
+  // Computed
+  const completedCount = todos.filter((t) => t.done).length
+  const progress = (completedCount / todos.length) * 100
+
+  return h('div', {}, [
+    h('p', {}, `Progress: ${progress}%`),
+    // ... render todos
+  ])
+}
+```
+
+### Middleware Pattern
+
+You can wrap `set` to add logging or persistence:
+
+```javascript
+const createLogger = (set) => (updater) => {
+  console.log('Before:', get())
+  set(updater)
+  console.log('After:', get())
+}
+
+const cortex = new Cortex({
+  memory: { count: 0 },
+  synapses: (set, get) => {
+    const loggedSet = createLogger(set)
+
+    return {
+      increment: () =>
+        loggedSet((s) => {
+          s.count++
+        }),
+    }
+  },
+})
+```
+
+### Multiple Cortexes
+
+You can create multiple Cortex instances for different domains:
+
+```javascript
+// cortexes/user-cortex.js
+export const userCortex = new Cortex({
+  memory: { currentUser: null },
+  synapses: (set) => ({
+    /* ... */
+  }),
+})
+
+// cortexes/cart-cortex.js
+export const cartCortex = new Cortex({
+  memory: { items: [] },
+  synapses: (set) => ({
+    /* ... */
+  }),
+})
+```
+
+### TypeScript/JSDoc Typing
+
+Humn's **Cortex** is implemented in vanilla JavaScript but offers **first‑class TypeScript support** through JSDoc generics.  
+This means developers get **autocompletion, type safety, and IntelliSense** — even in JavaScript files - without a separate TypeScript build step.
+
+---
+
+## Typing Overview
+
+When creating a Cortex instance, you define two types:
+
+1. **Memory** – the shape of your application state
+2. **Synapses** – the functions (actions) that modify that state
+
+```ts
+import { Cortex, persist } from 'humn'
+
+type AppMemory = {
+  user: {
+    name: string | null
+    email: string | null
+    mobile: string | null
+  }
+  settings: {
+    theme: 'light' | 'dark'
+  }
+  open: boolean
+  messages: { text: string; sender: 'user' | 'server' }[]
+  currentMessage: string
+}
+
+type AppSynapses = {
+  setName: (name: string | null) => void
+  setEmail: (email: string | null) => void
+  setMobile: (mobile: string | null) => void
+  toggleTheme: () => void
+  setOpen: (open: boolean) => void
+  addMessage: (message: { text: string; sender: 'user' | 'server' }) => void
+  setCurrentMessage: (currentMessage: string) => void
+}
+```
+
+Then instantiate a fully‑typed Cortex:
+
+```ts
+export const appCortex = new Cortex<AppMemory, AppSynapses>({
+  memory: {
+    user: persist({
+      name: null,
+      email: null,
+      mobile: null,
+    }),
+    settings: persist({
+      theme: 'light',
+    }),
+    open: persist(false),
+    messages: persist([]),
+    currentMessage: '',
+  },
+
+  synapses: (set, get) => ({
+    setName: (name) => set((state) => (state.user.name = name)),
+    setEmail: (email) => set((state) => (state.user.email = email)),
+    setMobile: (mobile) => set((state) => (state.user.mobile = mobile)),
+    toggleTheme: () => {
+      const currentState = get()
+      const newTheme =
+        currentState.settings.theme === 'light' ? 'dark' : 'light'
+      set((state) => {
+        state.settings.theme = newTheme
+      })
+    },
+    setOpen: (open) => set({ open }),
+    addMessage: ({ text, sender }) =>
+      set((state) => state.messages.push({ text, sender })),
+    setCurrentMessage: (currentMessage) => set({ currentMessage }),
+  }),
+})
+```
+
+---
+
+## IntelliSense Magic ✨
+
+TypeScript users now get perfect typings throughout:
+
+```ts
+// ✅ Typed access to memory
+appCortex.memory.user.name // string | null
+appCortex.memory.settings.theme // "light" | "dark"
+appCortex.memory.messages[0].text // string
+
+// ✅ Typed actions
+appCortex.synapses.setName('Keeghan')
+appCortex.synapses.toggleTheme()
+```
+
+Inside synapses, typings flow automatically:
+
+```ts
+const toggleTheme = () => {
+  const current = get() // type: AppMemory
+  const theme = current.settings.theme // "light" | "dark"
+
+  set((state) => {
+    state.settings.theme = theme === 'light' ? 'dark' : 'light'
+  })
+}
+```
+
+---
+
+## Persisted Fields
+
+Any key can be persisted simply by wrapping it with `persist()`.  
+Cortex automatically unwraps persisted types, so the public API remains identical:
+
+```ts
+appCortex.memory.settings.theme // "light" | "dark"
+```
+
+No `.initial` or other metadata is exposed in typings.
+
+---
+
+## Type‑Safe `set()` and `get()`
+
+`set()` supports two fully‑typed update modes:
+
+### 1. Object Merge
+
+```ts
+set({ open: true })
+```
+
+Only keys from your memory type are allowed.
+
+### 2. Functional Update
+
+```ts
+set((state) => {
+  state.user.name = 'Alice'
+  state.settings.theme = 'dark'
+})
+```
+
+Assignments that return values are safe — their return type is ignored by the type system.
+
+---
+
+## Derived Data
+
+Derived values stay strongly typed:
+
+```ts
+const messageCount = appCortex.memory.messages.length
+const isDark = appCortex.memory.settings.theme === 'dark'
+```
+
+No separate selector types or mapping functions required.
+
+---
+
+## Error Checking Example
+
+TypeScript validation prevents invalid mutations:
+
+```ts
+set((state) => (state.users.email = 'oops'))
+// ❌ Property 'users' does not exist on type 'AppMemory'
+```
+
+---
+
+## Using Cortex in JavaScript (with JSDoc)
+
+Even in plain `.js` files, you can get autocompletion and static checking by using JSDoc annotations:
+
+```js
+/**
+ * @typedef {object} User
+ * @property {string|null} name
+ * @property {string|null} email
+ * @property {string|null} mobile
+ */
+
+/** @typedef {'light'|'dark'} Theme */
+
+/**
+ * @typedef {object} AppMemory
+ * @property {User} user
+ * @property {{ theme: Theme }} settings
+ * @property {boolean} open
+ * @property {{ text: string, sender: 'user'|'server' }[]} messages
+ * @property {string} currentMessage
+ */
+
+/**
+ * @typedef {object} AppSynapses
+ * @property {(name: string|null) => void} setName
+ * @property {() => void} toggleTheme
+ */
+
+/** @type {import('humn').Cortex<AppMemory, AppSynapses>} */
+export const appCortex = new Cortex({
+  memory: {
+    user: persist({ name: null, email: null, mobile: null }),
+    settings: persist({ theme: 'light' }),
+    open: false,
+    messages: [],
+    currentMessage: '',
+  },
+  synapses: (set, get) => ({
+    setName: (name) => set((s) => (s.user.name = name)),
+    toggleTheme: () => {
+      const { settings } = get()
+      set(
+        (s) =>
+          (s.settings.theme = settings.theme === 'light' ? 'dark' : 'light'),
+      )
+    },
+  }),
+})
+```
+
+VSCode and other modern editors will give you full IntelliSense with this approach.
+
+## Best Practices
+
+### ✓ Do
+
+- Keep Memory serialisable (no functions, symbols, or class instances)
+- Use mutative syntax in functional updates for clarity
+- Create separate cortexes for different domains
+- Handle loading and error states in async actions
+- Use descriptive names for synapses (verbs: `fetchUser`, `updateSettings`)
+
+### ✗ Don't
+
+- Don't store derived data in Memory (compute it in components)
+- Don't mutate Memory directly outside of synapses
+- Don't create circular references in Memory
+- Don't forget to handle errors in async actions
+- Don't read from `cortex.memory` in synapses (use `get()` instead)
+
+## Performance Tips
+
+1. **Destructure selectively**: Only read what you need
+
+   ```javascript
+   const { count } = cortex.memory // Good
+   const allState = cortex.memory // Subscribes to everything!
+   ```
+
+2. **Batch updates**: Multiple `set` calls in one synapse are batched
+
+   ```javascript
+   updateAll: () => {
+     set({ a: 1 })
+     set({ b: 2 })
+     set({ c: 3 })
+     // Only triggers one re-render
+   }
+   ```
+
+## Next Steps
+
+- [Components](./components.md) - Learn how to build the Body
+- [Lifecycle Hooks](./lifecycle-hooks.md) - Handle side effects
+- [Examples](./examples.md) - See real-world patterns
+
+# Source: docs/internals/css.md
+
+# CSS Scoping & Runtime
+
+Humn uses a lightweight runtime CSS-in-JS solution that leverages **Native CSS Nesting** to provide scoped styles without the need for complex build-time extraction.
+
+## **Overview**
+
+The CSS system is responsible for taking a string of CSS, generating a unique scoped class name, and injecting that CSS into the DOM. It handles:
+
+1.  **Minification**: Stripping comments and whitespace.
+2.  **Hashing**: Generating unique class names based on content.
+3.  **Transformation**: intelligently rewriting selectors for Single Root components.
+4.  **Injection**: Appending styles to the document head.
+
+## The `css` Function
+
+The core of the module is the `css` function. It supports two signatures:
+
+1.  **Tagged Template** (Standard Usage): Used when manually calling `css` in JavaScript.
+
+```javascript
+const className = css`
+  color: red;
+`
+```
+
+2.  **Function Call** (Compiler Usage): Used by the compiler to pass metadata.
+
+```javascript
+// The second argument 'true' indicates a single-root component
+const className = css('div { color: red }', true)
+```
+
+## Hashing & Deduplication
+
+Humn uses the **DJB2** algorithm to create a generic hash of the minified CSS content.
+
+A `Set` cache is used to track which hashes have already been injected. If a component is rendered multiple times, the CSS is only added to the DOM once.
+
+```javascript
+const hash = hashString(content) // e.g., "1x4d2"
+const className = `humn-${hash}` // e.g., "humn-1x4d2"
+```
+
+## Single Root Transformation
+
+One of the most complex parts of the runtime is handling "Single File Component" styles.
+
+When styling a component, users expect a selector like div { ... } or .card { ... } to apply to the element itself (if it matches) AND any children.
+
+However, because Humn scopes styles by wrapping them in a unique class (e.g., .humn-hash { ... }), a standard selector like div would effectively become .humn-hash div, which only matches descendants.
+
+### The Union Strategy
+
+To solve this, when isSingleRoot is true, Humn transforms selectors using a Union Strategy. It rewrites selectors to apply to both the parent context (using the nesting selector &) and the descendant context.
+
+### Transformation Rule: selector → selector&, selector
+
+| Input Selector | Transformed       | Compiled CSS                          | Result                                  |
+| :------------- | :---------------- | :------------------------------------ | :-------------------------------------- |
+| `div`          | `div&, div`       | `div.humn-hash, .humn-hash div`       | Matches root `div` OR nested `div`s     |
+| `.card`        | `.card&, .card`   | `.card.humn-hash, .humn-hash .card`   | Matches root `.card` OR nested `.card`s |
+| `:hover`       | `:hover&, :hover` | `:hover.humn-hash, .humn-hash :hover` | Matches root hover OR nested hover      |
+
+### The Regex Logic
+
+The transformation relies on a robust regex to identify top-level selectors while ignoring descendants, values, and keyframes.
+
+```javascript
+;/(^|[{};,])(\s*)(?!from|to)((?:[.#]?[\w-]+|\[[^\]]+\]|:{1,2}[^:,{\s]+)+)(?=\s*\{)/gi
+```
+
+1. Hard Start `(^|[{};,])`: Ensures we are at the beginning of a selector chain. This prevents us from modifying descendants (e.g., in `header .card`, `.card` is NOT transformed).
+2. Exclusions `(?!from|to)`: Negative lookahead to ensure we don't break @keyframes.
+3. Selector Capture: Captures the actual selector.
+   1. `[.#]?[\w-]+`: Tags (`div`), Classes (`.class`), IDs (`#id`)
+   2. `\[[^\]]+\]`: Attributes ([type="text"])
+   3. `:{1,2}[^:,{\s]+`: Pseudos (`:hover`, `::before`)
+4. Block Lookahead `(?=\s*\{)`: Ensures the match is followed by a `{` block. This is critical to avoid matching CSS values (like `#fff`) or properties that look like selectors.
+
+## DOM Injection
+
+Styles are injected into a single shared `<style id="humn-styles">` element in the document head.
+
+```html
+<head>
+  <style id="humn-styles">
+    .humn-1x4d2 {
+      color: red;
+    }
+    .humn-9k2j1 .card&,
+    .humn-9k2j1 .card {
+      background: blue;
+    }
+  </style>
+</head>
+```
+
+# Source: docs/internals/reactivity.md
+
+# Reactivity System
+
+Humn's reactivity system is built on the **Observer Pattern** and JavaScript **Proxies**. It allows components to automatically subscribe to the specific pieces of state they use.
+
+## Core Components
+
+### 1. The Observer (`observer.js`)
+
+The `observer.js` module is a singleton that tracks the "currently executing" function. This is usually a component's render function.
+
+```javascript
+let currentObserver = null
+
+export const setObserver = (obs) => {
+  currentObserver = obs
+}
+```
+
+### 2. Cortex Proxies (`cortex.js`)
+
+When you create a `Cortex` cortex, the `memory` object is wrapped in a Proxy. This Proxy intercepts all property access (get) and mutation (set).
+
+## The Dependency Tracking Cycle
+
+### Step 1: Render Begins
+
+When a component needs to render, Humn sets `currentObserver` to that component's update function.
+
+### Step 2: Property Access (Get)
+
+As the component renders, it reads values from the cortex (e.g., `cortex.memory.count`).
+The Proxy intercepts this access. It checks if `currentObserver` is set. If so, it adds the observer to a dependency list for that specific property.
+
+```javascript
+// Simplified Logic
+get(target, prop) {
+  if (currentObserver) {
+    dependencies.get(prop).add(currentObserver);
+  }
+  return target[prop];
+}
+```
+
+### Step 3: Render Ends
+
+Humn clears `currentObserver`. The component is now subscribed to exactly the properties it read.
+
+### Step 4: Mutation (Set)
+
+When you update state (e.g., `cortex.synapses.increment()`), the Proxy intercepts the change.
+It looks up the dependency list for the changed property and calls all subscribed observers.
+
+```javascript
+// Simplified Logic
+set(target, prop, value) {
+  target[prop] = value;
+  dependencies.get(prop).forEach(observer => observer());
+  return true;
+}
+```
+
+## Why Proxies?
+
+We use Proxies instead of `get()`/`set()` accessors or dirty checking because:
+
+1.  **Granularity**: We can track access to nested properties dynamically.
+2.  **Transparency**: You work with plain objects. No `.value` or special syntax needed.
+3.  **Performance**: Only components that actually _use_ a changed property are re-rendered.
+
+## Deep Reactivity
+
+Cortex handles deep reactivity by recursively wrapping nested objects in Proxies when they are accessed. This ensures that even changes deep within your state tree trigger the correct updates.
+
+# Source: docs/internals/runtime.md
+
+# Runtime
+
+The Humn runtime is responsible for bootstrapping the application, rendering components, patching the DOM, and managing component lifecycle hooks.
+
+## The Mount Process (`mount.js`)
+
+The entry point for any Humn application is the `mount()` function. It creates a root VNode and patches it into the target element.
+
+```javascript
+export const mount = (target, Component) => {
+  let prevVNode = null
+
+  const lifecycle = () => {
+    const nextVNode = {
+      tag: Component,
+      props: {},
+      children: [],
+    }
+
+    patch(target, nextVNode, prevVNode)
+    prevVNode = nextVNode
+  }
+
+  lifecycle()
+}
+```
+
+### How Reactivity Connects to the Runtime
+
+Each component instance owns an update observer. Before a component renders, Humn clears that observer's previous Cortex dependencies, sets it as the current observer, and then runs the component function.
+
+Any Cortex state read during that render is registered against that component observer. When a later state update changes a related path, Cortex queues that observer in a microtask. Multiple state updates in the same tick collapse into one render for each affected component.
+
+The queued component update creates a fresh child VNode for that component and patches only that component's subtree against its previous child VNode.
+
+### Lifecycle Hooks
+
+`onMount` callbacks run once after the component is first inserted. `onCleanup` callbacks run when the component is removed. Updating a mounted component does not run cleanup and remount hooks.
+
+# Source: docs/internals/virtual-dom.md
+
+# Virtual DOM & Reconciliation
+
+Humn uses a lightweight Virtual DOM (V-DOM) system to efficiently update the real DOM. Understanding how this works will help you write more performant applications.
+
+## What is a Virtual DOM?
+
+A Virtual DOM is a JavaScript representation of your UI. Instead of directly manipulating the DOM (which is slow), you describe what you want, and Humn figures out the minimal changes needed.
+
+```mermaid
+graph LR
+    subgraph "Humn Rendering Pipeline"
+        A["Component Function"] -->|"returns"| B["Virtual DOM"]
+        B -->|"diff"| C["Patch Operations"]
+        C -->|"apply"| D["Real DOM"]
+    end
+
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style D fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+```
+
+## The `h()` Function
+
+The `h()` function (short for "hyperscript") creates Virtual DOM nodes:
+
+```javascript
+import { h } from 'humn'
+
+// Creates a VNode: { tag: 'div', props: { class: 'card' }, children: [...] }
+h('div', { class: 'card' }, [h('h1', {}, 'Title'), h('p', {}, 'Content')])
+```
+
+**Signature:**
+
+```javascript
+h(tag, props, children) → VNode
+```
+
+- **tag**: HTML tag name (`'div'`, `'span'`) or component function
+- **props**: Object of attributes/events (`{ class: 'btn', onclick: handler }`)
+- **children**: Array of child VNodes or strings/numbers
+
+## VNode Structure
+
+A VNode is a plain JavaScript object:
+
+```javascript
+{
+  tag: 'button',
+  props: {
+    class: 'primary',
+    onclick: handleClick
+  },
+  children: ['Click me'],
+  el: null  // Will hold the real DOM element after creation
+}
+```
+
+## The Diffing Algorithm
+
+When state changes, Humn compares the new VNode tree with the old one to find the minimal set of changes.
+
+```mermaid
+graph TB
+    subgraph "Diffing Process"
+        A["Old VNode Tree"]
+        B["New VNode Tree"]
+        C{"Compare"}
+        D["No Change:<br/>Skip"]
+        E["Props Changed:<br/>Update"]
+        F["Type Changed:<br/>Replace"]
+        G["Children Changed:<br/>Recurse"]
+
+        A --> C
+        B --> C
+        C --> D
+        C --> E
+        C --> F
+        C --> G
+    end
+
+    style C fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style D fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style E fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
+    style F fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style G fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+```
+
+### Diffing Cases
+
+#### Case 1: Text Node Changed
+
+```javascript
+// Old: "Hello"
+// New: "Goodbye"
+// Action: Update textContent
+```
+
+#### Case 2: Props Changed
+
+```javascript
+// Old: h('div', { class: 'light' }, 'Content')
+// New: h('div', { class: 'dark' }, 'Content')
+// Action: Update class attribute only
+```
+
+#### Case 3: Tag Changed
+
+```javascript
+// Old: h('div', {}, 'Content')
+// New: h('span', {}, 'Content')
+// Action: Replace entire element
+```
+
+#### Case 4: Element Added/Removed
+
+```javascript
+// Old: [h('li', {}, 'A'), h('li', {}, 'B')]
+// New: [h('li', {}, 'A'), h('li', {}, 'B'), h('li', {}, 'C')]
+// Action: Append new <li>
+```
+
+## Keyed Diffing
+
+For lists, you should provide a unique `key` prop. This allows Humn to efficiently reorder elements instead of destroying and recreating them.
+
+### Without Keys (Index-based)
+
+```javascript
+// Old: ['A', 'B', 'C']
+// New: ['C', 'A', 'B']
+
+// Without keys, Humn sees:
+// Index 0: 'A' → 'C' (update text)
+// Index 1: 'B' → 'A' (update text)
+// Index 2: 'C' → 'B' (update text)
+// Result: 3 DOM operations
+```
+
+### With Keys (Identity-based)
+
+```javascript
+// Old: [{ id: 1, text: 'A' }, { id: 2, text: 'B' }, { id: 3, text: 'C' }]
+// New: [{ id: 3, text: 'C' }, { id: 1, text: 'A' }, { id: 2, text: 'B' }]
+
+h(
+  'ul',
+  {},
+  items.map((item) => h('li', { key: item.id }, item.text)),
+)
+
+// With keys, Humn sees:
+// id:3 moved to position 0
+// id:1 moved to position 1
+// id:2 stayed at position 2
+// Result: 2 DOM move operations (more efficient!)
+```
+
+**Keyed Diffing Flow:**
+
+```mermaid
+sequenceDiagram
+    participant Diff as Diff Algorithm
+    participant OldMap as Old Key Map
+    participant NewList as New Children
+    participant DOM
+
+    Diff->>OldMap: Build { key: vnode } map
+    Diff->>NewList: Iterate new children
+
+    loop For each new child
+        NewList->>OldMap: Find matching key?
+        alt Key exists
+            OldMap->>Diff: Reuse & move element
+            Diff->>DOM: insertBefore()
+        else Key missing
+            Diff->>DOM: createElement()
+        end
+    end
+
+    Diff->>OldMap: Remove unused keys
+    OldMap->>DOM: removeChild()
+```
+
+### When to Use Keys
+
+✓ **Always use keys for:**
+
+- Lists that can reorder (todos, tables, sortable data)
+- Lists where items can be added/removed from the middle
+- Lists where you want to preserve component state (input focus, scroll position)
+
+✗ **Don't need keys for:**
+
+- Static lists that never change
+- Lists that only append/prepend
+- Simple text rendering
+
+## Reconciliation Examples
+
+### Example 1: Simple Update
+
+```javascript
+const cortex = new Cortex({
+  memory: { count: 0 },
+  synapses: (set) => ({
+    inc: () =>
+      set((s) => {
+        s.count++
+      }),
+  }),
+})
+
+const App = () => {
+  const { count } = cortex.memory
+  return h('div', {}, [
+    h('p', {}, `Count: ${count}`),
+    h('button', { onclick: cortex.synapses.inc }, 'Increment'),
+  ])
+}
+```
+
+**What happens when you click?**
+
+1. `inc()` updates memory: `{ count: 1 }`
+2. Component re-renders: New VNode tree created
+3. Diff algorithm compares:
+   - `<div>`: Same tag → Keep
+   - `<p>`: Same tag → Keep, but text changed
+   - Text node: `"Count: 0"` → `"Count: 1"` → Update
+   - `<button>`: No changes → Skip
+4. Result: Only the text node is updated in the DOM
+
+### Example 2: Conditional Rendering
+
+```javascript
+const App = () => {
+  const { isLoggedIn } = cortex.memory
+
+  return h('div', {}, [
+    h('h1', {}, 'App'),
+    isLoggedIn
+      ? h('button', { key: 'logout' }, 'Logout')
+      : h('button', { key: 'login' }, 'Login'),
+  ])
+}
+```
+
+**What happens when `isLoggedIn` changes?**
+
+1. Old VNode: `h('button', { key: 'logout' }, 'Logout')`
+2. New VNode: `h('button', { key: 'login' }, 'Login')`
+3. Keys are different → Replace entire button
+4. Old button removed, new button created
+
+### Example 3: List Reordering
+
+```javascript
+const TodoList = () => {
+  const { todos } = cortex.memory
+
+  return h(
+    'ul',
+    {},
+    todos.map((todo) =>
+      h('li', { key: todo.id }, [
+        h('input', {
+          type: 'checkbox',
+          checked: todo.done,
+          onchange: () => cortex.synapses.toggle(todo.id),
+        }),
+        h('span', {}, todo.text),
+      ]),
+    ),
+  )
+}
+```
+
+**If you reorder todos:**
+
+- Humn finds each `<li>` by its `key`
+- Moves the actual DOM nodes to their new positions
+- Preserves checkbox state, event listeners, and any internal component state
+
+## Performance Optimisation
+
+### 1. Flatten Children
+
+Humn automatically flattens nested arrays:
+
+```javascript
+h('div', {}, [
+  items.map((i) => h('p', {}, i)),
+  // No need to worry about the array being nested
+])
+```
+
+### 2. Skip Unnecessary Updates
+
+If your props haven't changed, the element won't be touched:
+
+```javascript
+// If oldProps.onclick === newProps.onclick, the listener isn't re-attached
+```
+
+### 3. Batched Updates
+
+Multiple state changes in one synapse are batched into a single render:
+
+```javascript
+updateAll: () => {
+  set({ a: 1 })
+  set({ b: 2 })
+  set({ c: 3 })
+  // Only 1 re-render, not 3!
+}
+```
+
+## Debugging the V-DOM
+
+You can log VNodes to see their structure:
+
+```javascript
+const App = () => {
+  const vnode = h('div', {}, 'Hello')
+  console.log(vnode)
+  return vnode
+}
+```
+
+Output:
+
+```javascript
+{
+  tag: 'div',
+  props: {},
+  children: ['Hello'],
+  el: null
+}
+```
+
+## Common Pitfalls
+
+### ❌ Forgetting Keys in Dynamic Lists
+
+```javascript
+// BAD: No keys
+items.map((item) => h('li', {}, item.text))
+
+// GOOD: With keys
+items.map((item) => h('li', { key: item.id }, item.text))
+```
+
+### ❌ Using Index as Key
+
+```javascript
+// BAD: Index changes when list reorders
+items.map((item, i) => h('li', { key: i }, item.text))
+
+// GOOD: Stable, unique ID
+items.map((item) => h('li', { key: item.id }, item.text))
+```
+
+### ❌ Mutating Props
+
+```javascript
+// BAD: Mutating props object
+const props = { class: 'btn' }
+props.class = 'btn-primary' // Don't do this!
+
+// GOOD: Create new object
+const props = { class: 'btn' }
+const newProps = { ...props, class: 'btn-primary' }
+```
+
+## Next Steps
+
+- [Components](./components.md) - Build reusable UI pieces
+- [Lifecycle Hooks](./lifecycle-hooks.md) - Hook into the component lifecycle
+- [Performance Guide](./performance.md) - Advanced optimisation techniques
+
