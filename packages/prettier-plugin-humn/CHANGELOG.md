@@ -1,3 +1,9 @@
+## [prettier-plugin-humn-v0.0.5](https://github.com/KeeghanM/humn/compare/prettier-plugin-humn-v0.0.4...prettier-plugin-humn-v0.0.5) (2026-06-14)
+
+### Bug Fixes
+
+- **prettier:** format humn templates ([ab8b977](https://github.com/KeeghanM/humn/commit/ab8b97771f1d8043f043a8740adbb4a8f18b5455))
+
 ## [prettier-plugin-humn-v0.0.4](https://github.com/KeeghanM/humn/compare/prettier-plugin-humn-v0.0.3...prettier-plugin-humn-v0.0.4) (2025-12-10)
 
 ### Bug Fixes
