@@ -1,4 +1,6 @@
 function createReleaseConfig({ packageVsix = false, tagFormat }) {
+  if (!tagFormat) throw new Error('createReleaseConfig requires tagFormat')
+
   return {
     extends: 'semantic-release-monorepo',
     branches: ['main'],
