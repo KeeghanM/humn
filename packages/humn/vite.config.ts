@@ -1,10 +1,6 @@
 import humnCompiler from 'vite-plugin-humn'
-import terser from '@rollup/plugin-terser'
 import { defineConfig } from 'vite'
-import dts from 'vite-plugin-dts'
 import path from 'path'
-
-const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
   resolve: {
@@ -22,7 +18,6 @@ export default defineConfig({
       external: [],
       output: {
         globals: {},
-        compact: isProduction,
       },
     },
     sourcemap: true,
@@ -33,20 +28,5 @@ export default defineConfig({
       allow: ['..'],
     },
   },
-  plugins: [
-    humnCompiler(),
-    dts({
-      insertTypesEntry: true,
-      rollupTypes: true,
-    }),
-    isProduction &&
-      terser({
-        format: {
-          comments: false,
-        },
-        compress: {
-          drop_console: true,
-        },
-      }),
-  ],
+  plugins: [humnCompiler()],
 })
