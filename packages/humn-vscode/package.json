@@ -7,6 +7,7 @@
     "url": "git+https://github.com/KeeghanM/humn.git"
   },
   "scripts": {
+    "qa:test": "node scripts/validate-grammar.cjs",
     "package": "vsce package"
   },
   "license": "MIT",
@@ -23,6 +24,7 @@
         "path": "./syntaxes/humn.tmLanguage.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
+          "source.tsx.embedded.humn": "typescriptreact",
           "source.tsx": "typescriptreact",
           "source.ts": "typescript",
           "source.js": "javascript",
