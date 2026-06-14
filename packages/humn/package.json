@@ -34,6 +34,7 @@
     "dist",
     "README.md",
     "LICENSE",
+    "docs",
     "llms.txt",
     "llms-full.txt",
     "AGENTS.md",
@@ -44,8 +45,9 @@
   "scripts": {
     "bench": "node benchmarks/large-app.js",
     "build": "vite build && tsc -p tsconfig.json",
+    "build:docs": "node scripts/build-docs.js",
     "dev": "vite --port 3000 --open /playground/",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build:docs && npm run build",
     "qa:test": "vitest run",
     "qa:test:watch": "vitest watch"
   },
