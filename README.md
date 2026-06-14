@@ -93,6 +93,16 @@ import App from './app.humn'
 mount(document.getElementById('app'), App)
 ```
 
+## AI & Agent Support
+
+Humn natively ships with [llms.txt](https://llmstxt.org/) standard support and AI assistant rules. To help your AI coding agents (like Cursor, Claude Code, GitHub Copilot) understand Humn's conventions and write idiomatic code, run the following command in your project:
+
+```bash
+npx humn init-ai
+```
+
+This will automatically scaffold `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/humn.mdc` in your workspace so agents don't confuse Humn with React or Svelte.
+
 ## Contributing
 
 We are building a library for humans, by humans. Please read coding-standards.md before pushing code.
