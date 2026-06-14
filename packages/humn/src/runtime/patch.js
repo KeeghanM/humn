@@ -71,12 +71,50 @@ export function mountComponent({ index, newVNode, oldVNode, parent }) {
   instance.vNode = newVNode
 }
 
+function isComponentVNode(vNode) {
+  return typeof vNode?.tag === 'function'
+}
+
+function isDifferentComponent(newVNode, oldVNode) {
+  return (
+    isComponentVNode(newVNode) &&
+    isComponentVNode(oldVNode) &&
+    newVNode.tag !== oldVNode.tag
+  )
+}
+
 export function patch(parent, newVNode, oldVNode, index = 0) {
   // Removal must clean up recursively so component hooks cannot leak.
   if (newVNode === undefined || newVNode === null) {
-    const el = oldVNode.el || parent.childNodes[index]
+    const el = oldVNode?.el || parent.childNodes[index]
     runUnmount(oldVNode)
-    if (el) parent.removeChild(el)
+    if (el && el.parentNode === parent) parent.removeChild(el)
+    return
+  }
+
+  if (isDifferentComponent(newVNode, oldVNode)) {
+    const oldEl = oldVNode.el || oldVNode.child?.el || parent.childNodes[index]
+    runUnmount(oldVNode)
+
+    const fragment = document.createDocumentFragment()
+    mountComponent({ index: 0, newVNode, oldVNode: null, parent: fragment })
+
+    newVNode.instance.parent = parent
+    newVNode.instance.index = index
+
+    const replacement = newVNode.el || fragment.firstChild
+
+    if (oldEl && oldEl.parentNode === parent) {
+      parent.replaceChild(replacement, oldEl)
+    } else {
+      const current = parent.childNodes[index]
+      if (current && current.parentNode === parent) {
+        parent.replaceChild(replacement, current)
+      } else {
+        parent.appendChild(replacement)
+      }
+    }
+
     return
   }
 

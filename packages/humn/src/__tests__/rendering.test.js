@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { Cortex, css, h, mount } from '../index'
+import { Cortex, css, h, mount, onCleanup, onMount } from '../index'
 
 async function flushUpdates() {
   await Promise.resolve()
@@ -296,7 +296,7 @@ describe('Rendering & Reactivity', () => {
         `
       /* Descendant selector should NOT match root */
       header .logo { height: 50px; } 
-
+  
       @keyframes fade {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -316,5 +316,145 @@ describe('Rendering & Reactivity', () => {
       expect(styleTag.textContent).toContain('from { opacity: 0; }')
       expect(styleTag.textContent).not.toContain(`from&`)
     })
+  })
+
+  it('replaces different component types with the same root element tag', async () => {
+    const store = new Cortex({
+      memory: {
+        showCreateForm: false,
+      },
+      synapses: (set) => ({
+        toggle() {
+          set((state) => {
+            state.showCreateForm = !state.showCreateForm
+          })
+        },
+      }),
+    })
+
+    const detailMountSpy = vi.fn()
+    const detailCleanupSpy = vi.fn()
+    const createMountSpy = vi.fn()
+    const createCleanupSpy = vi.fn()
+
+    const CreateCustomer = () => {
+      onMount(createMountSpy)
+      onCleanup(createCleanupSpy)
+      return h('aside', { class: 'create' }, [
+        h('form', {}, [
+          h('input', { value: 'New customer' }),
+          h('button', {}, 'Create'),
+        ]),
+      ])
+    }
+
+    const AccountDetail = () => {
+      onMount(detailMountSpy)
+      onCleanup(detailCleanupSpy)
+      return h('aside', { class: 'detail' }, [
+        h('section', {}, [
+          h('h2', {}, 'Account detail'),
+          h('div', {}, 'Stats'),
+        ]),
+        h('div', { class: 'actions' }, [h('button', {}, 'Log touch')]),
+      ])
+    }
+
+    const App = () => {
+      const { showCreateForm } = store.memory
+
+      return h('main', {}, [
+        showCreateForm ? h(CreateCustomer) : h(AccountDetail),
+      ])
+    }
+
+    const target = document.createElement('div')
+    mount(target, App)
+
+    expect(target.querySelector('aside.detail')).not.toBeNull()
+
+    // Wait for setTimeouts inside scheduleMountHooks to resolve (if any)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(detailMountSpy).toHaveBeenCalledTimes(1)
+    expect(detailCleanupSpy).toHaveBeenCalledTimes(0)
+    expect(createMountSpy).toHaveBeenCalledTimes(0)
+    expect(createCleanupSpy).toHaveBeenCalledTimes(0)
+
+    store.synapses.toggle()
+    await Promise.resolve()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(target.querySelector('aside.create')).not.toBeNull()
+    expect(target.querySelector('aside.detail')).toBeNull()
+
+    expect(detailCleanupSpy).toHaveBeenCalledTimes(1)
+    expect(createMountSpy).toHaveBeenCalledTimes(1)
+
+    store.synapses.toggle()
+    await Promise.resolve()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(target.querySelector('aside.detail')).not.toBeNull()
+    expect(target.querySelector('aside.create')).toBeNull()
+
+    expect(createCleanupSpy).toHaveBeenCalledTimes(1)
+    expect(detailMountSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('should preserve parent and update state for newly inserted keyed components', async () => {
+    const store = new Cortex({
+      memory: {
+        items: [],
+        counter: 0,
+      },
+      synapses: (set) => ({
+        addItem: (id) =>
+          set((s) => {
+            s.items.push({ id })
+          }),
+        increment: () =>
+          set((s) => {
+            s.counter++
+          }),
+      }),
+    })
+
+    const KeyedChild = ({ id }) => {
+      // Access store.memory.counter to subscribe to changes and conditionally render root tag
+      const tag = store.memory.counter % 2 === 0 ? 'li' : 'div'
+      return h(tag, { 'data-id': String(id) }, `Count: ${store.memory.counter}`)
+    }
+
+    const App = () =>
+      h(
+        'ul',
+        {},
+        store.memory.items.map((item) =>
+          h(KeyedChild, { id: item.id, key: item.id }),
+        ),
+      )
+
+    const target = document.createElement('div')
+    mount(target, App)
+
+    // Initially no items
+    expect(target.querySelectorAll('li').length).toBe(0)
+
+    // Add a new keyed child - this goes through insertNewKeyedChild
+    store.synapses.addItem(42)
+    await Promise.resolve()
+
+    expect(target.querySelector('[data-id="42"]')).not.toBeNull()
+    expect(target.querySelector('[data-id="42"]').tagName).toBe('LI')
+    expect(target.querySelector('[data-id="42"]').textContent).toBe('Count: 0')
+
+    // Now increment the counter. This triggers a state update inside the KeyedChild component, changing its root tag.
+    store.synapses.increment()
+    await Promise.resolve()
+
+    expect(target.querySelector('[data-id="42"]')).not.toBeNull()
+    expect(target.querySelector('[data-id="42"]').tagName).toBe('DIV')
+    expect(target.querySelector('[data-id="42"]').textContent).toBe('Count: 1')
   })
 })
