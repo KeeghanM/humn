@@ -12,6 +12,14 @@ let currentInstance = null // For Lifecycle Hooks
  */
 export const getObserver = () => currentObserver
 
+export function clearObserverDependencies(observer) {
+  const cortexes = observer?.__humnCortexes
+  if (!cortexes) return
+
+  cortexes.forEach((cortex) => cortex._listeners.delete(observer))
+  cortexes.clear()
+}
+
 /**
  * Sets the current observer.
  * @param {function|null} obs

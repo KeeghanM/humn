@@ -177,7 +177,9 @@ export class Cortex {
    * Only notify listeners that read properties which changed
    */
   _notifyRelevantListeners(changedPaths) {
-    this._listeners.forEach((accessedPaths, renderFn) => {
+    const listeners = Array.from(this._listeners.entries())
+
+    listeners.forEach(([renderFn, accessedPaths]) => {
       const shouldNotify = Array.from(accessedPaths).some((accessedPath) => {
         return Array.from(changedPaths).some((changedPath) => {
           // Check for exact match or parent/child relationship
@@ -234,6 +236,10 @@ export class Cortex {
 
     if (!this._listeners.has(currentObserver))
       this._listeners.set(currentObserver, new Set())
+
+    if (!currentObserver.__humnCortexes)
+      currentObserver.__humnCortexes = new Set()
+    currentObserver.__humnCortexes.add(this)
 
     const accessedPaths = this._listeners.get(currentObserver)
 

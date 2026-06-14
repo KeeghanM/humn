@@ -1,5 +1,5 @@
+import { mountComponent } from './patch.js'
 import { patchProps } from './patch-props.js'
-import { renderComponent, scheduleMountHooks } from './component-lifecycle.js'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const MATH_NS = 'http://www.w3.org/1998/Math/MathML'
@@ -35,14 +35,14 @@ export function createElement(vNode, namespace) {
 }
 
 function createComponentElement(vNode, namespace) {
-  const childVNode = renderComponent(vNode)
-  const element = createElement(childVNode, namespace)
-
-  vNode.child = childVNode
-  vNode.el = element
-  scheduleMountHooks(vNode.hooks)
-
-  return element
+  const fragment = document.createDocumentFragment()
+  mountComponent({
+    index: 0,
+    newVNode: vNode,
+    oldVNode: null,
+    parent: fragment,
+  })
+  return vNode.el || fragment.firstChild
 }
 
 function appendChildren({ element, namespace, tag, vNode }) {

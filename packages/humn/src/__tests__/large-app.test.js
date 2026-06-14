@@ -76,20 +76,22 @@ describe('Large app regression coverage', () => {
     expect(target.querySelectorAll('[data-row-id]').length).toBe(600)
   })
 
-  it('records render counts for future render-granularity assertions', async () => {
+  it('only re-renders components that read changed state paths', async () => {
     const counters = createRenderCounters()
     const store = createLargeAppStore({ rowCount: 300 })
     const { App } = createLargeAppComponents(store, counters)
     const target = document.createElement('div')
 
     mount(target, App)
+    const initialCounts = { ...counters }
+
     store.synapses.incrementNotifications()
     await flushUpdates()
 
-    expect(counters.App).toBeGreaterThan(0)
-    expect(counters.Header).toBeGreaterThan(0)
-    expect(counters.Sidebar).toBeGreaterThan(0)
-    expect(counters.RowList).toBeGreaterThan(0)
-    expect(counters.Row).toBeGreaterThanOrEqual(300)
+    expect(counters.App).toBe(initialCounts.App)
+    expect(counters.Header).toBe(initialCounts.Header)
+    expect(counters.RowList).toBe(initialCounts.RowList)
+    expect(counters.Row).toBe(initialCounts.Row)
+    expect(counters.Sidebar).toBe(initialCounts.Sidebar + 1)
   })
 })

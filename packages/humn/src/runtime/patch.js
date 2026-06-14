@@ -10,6 +10,60 @@ import { hasKeys, reconcileChildren } from './reconcile-children.js'
 
 export { hasKeys }
 
+export function createComponentInstance() {
+  const instance = {
+    index: 0,
+    parent: null,
+    update: null,
+    vNode: null,
+  }
+
+  instance.update = () => {
+    if (!instance.vNode || !instance.parent) return
+
+    const nextVNode = {
+      children: instance.vNode.children,
+      instance,
+      props: instance.vNode.props,
+      tag: instance.vNode.tag,
+    }
+
+    mountComponent({
+      index: instance.index,
+      newVNode: nextVNode,
+      oldVNode: instance.vNode,
+      parent: instance.parent,
+    })
+  }
+
+  return instance
+}
+
+export function mountComponent({ index, newVNode, oldVNode, parent }) {
+  const previousVNode = oldVNode?.instance?.vNode || oldVNode
+  const instance = previousVNode?.instance || createComponentInstance()
+  const isNew = !previousVNode
+
+  newVNode.instance = instance
+  instance.index = index
+  instance.parent = parent
+
+  const childVNode = renderComponent(newVNode, instance.update)
+  newVNode.child = childVNode
+
+  patch(parent, childVNode, previousVNode?.child, index)
+  newVNode.el = childVNode.el
+
+  if (isNew) scheduleMountHooks(newVNode.hooks)
+  if (!isNew)
+    runComponentUpdateHooks({
+      newHooks: newVNode.hooks,
+      oldHooks: previousVNode.hooks,
+    })
+
+  instance.vNode = newVNode
+}
+
 export function patch(parent, newVNode, oldVNode, index = 0) {
   // Removal must clean up recursively so component hooks cannot leak.
   if (newVNode === undefined || newVNode === null) {
@@ -20,18 +74,7 @@ export function patch(parent, newVNode, oldVNode, index = 0) {
   }
 
   if (typeof newVNode.tag === 'function') {
-    const isNew = !oldVNode
-    const childVNode = renderComponent(newVNode)
-    newVNode.child = childVNode
-    const oldChild = oldVNode ? oldVNode.child : undefined
-    patch(parent, childVNode, oldChild, index)
-    newVNode.el = childVNode.el
-    if (isNew) scheduleMountHooks(newVNode.hooks)
-    if (!isNew)
-      runComponentUpdateHooks({
-        newHooks: newVNode.hooks,
-        oldHooks: oldVNode.hooks,
-      })
+    mountComponent({ index, newVNode, oldVNode, parent })
     return
   }
 
