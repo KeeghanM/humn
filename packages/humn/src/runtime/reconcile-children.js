@@ -1,5 +1,3 @@
-import { createElement, getNamespace } from './create-element.js'
-
 export function hasKeys(children) {
   return children && children.some((child) => child?.props?.key != null)
 }
@@ -65,7 +63,7 @@ function reconcileKeyedChildren({
       return
     }
 
-    insertNewKeyedChild({ index, newChild, parent })
+    insertNewKeyedChild({ index, newChild, parent, patchNode })
   })
 
   removeStaleKeyedChildren({ keyedChildren, parent, runUnmount })
@@ -102,16 +100,15 @@ function patchExistingKeyedChild({
     parent.insertBefore(element, domChildAtIndex)
 }
 
-function insertNewKeyedChild({ index, newChild, parent }) {
-  const newElement = createElement(newChild, getNamespace(parent))
+function insertNewKeyedChild({ index, newChild, parent, patchNode }) {
+  patchNode(parent, newChild, null, index)
+
+  const newElement = newChild.el
   const domChildAtIndex = parent.childNodes[index]
 
-  if (domChildAtIndex) {
+  if (newElement && domChildAtIndex && domChildAtIndex !== newElement) {
     parent.insertBefore(newElement, domChildAtIndex)
-    return
   }
-
-  parent.appendChild(newElement)
 }
 
 function removeStaleKeyedChildren({ keyedChildren, parent, runUnmount }) {
