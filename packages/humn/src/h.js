@@ -28,3 +28,13 @@ export const h = (tag, props = {}, children = []) => {
     children: cleanChildren,
   }
 }
+
+export function cloneVNode(vNode) {
+  if (typeof vNode !== 'object' || vNode === null) return vNode
+
+  return {
+    tag: vNode.tag,
+    props: { ...vNode.props },
+    children: vNode.children.map(cloneVNode),
+  }
+}

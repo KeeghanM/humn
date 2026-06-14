@@ -23,6 +23,7 @@ export default function humn() {
 
       const renderNodes = compileTemplate(templateHTML)
       const hasSingleTemplateNode = renderNodes.length === 1
+      const staticHoists = renderNodes.hoists || []
 
       const importRegex = /import\s+(?:[\s\S]*?from\s+)?['"][^'"]+['"];?/g
       const userImports = (scriptContent.match(importRegex) || []).join('\n')
@@ -45,8 +46,9 @@ export default function humn() {
 
       return {
         code: `
-          ${`import { h${styleContent ? ', css' : ''} } from 'humn';`}
+          ${`import { h${styleContent ? ', css' : ''}${staticHoists.length ? ', cloneVNode' : ''} } from 'humn';`}
           ${userImports}
+          ${staticHoists.join('\n')}
           ${styleLogic}
 
           export default function Component(props) {

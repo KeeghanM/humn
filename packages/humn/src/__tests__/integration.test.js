@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import humnPlugin from '../../../vite-plugin-humn/src/index.js'
-import { Cortex, css, h, mount } from '../index.js'
+import { cloneVNode, Cortex, css, h, mount } from '../index.js'
 
 /**
  * Compiles and executes a .humn component string in the test environment.
@@ -26,8 +26,8 @@ const compile = (source, imports = {}) => {
     .replace('export default function', 'return function')
 
   // We inject 'h' and 'css' (core) + any user provided imports (store, sub-components)
-  const dependencyNames = ['h', 'css', ...Object.keys(imports)]
-  const dependencyValues = [h, css, ...Object.values(imports)]
+  const dependencyNames = ['h', 'css', 'cloneVNode', ...Object.keys(imports)]
+  const dependencyValues = [h, css, cloneVNode, ...Object.values(imports)]
 
   // new Function(deps..., body)(values...)
   const factory = new Function(...dependencyNames, runnableCode)

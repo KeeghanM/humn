@@ -18,14 +18,16 @@ describe('Humn Compiler', () => {
       const input = '<div></div>'
       const output = compileTemplate(input)
 
-      expect(normalize(output[0])).toContain("h('div', {}, [])")
+      expect(normalize(output[0])).toBe('cloneVNode(__humn_static_0)')
+      expect(normalize(output.hoists[0])).toContain("h('div', {}, [])")
     })
 
     it('should compile nested static elements', () => {
       const input = '<div><span>text</span></div>'
       const output = compileTemplate(input)
 
-      expect(normalize(output[0])).toBe(
+      expect(normalize(output[0])).toBe('cloneVNode(__humn_static_0)')
+      expect(normalize(output.hoists[0])).toContain(
         "h('div', {}, [h('span', {}, ['text'])])",
       )
     })
@@ -34,8 +36,8 @@ describe('Humn Compiler', () => {
       const input = '<div class="container" id="main"></div>'
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain("'class': 'container'")
-      expect(output[0]).toContain("'id': 'main'")
+      expect(output.hoists[0]).toContain("'class': 'container'")
+      expect(output.hoists[0]).toContain("'id': 'main'")
     })
   })
 
@@ -85,15 +87,15 @@ describe('Humn Compiler', () => {
       const input = '<input type="text" />'
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain("h('input'")
+      expect(output.hoists[0]).toContain("h('input'")
     })
 
     it('should handle attributes with different quote styles', () => {
       const input = `<div class='single' id="double"></div>`
       const output = compileTemplate(input)
 
-      expect(output[0]).toContain("'class': 'single'")
-      expect(output[0]).toContain("'id': 'double'")
+      expect(output.hoists[0]).toContain("'class': 'single'")
+      expect(output.hoists[0]).toContain("'id': 'double'")
     })
   })
 })
