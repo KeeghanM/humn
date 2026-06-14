@@ -74,6 +74,61 @@ const { increment } = counter.synapses
 
 Use normal JavaScript derived values inside the script block.
 
+### Do not start fetches or side effects in the script block
+
+Incorrect:
+```js
+<script>
+  const users = await api.getUsers() // Runs on every render!
+</script>
+```
+
+Correct:
+```js
+<script>
+  import { onMount } from 'humn'
+  
+  onMount(() => {
+    // Component-owned side effect runs once
+    myCortex.synapses.loadUsers()
+  })
+</script>
+```
+
+### Do not manage request lifecycle manually
+
+Use `resource` and `resourceSynapse` for server state.
+
+Incorrect:
+```js
+export const dataCortex = new Cortex({
+  memory: {
+    loading: false,
+    users: [],
+    error: null
+  },
+  synapses: (set) => ({
+    loadUsers: async () => { /* ... manual loading/error boilerplate ... */ }
+  })
+})
+```
+
+Correct:
+```js
+import { Cortex, resource, resourceSynapse } from 'humn'
+
+export const dataCortex = new Cortex({
+  memory: {
+    users: resource([]) // Creates { data, status, loading, error, etc. }
+  },
+  synapses: (set, get) => ({
+    loadUsers: resourceSynapse(set, get, 'users', async () => {
+      return api.getUsers()
+    })
+  })
+})
+```
+
 ### Do not put all state in one global Cortex
 
 Use multiple Cortexes for separate domains such as UI, CRM, finance, auth and notifications.

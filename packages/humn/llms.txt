@@ -17,6 +17,8 @@ Humn is not React, Vue, Svelte or Solid. Do not assume JSX runtime behaviour, ho
 
 - Use .humn files for components.
 - Use Cortex for shared state.
+- Do not start fetches or side effects directly in the `<script>` block (it runs on every render). Always use `onMount()` for component-owned side effects.
+- For async data, use `resource(initialData)` in memory and `resourceSynapse()` for fetching.
 - Read state through `cortex.memory` inside component scripts.
 - Mutate state through `cortex.synapses`.
 - Do not use React hooks, JSX imports, Svelte `$:` syntax or Solid signals.

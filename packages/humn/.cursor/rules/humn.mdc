@@ -11,6 +11,8 @@ Humn is a reactive frontend framework. It uses `.humn` files and Cortex state.
 
 - Humn is NOT React, Vue, Svelte, or Solid.
 - Do not use React hooks, JSX, Svelte `$:` syntax, or Solid signals.
+- Do not start fetches directly in the `<script>` block. It runs on every render. Use `onMount()` instead.
+- Use `resource()` and `resourceSynapse()` for async data fetching.
 - Use `.humn` files for components. They contain `<script>`, template markup, and `<style>`.
 - Use `Cortex` for state management, with `memory` for state and `synapses` for actions.
 - Read state via `cortex.memory`, mutate via `cortex.synapses` which calls `set((state) => ...)`.

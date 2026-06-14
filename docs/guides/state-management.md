@@ -101,3 +101,72 @@ Cortex supports strong typing out of the box. By defining your Memory and Synaps
 Cortex automatically handles the complexity of unwrapping `persist()` values in your types, so your API remains clean.
 
 > For a detailed guide on how to type your cortex using TypeScript or JSDoc, see the **[TypeScript Support](./typescript.md)** guide.
+
+## Data Fetching
+
+Do not start fetches directly in a `.humn` script block. The script block runs during render and may run many times.
+
+Use `onMount` to trigger component-owned loading, and use a Cortex resource synapse to own the async workflow.
+
+Components should read resource state and render the right UI. They should not manage request lifecycle manually.
+
+### The `resource` primitive
+
+Humn comes with built-in primitives to handle server state, similar to React Query or Solid's resources: `resource` and `resourceSynapse`.
+
+```javascript
+// cortexes/crmCortex.js
+import { Cortex, resource, resourceSynapse } from 'humn'
+import { api } from '../api/api.js'
+
+export const crmCortex = new Cortex({
+  memory: {
+    // Automatically creates { data: [], status: 'idle', loading: false, error: null }
+    accounts: resource([]),
+  },
+
+  synapses: (set, get) => ({
+    // Automatically manages loading/error states, race conditions, and deduplication
+    loadAccounts: resourceSynapse(set, get, 'accounts', async (params) => {
+      return api.accounts.list(params)
+    }),
+  }),
+})
+```
+
+Usage in a component:
+
+```humn
+<script>
+  import { onMount } from 'humn'
+  import { crmCortex } from '../cortexes/crmCortex.js'
+
+  const { accounts } = crmCortex.memory
+  const { loadAccounts } = crmCortex.synapses
+
+  // Trigger the fetch safely on mount
+  onMount(() => loadAccounts())
+</script>
+
+<div>
+  {#if accounts.loading}
+    <p>Loading accounts...</p>
+  {/if}
+  
+  {#if accounts.error}
+    <p>Could not load accounts: {accounts.error.message}</p>
+  {/if}
+
+  {#if accounts.status === 'success'}
+    <ul>
+      {accounts.data.map(acc => <li>{acc.name}</li>)}
+    </ul>
+  {/if}
+</div>
+```
+
+`resourceSynapse` supports fetching options like `force`:
+
+```javascript
+crmCortex.synapses.loadAccounts(null, { force: true })
+```

@@ -15,6 +15,8 @@ This project uses Humn.
 - A `.humn` file may contain `<script>`, template markup and `<style>`.
 - Component styles are scoped.
 - Shared state should live in Cortexes.
+- Do not start fetches or side effects directly in the `<script>` block. It runs on every render. Use `onMount()`.
+- Use `resource()` and `resourceSynapse()` for async server state.
 - Read state from `cortex.memory`.
 - Change state through `cortex.synapses`.
 - Use `persist(initial, { key })` for localStorage-backed state.
