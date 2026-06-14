@@ -1,0 +1,79 @@
+# Humn full LLM context
+
+## Mental model
+
+Humn is a minimal, reactive UI framework with built-in state management. It relies on a Virtual DOM.
+You author components in `.humn` single file components, or manually using `h()` factory functions.
+
+## Installation
+
+```bash
+npm install humn
+npm install -D vite-plugin-humn
+```
+
+## .humn file format
+
+A `.humn` file contains three optional sections:
+- `<script>`: Component logic. Imports, state connections, and derived values.
+- `<style>`: Scoped CSS for the component.
+- The rest of the file is the template markup.
+
+## Cortex
+
+Cortex is Humn's state management primitive.
+
+```js
+import { Cortex } from 'humn'
+
+export const cortex = new Cortex({
+  memory: {
+    count: 0
+  },
+  synapses: (set) => ({
+    increment() {
+      set((state) => {
+        state.count += 1
+      })
+    }
+  })
+})
+```
+
+## Common mistakes
+
+### Do not instantiate Cortex with positional arguments
+
+Incorrect:
+```js
+new Cortex(memory, synapses)
+```
+
+Correct:
+```js
+new Cortex({
+  memory: { count: 0 },
+  synapses: (set) => ({ /* ... */ })
+})
+```
+
+### Do not use React hooks
+
+Incorrect:
+```js
+const [count, setCount] = useState(0)
+```
+
+Correct:
+```js
+const { count } = counter.memory
+const { increment } = counter.synapses
+```
+
+### Do not use Svelte $: reactive declarations
+
+Use normal JavaScript derived values inside the script block.
+
+### Do not put all state in one global Cortex
+
+Use multiple Cortexes for separate domains such as UI, CRM, finance, auth and notifications.

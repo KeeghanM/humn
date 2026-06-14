@@ -1,0 +1,18 @@
+---
+description: Use this rule when working with Humn frontend framework code (.humn files, Cortexes).
+globs: ["*.humn", "src/**/*.js", "src/**/*.ts"]
+---
+
+# Humn
+
+Humn is a reactive frontend framework. It uses `.humn` files and Cortex state.
+
+## Rules
+
+- Humn is NOT React, Vue, Svelte, or Solid.
+- Do not use React hooks, JSX, Svelte `$:` syntax, or Solid signals.
+- Use `.humn` files for components. They contain `<script>`, template markup, and `<style>`.
+- Use `Cortex` for state management, with `memory` for state and `synapses` for actions.
+- Read state via `cortex.memory`, mutate via `cortex.synapses` which calls `set((state) => ...)`.
+- Component styles inside `<style>` are automatically scoped.
+- Instantiate Cortex with an object: `new Cortex({ memory: {...}, synapses: (set) => ({...}) })`.

@@ -10,19 +10,31 @@ While you can use `humn` standalone with the `h()` syntax, we recommend using it
 npm install humn
 ```
 
+## AI & Agent Support
+
+Humn includes built-in instructions to help AI coding agents (like Cursor, Claude Code, GitHub Copilot) understand its conventions and write idiomatic code.
+
+To initialize the AI instructions in your project, run:
+
+```bash
+npx humn init-ai
+```
+
+This will create `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/humn.mdc` in your workspace, ensuring coding agents don't confuse Humn with React or Svelte.
+
 ## Quick Start with `h()`
 
 Here's a simple counter example using the `h()` syntax.
 
-### 1. Create a Cortex (Store)
+### 1. Create a Cortex (Cortex)
 
 The `Cortex` holds your application's state (`memory`) and the actions that can modify it (`synapses`).
 
 ```javascript
-// store.js
+// cortex.js
 import { Cortex } from 'humn'
 
-export const counterStore = new Cortex({
+export const counterCortex = new Cortex({
   memory: {
     count: 0,
   },
@@ -46,11 +58,11 @@ Components are functions that return a tree of `h()` calls.
 ```javascript
 // App.js
 import { h } from 'humn'
-import { counterStore } from './store'
+import { counterCortex } from './cortex'
 
 export function App() {
-  const { count } = counterStore.memory
-  const { increment, decrement } = counterStore.synapses
+  const { count } = counterCortex.memory
+  const { increment, decrement } = counterCortex.synapses
 
   return h('div', {}, [
     h('h1', {}, `Count: ${count}`),
