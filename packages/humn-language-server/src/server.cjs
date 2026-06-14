@@ -433,10 +433,20 @@ function getDocumentContext(document) {
   return context
 }
 
+function hasTsConfig() {
+  for (const root of workspaceRoots) {
+    const rootPath = uriToPath(root)
+    if (rootPath && fs.existsSync(path.join(rootPath, 'tsconfig.json'))) {
+      return true
+    }
+  }
+  return false
+}
+
 function createLanguageService(files) {
   const compilerOptions = {
     allowJs: true,
-    checkJs: true,
+    checkJs: hasTsConfig(),
     jsx: ts.JsxEmit.Preserve,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
@@ -449,7 +459,14 @@ function createLanguageService(files) {
   const host = {
     getCompilationSettings: () => compilerOptions,
     getCurrentDirectory: () => process.cwd(),
-    getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options),
+    getDefaultLibFileName(options) {
+      const libName = ts.getDefaultLibFileName(options)
+      const packagedLibPath = path.join(__dirname, 'lib', libName)
+      if (fs.existsSync(packagedLibPath)) {
+        return packagedLibPath
+      }
+      return ts.getDefaultLibFilePath(options)
+    },
     getScriptFileNames: () => Array.from(files.keys()),
     getScriptVersion: (fileName) => files.get(fileName)?.version || '1',
     getScriptSnapshot(fileName) {

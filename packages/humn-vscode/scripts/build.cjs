@@ -1,4 +1,5 @@
 const path = require('node:path')
+const fs = require('node:fs')
 const esbuild = require('esbuild')
 
 const packageRoot = path.join(__dirname, '..')
@@ -24,6 +25,26 @@ async function build() {
     format: 'cjs',
     sourcemap: true,
   })
+
+  // Copy TypeScript standard library d.ts files so they are packaged inside the VSIX
+  const distLibDir = path.join(packageRoot, 'dist', 'lib')
+  fs.mkdirSync(distLibDir, { recursive: true })
+
+  const tsLibSourceDir = path.join(
+    packageRoot,
+    '../../node_modules/typescript/lib',
+  )
+  if (fs.existsSync(tsLibSourceDir)) {
+    const files = fs.readdirSync(tsLibSourceDir)
+    for (const file of files) {
+      if (file.endsWith('.d.ts')) {
+        fs.copyFileSync(
+          path.join(tsLibSourceDir, file),
+          path.join(distLibDir, file),
+        )
+      }
+    }
+  }
 }
 
 build().catch((error) => {
