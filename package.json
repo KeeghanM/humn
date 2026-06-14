@@ -6,6 +6,7 @@
   ],
   "type": "module",
   "scripts": {
+    "bench": "npm run bench --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "qa:test": "npm run qa:test --workspaces --if-present",

@@ -33,6 +33,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "bench": "node benchmarks/large-app.js",
     "build": "vite build && tsc -p tsconfig.json",
     "dev": "vite --port 3000 --open /playground/",
     "prepublishOnly": "npm run build",
