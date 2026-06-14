@@ -546,15 +546,12 @@ function getTypescriptDiagnostics(document, context) {
 function getLocalDefinition(document, context, name) {
   const symbol = context.parsed.symbols.get(name)
   if (!symbol) return null
-  if (symbol.import) {
+  if (symbol.import && symbol.import.source.endsWith('.humn')) {
     const target = resolveImportPath(document.uri, symbol.import.source)
     if (target)
       return Location.create(pathToUri(target), Range.create(0, 0, 0, 0))
   }
-  return Location.create(
-    document.uri,
-    toRange(document, symbol.start, symbol.end),
-  )
+  return null
 }
 
 function getComponentTagRanges(parsed, name) {
