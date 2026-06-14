@@ -1,3 +1,18 @@
+## [humn-v1.6.0](https://github.com/KeeghanM/humn/compare/humn-v1.5.0...humn-v1.6.0) (2026-06-14)
+
+### Features
+
+- **humn:** batch cortex render notifications ([6667486](https://github.com/KeeghanM/humn/commit/66674860aa066c744e6486f0b83217f215b2b213))
+- **compiler:** hoist static template subtrees ([157ed2e](https://github.com/KeeghanM/humn/commit/157ed2ecdbf7a5717b4f48e4c7087199671a7c93))
+- **humn:** render components from scoped observers ([0ca3f20](https://github.com/KeeghanM/humn/commit/0ca3f2052fc5cd4a192cf36bf8b7f10153a44e01))
+- **humn:** use copy-on-write state drafts ([01d210a](https://github.com/KeeghanM/humn/commit/01d210a9f8ec81255eb9b45208d0f52d24a149df))
+
+### Bug Fixes
+
+- **prettier:** format humn templates ([ab8b977](https://github.com/KeeghanM/humn/commit/ab8b97771f1d8043f043a8740adbb4a8f18b5455))
+- **humn:** guard component update edge cases ([277636a](https://github.com/KeeghanM/humn/commit/277636ac24590d3ea16074de5b95d0ddf49dd994))
+- **humn:** keep lifecycle hooks mount scoped ([85c7dbe](https://github.com/KeeghanM/humn/commit/85c7dbe15418cbb8e01cdb8e44e4d7e1f483626a))
+
 ## [humn-v1.5.0](https://github.com/KeeghanM/humn/compare/humn-v1.4.1...humn-v1.5.0) (2026-05-13)
 
 ### Features
