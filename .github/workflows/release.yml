@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     branches:
@@ -10,27 +11,15 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Release ${{ matrix.workspace }}
+    name: Release packages
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include:
-          - filter: core
-            workspace: packages/humn
-            needs-vsce: false
-          - filter: prettier
-            workspace: packages/prettier-plugin-humn
-            needs-vsce: false
-          - filter: vite
-            workspace: packages/vite-plugin-humn
-            needs-vsce: false
-          - filter: extension
-            workspace: packages/humn-vscode
-            needs-vsce: true
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,48 +27,117 @@ jobs:
           fetch-depth: 0
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Check for changes
+      - name: Check for package code changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             core:
               - 'packages/humn/**'
-              - '.github/workflows/release.yml'
+              - '!packages/humn/package.json'
+              - '!packages/humn/package-lock.json'
+              - '!packages/humn/CHANGELOG.md'
+              - '!packages/humn/README.md'
             prettier:
               - 'packages/prettier-plugin-humn/**'
-              - '.github/workflows/release.yml'
+              - '!packages/prettier-plugin-humn/package.json'
+              - '!packages/prettier-plugin-humn/package-lock.json'
+              - '!packages/prettier-plugin-humn/CHANGELOG.md'
+              - '!packages/prettier-plugin-humn/README.md'
             vite:
               - 'packages/vite-plugin-humn/**'
-              - '.github/workflows/release.yml'
+              - '!packages/vite-plugin-humn/package.json'
+              - '!packages/vite-plugin-humn/package-lock.json'
+              - '!packages/vite-plugin-humn/CHANGELOG.md'
+              - '!packages/vite-plugin-humn/README.md'
             extension:
               - 'packages/humn-vscode/**'
-              - '.github/workflows/release.yml'
+              - '!packages/humn-vscode/package.json'
+              - '!packages/humn-vscode/package-lock.json'
+              - '!packages/humn-vscode/CHANGELOG.md'
+              - '!packages/humn-vscode/README.md'
+
+      - name: Stop if no package code changed
+        if: ${{ steps.filter.outputs.core != 'true' && steps.filter.outputs.prettier != 'true' && steps.filter.outputs.vite != 'true' && steps.filter.outputs.extension != 'true' }}
+        run: echo "No package code changes detected. Nothing to release."
 
       - name: Setup Node.js
+        if: ${{ steps.filter.outputs.core == 'true' || steps.filter.outputs.prettier == 'true' || steps.filter.outputs.vite == 'true' || steps.filter.outputs.extension == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
+        if: ${{ steps.filter.outputs.core == 'true' || steps.filter.outputs.prettier == 'true' || steps.filter.outputs.vite == 'true' || steps.filter.outputs.extension == 'true' }}
         run: npm ci
 
-      - name: Build package
-        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
-        run: npm run build --if-present -w ${{ matrix.workspace }}
+      - name: Configure Git author
+        if: ${{ steps.filter.outputs.core == 'true' || steps.filter.outputs.prettier == 'true' || steps.filter.outputs.vite == 'true' || steps.filter.outputs.extension == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Test package
-        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
-        run: npm run qa:test --if-present -w ${{ matrix.workspace }}
+      - name: Build humn
+        if: ${{ steps.filter.outputs.core == 'true' }}
+        run: npm run build --if-present -w packages/humn
+
+      - name: Test humn
+        if: ${{ steps.filter.outputs.core == 'true' }}
+        run: npm run qa:test --if-present -w packages/humn
+
+      - name: Release humn
+        if: ${{ steps.filter.outputs.core == 'true' }}
+        working-directory: packages/humn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Build prettier plugin
+        if: ${{ steps.filter.outputs.prettier == 'true' }}
+        run: npm run build --if-present -w packages/prettier-plugin-humn
+
+      - name: Test prettier plugin
+        if: ${{ steps.filter.outputs.prettier == 'true' }}
+        run: npm run qa:test --if-present -w packages/prettier-plugin-humn
+
+      - name: Release prettier plugin
+        if: ${{ steps.filter.outputs.prettier == 'true' }}
+        working-directory: packages/prettier-plugin-humn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Build vite plugin
+        if: ${{ steps.filter.outputs.vite == 'true' }}
+        run: npm run build --if-present -w packages/vite-plugin-humn
+
+      - name: Test vite plugin
+        if: ${{ steps.filter.outputs.vite == 'true' }}
+        run: npm run qa:test --if-present -w packages/vite-plugin-humn
+
+      - name: Release vite plugin
+        if: ${{ steps.filter.outputs.vite == 'true' }}
+        working-directory: packages/vite-plugin-humn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Build VS Code extension
+        if: ${{ steps.filter.outputs.extension == 'true' }}
+        run: npm run build --if-present -w packages/humn-vscode
+
+      - name: Test VS Code extension
+        if: ${{ steps.filter.outputs.extension == 'true' }}
+        run: npm run qa:test --if-present -w packages/humn-vscode
 
       - name: Install vsce
-        if: ${{ steps.filter.outputs[matrix.filter] == 'true' && matrix.needs-vsce }}
+        if: ${{ steps.filter.outputs.extension == 'true' }}
         run: npm install -g @vscode/vsce
 
-      - name: Release package
-        if: ${{ steps.filter.outputs[matrix.filter] == 'true' }}
-        working-directory: ${{ matrix.workspace }}
+      - name: Release VS Code extension
+        if: ${{ steps.filter.outputs.extension == 'true' }}
+        working-directory: packages/humn-vscode
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
