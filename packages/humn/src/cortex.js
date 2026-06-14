@@ -1,6 +1,30 @@
 import { getObserver } from './observer.js'
 
 const isDev = import.meta.env?.DEV || false
+const pendingRenderFns = new Set()
+let isRenderFlushQueued = false
+
+function queueRender(renderFn) {
+  pendingRenderFns.add(renderFn)
+
+  scheduleRenderFlush()
+}
+
+function scheduleRenderFlush() {
+  if (isRenderFlushQueued) return
+
+  isRenderFlushQueued = true
+  queueMicrotask(flushQueuedRenders)
+}
+
+function flushQueuedRenders() {
+  isRenderFlushQueued = false
+  const renderFns = Array.from(pendingRenderFns)
+  pendingRenderFns.clear()
+
+  renderFns.forEach((renderFn) => renderFn())
+  if (pendingRenderFns.size > 0) scheduleRenderFlush()
+}
 
 /**
  * Mapped type for the Memory configuration object.
@@ -191,7 +215,7 @@ export class Cortex {
         })
       })
 
-      if (shouldNotify) renderFn()
+      if (shouldNotify) queueRender(renderFn)
     })
   }
 

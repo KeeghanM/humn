@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { Cortex, css, h, mount } from '../index'
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 describe('Rendering & Reactivity', () => {
   it('should render a simple component', () => {
     const App = () => h('div', {}, 'Hello, World!')
@@ -10,7 +14,7 @@ describe('Rendering & Reactivity', () => {
     expect(target.innerHTML).toBe('<div>Hello, World!</div>')
   })
 
-  it('should update DOM text when cortex changes', () => {
+  it('should update DOM text when cortex changes', async () => {
     const user = new Cortex({
       memory: { name: 'Keeghan' },
       synapses: (set) => ({
@@ -24,10 +28,11 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.innerHTML).toBe('<div>Hello, Keeghan!</div>')
     user.synapses.changeName('McGarry')
+    await flushUpdates()
     expect(target.innerHTML).toBe('<div>Hello, McGarry!</div>')
   })
 
-  it('should reorder keyed elements (Keyed Diffing)', () => {
+  it('should reorder keyed elements (Keyed Diffing)', async () => {
     const store = new Cortex({
       memory: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] },
       synapses: (set) => ({
@@ -56,6 +61,7 @@ describe('Rendering & Reactivity', () => {
     expect(target.firstChild.firstChild.id).toBe('li-1')
 
     store.synapses.reverse()
+    await flushUpdates()
 
     expect(target.firstChild.firstChild.id).toBe('li-3')
 
@@ -67,7 +73,7 @@ describe('Rendering & Reactivity', () => {
 
   // --- EDGE CASES ---
 
-  it('should handle conditional rendering', () => {
+  it('should handle conditional rendering', async () => {
     const ui = new Cortex({
       memory: { show: false },
       synapses: (set) => ({ toggle: () => set((s) => ({ show: !s.show })) }),
@@ -86,12 +92,14 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.querySelector('#msg')).toBeNull()
     ui.synapses.toggle()
+    await flushUpdates()
     expect(target.querySelector('#msg').innerHTML).toBe('Visible')
     ui.synapses.toggle()
+    await flushUpdates()
     expect(target.querySelector('#msg')).toBeNull()
   })
 
-  it('should sync input values even if DOM is dirty', () => {
+  it('should sync input values even if DOM is dirty', async () => {
     const store = new Cortex({
       memory: { text: '' },
       synapses: (set) => ({
@@ -109,11 +117,12 @@ describe('Rendering & Reactivity', () => {
 
     // Force reset from State
     store.synapses.reset()
+    await flushUpdates()
 
     expect(input.value).toBe('')
   })
 
-  it('should update styles on state change', () => {
+  it('should update styles on state change', async () => {
     // This also tests "Deep Nested Updates" but verifies via CSS class application
     const store = new Cortex({
       memory: { user: { profile: { theme: 'light' } } },
@@ -135,6 +144,7 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.firstChild.className).toBe('light')
     store.synapses.goDark()
+    await flushUpdates()
     expect(target.firstChild.className).toBe('dark')
   })
 

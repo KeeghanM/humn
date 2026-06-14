@@ -34,6 +34,10 @@ const compile = (source, imports = {}) => {
   return factory(...dependencyValues)
 }
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 // Mock Store Logic
 const createStore = () =>
   new Cortex({
@@ -174,6 +178,7 @@ describe('Integration: Compiler + Runtime', () => {
 
     // 2. Click Add
     btn.click()
+    await flushUpdates()
 
     // 3. Verify Update
     // Reactivity should trigger a re-render of App
@@ -181,7 +186,7 @@ describe('Integration: Compiler + Runtime', () => {
     expect(input.value).toBe('')
   })
 
-  it('should apply scoped styles correctly to sub-components', () => {
+  it('should apply scoped styles correctly to sub-components', async () => {
     mount(container, App)
 
     const item = container.querySelector('[data-testid="item"]')
@@ -192,6 +197,7 @@ describe('Integration: Compiler + Runtime', () => {
 
     // Trigger toggle (tests interactivity passed down to children)
     item.click()
+    await flushUpdates()
     expect(item.className).toContain('done')
   })
 })

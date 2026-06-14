@@ -85,7 +85,9 @@ describe('Large app regression coverage', () => {
     mount(target, App)
     const initialCounts = { ...counters }
 
-    store.synapses.incrementNotifications()
+    for (let index = 0; index < 25; index++) {
+      store.synapses.incrementNotifications()
+    }
     await flushUpdates()
 
     expect(counters.App).toBe(initialCounts.App)
@@ -93,5 +95,6 @@ describe('Large app regression coverage', () => {
     expect(counters.RowList).toBe(initialCounts.RowList)
     expect(counters.Row).toBe(initialCounts.Row)
     expect(counters.Sidebar).toBe(initialCounts.Sidebar + 1)
+    expect(target.textContent).toContain('Notifications: 25')
   })
 })

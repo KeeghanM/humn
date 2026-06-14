@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { Cortex, h, mount } from '../index'
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 describe('Interaction helpers', () => {
   it('supports onenter and onescape keyboard helpers', () => {
     const onEnter = vi.fn()
@@ -102,7 +106,7 @@ describe('Interaction helpers', () => {
     expect(parent).toHaveBeenCalledTimes(0)
   })
 
-  it('replaces wrapped event listeners when handler props change', () => {
+  it('replaces wrapped event listeners when handler props change', async () => {
     const firstHandler = vi.fn()
     const secondHandler = vi.fn()
     const store = new Cortex({
@@ -119,13 +123,14 @@ describe('Interaction helpers', () => {
 
     button.click()
     store.synapses.setHandler(secondHandler)
+    await flushUpdates()
     button.click()
 
     expect(firstHandler).toHaveBeenCalledTimes(1)
     expect(secondHandler).toHaveBeenCalledTimes(1)
   })
 
-  it('replaces and removes keyboard helper listeners across patches', () => {
+  it('replaces and removes keyboard helper listeners across patches', async () => {
     const onEnter = vi.fn()
     const store = new Cortex({
       memory: { enabled: true, version: 0 },
@@ -151,10 +156,12 @@ describe('Interaction helpers', () => {
     const input = target.querySelector('input')
 
     store.synapses.bump()
+    await flushUpdates()
     input.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
     )
     store.synapses.disable()
+    await flushUpdates()
     input.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
     )

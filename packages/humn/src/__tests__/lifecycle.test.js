@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { Cortex, h, mount, onCleanup, onMount } from '../index'
 
+async function flushUpdates() {
+  await Promise.resolve()
+}
+
 describe('lifecycle', () => {
   it('should fire onMount when component appears', async () => {
     const onMountSpy = vi.fn()
@@ -46,6 +50,7 @@ describe('lifecycle', () => {
 
     // 2. Remove Child
     store.synapses.toggle()
+    await flushUpdates()
 
     expect(target.innerHTML).not.toContain('Child')
     expect(onCleanupSpy).toHaveBeenCalledTimes(1)
@@ -79,6 +84,7 @@ describe('lifecycle', () => {
     expect(cleanupSpy).toHaveBeenCalledTimes(0)
 
     store.synapses.increment()
+    await flushUpdates()
 
     await new Promise((r) => setTimeout(r, 0))
     expect(target.textContent).toBe('1')
@@ -117,6 +123,7 @@ describe('lifecycle', () => {
     mount(target, App)
 
     store.synapses.hide()
+    await flushUpdates()
 
     expect(throwingCleanup).toHaveBeenCalledTimes(1)
     expect(stableCleanup).toHaveBeenCalledTimes(1)
