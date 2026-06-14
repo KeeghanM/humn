@@ -7,16 +7,37 @@
     "url": "git+https://github.com/KeeghanM/humn.git"
   },
   "scripts": {
+    "build": "node scripts/build.cjs",
     "qa:test": "node scripts/validate-grammar.cjs",
-    "package": "vsce package"
+    "package": "vsce package",
+    "vscode:prepublish": "npm run build"
   },
   "license": "MIT",
   "publisher": "HumanSideOfCode",
   "description": "Syntax highlighting and language support for the Humn language",
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onLanguage:humn",
+    "onCommand:humn.toggleComment"
+  ],
   "categories": [
     "Programming Languages"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "humn.toggleComment",
+        "title": "Humn: Toggle Comment"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "humn.toggleComment",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "editorTextFocus && editorLangId == humn"
+      }
+    ],
     "grammars": [
       {
         "language": "humn",
@@ -48,12 +69,23 @@
           "dark": "./icons/humn-dark.svg"
         }
       }
+    ],
+    "snippets": [
+      {
+        "language": "humn",
+        "path": "./snippets/humn.json"
+      }
     ]
   },
   "engines": {
     "vscode": "^1.70.0"
   },
   "devDependencies": {
+    "esbuild": "^0.27.7",
     "semantic-release-vsce": "^6.0.18"
+  },
+  "dependencies": {
+    "humn-language-server": "^0.0.0",
+    "vscode-languageclient": "^9.0.1"
   }
 }

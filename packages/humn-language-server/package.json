@@ -1,0 +1,21 @@
+{
+  "name": "humn-language-server",
+  "version": "0.0.0",
+  "description": "Language server for Humn single-file components",
+  "license": "MIT",
+  "main": "src/server.cjs",
+  "bin": {
+    "humn-language-server": "src/server.cjs"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "qa:test": "node src/__tests__/core.test.cjs"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  }
+}

@@ -1,15 +1,21 @@
-# Ignore source control and build tools
+# Ignore source control and local tooling
 .git
 .gitignore
 .vscode
 .github
-node_modules
 **/*.map
-
-# we only want to bundle  dist
 src/
+scripts/
+*.vsix
+
 vite.config.js
-!dist/
+
+# Runtime source and production dependencies are required by the extension.
+node_modules/**/.bin
+node_modules/**/.cache
+node_modules/**/test
+node_modules/**/tests
+node_modules/**/__tests__
 
 # Ignore the monorepo root references if any exist
 ../

@@ -1,0 +1,75 @@
+{
+  "Humn component": {
+    "prefix": "humn-component",
+    "body": [
+      "<script>",
+      "  ${1}",
+      "</script>",
+      "",
+      "<${2:div}>",
+      "  ${3}",
+      "</${2:div}>",
+      "",
+      "<style>",
+      "  ${2:div} {",
+      "    ${4}",
+      "  }",
+      "</style>"
+    ],
+    "description": "Create a Humn component with script, template and style sections"
+  },
+  "Humn onMount": {
+    "prefix": "humn-onmount",
+    "body": ["onMount(() => {", "  ${1}", "})"],
+    "description": "Run component side effects after mount"
+  },
+  "Humn prop": {
+    "prefix": "humn-prop",
+    "body": "const { ${1:name} } = props",
+    "description": "Read a component prop"
+  },
+  "Humn list": {
+    "prefix": "humn-list",
+    "body": [
+      "{${1:items}.map((${2:item}) => (",
+      "  <${3:div}>{${2:item}.${4:name}}</${3:div}>",
+      "))}"
+    ],
+    "description": "Render a list with JavaScript map"
+  },
+  "Humn conditional": {
+    "prefix": "humn-if",
+    "body": "{${1:condition} && <${2:div}>${3}</${2:div}>}",
+    "description": "Render markup conditionally"
+  },
+  "Humn Cortex": {
+    "prefix": "humn-cortex",
+    "body": [
+      "import { Cortex } from 'humn'",
+      "",
+      "export const ${1:appCortex} = new Cortex({",
+      "  memory: {",
+      "    ${2:key}: ${3:value},",
+      "  },",
+      "  synapses: (set) => ({",
+      "    ${4:update}(${5:value}) {",
+      "      set((state) => {",
+      "        state.${2:key} = ${5:value}",
+      "      })",
+      "    },",
+      "  }),",
+      "})"
+    ],
+    "description": "Create a Humn Cortex"
+  },
+  "Humn resource synapse": {
+    "prefix": "humn-resource",
+    "body": [
+      "${1:items}: resource(),",
+      "load${2:Items}: resourceSynapse(async () => {",
+      "  return ${3:apiCall}()",
+      "}),"
+    ],
+    "description": "Create resource-backed async state"
+  }
+}
