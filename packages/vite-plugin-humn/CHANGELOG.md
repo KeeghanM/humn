@@ -1,3 +1,9 @@
+## [vite-plugin-humn-v1.4.0](https://github.com/KeeghanM/humn/compare/vite-plugin-humn-v1.3.2...vite-plugin-humn-v1.4.0) (2026-06-14)
+
+### Features
+
+- **compiler:** hoist static template subtrees ([157ed2e](https://github.com/KeeghanM/humn/commit/157ed2ecdbf7a5717b4f48e4c7087199671a7c93))
+
 ## [vite-plugin-humn-v1.3.2](https://github.com/KeeghanM/humn/compare/vite-plugin-humn-v1.3.1...vite-plugin-humn-v1.3.2) (2026-05-13)
 
 ### Bug Fixes
