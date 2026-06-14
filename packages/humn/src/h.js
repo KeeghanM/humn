@@ -32,9 +32,11 @@ export const h = (tag, props = {}, children = []) => {
 export function cloneVNode(vNode) {
   if (typeof vNode !== 'object' || vNode === null) return vNode
 
+  const children = Array.isArray(vNode.children) ? vNode.children : []
+
   return {
     tag: vNode.tag,
     props: { ...vNode.props },
-    children: vNode.children.map(cloneVNode),
+    children: children.map(cloneVNode),
   }
 }

@@ -1,5 +1,7 @@
+import { format } from 'prettier'
 import { describe, expect, it } from 'vitest'
-import { parsers } from '../index.js'
+
+import plugin, { parsers } from '../index.js'
 
 const parse = parsers['humn-parser'].parse
 
@@ -53,5 +55,15 @@ describe('Prettier Humn Parser', () => {
     const ast = parse(code)
 
     expect(getContent(ast, 'humn-script')).toBe('const x = 1')
+  })
+
+  it('should format template content', async () => {
+    const formatted = await format('<div><span>Hello</span></div>', {
+      parser: 'humn-parser',
+      plugins: [plugin],
+    })
+
+    expect(formatted).toContain('<div>')
+    expect(formatted).toContain('  <span>Hello</span>')
   })
 })

@@ -1,6 +1,47 @@
 import { doc } from 'prettier'
 
 const { group, hardline, indent, join } = doc.builders
+const { mapDoc } = doc.utils
+
+function stripFragmentWrapper(doc) {
+  const cleanDoc = mapDoc(doc, (node) => {
+    if (
+      typeof node === 'string' &&
+      (node === ';<>' || node === '<>' || node === '</>')
+    ) {
+      return ''
+    }
+    return node
+  })
+
+  const indentContent = findFirstIndentContent(cleanDoc)
+  if (!indentContent) return cleanDoc
+  if (Array.isArray(indentContent) && indentContent[0]?.type === 'line') {
+    return indentContent.slice(1)
+  }
+  return indentContent
+}
+
+function findFirstIndentContent(node) {
+  if (!node) return null
+  if (node.type === 'indent') return node.contents
+  if (node.type === 'group' || node.type === 'align' || node.type === 'label') {
+    return findFirstIndentContent(node.contents)
+  }
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findFirstIndentContent(child)
+      if (found) return found
+    }
+  }
+  if (node.type === 'concat' && Array.isArray(node.parts)) {
+    for (const child of node.parts) {
+      const found = findFirstIndentContent(child)
+      if (found) return found
+    }
+  }
+  return null
+}
 
 export const languages = [
   {
@@ -93,7 +134,14 @@ export const printers = {
       }
 
       if (node.type === 'humn-template') {
-        return node.content
+        return async (textToDoc) => {
+          const doc = await textToDoc(`<>${node.content}</>`, {
+            parser: 'babel',
+            semi: false,
+          })
+
+          return stripFragmentWrapper(doc)
+        }
       }
 
       return null
