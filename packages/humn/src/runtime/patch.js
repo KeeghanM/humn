@@ -86,7 +86,7 @@ function isDifferentComponent(newVNode, oldVNode) {
 export function patch(parent, newVNode, oldVNode, index = 0) {
   // Removal must clean up recursively so component hooks cannot leak.
   if (newVNode === undefined || newVNode === null) {
-    const el = oldVNode.el || parent.childNodes[index]
+    const el = oldVNode?.el || parent.childNodes[index]
     runUnmount(oldVNode)
     if (el && el.parentNode === parent) parent.removeChild(el)
     return
