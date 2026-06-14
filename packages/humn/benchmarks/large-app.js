@@ -82,6 +82,8 @@ async function runBenchmark({ mixedUpdates, notificationUpdates, rowCount }) {
     }
   })
 
+  // Each update scenario includes a fresh mount so repeated benchmark runs stay
+  // isolated and comparable without cross-scenario DOM or subscription state.
   const notifications = await time('notificationUpdates', async () => {
     const scenario = createScenario(rowCount)
     mount(scenario.target, scenario.App)
@@ -98,6 +100,8 @@ async function runBenchmark({ mixedUpdates, notificationUpdates, rowCount }) {
     }
   })
 
+  // Keep setup inside the timed block to measure the realistic cost of mounting
+  // a screen and applying a burst of app updates from a clean start.
   const mixed = await time('mixedUpdates', async () => {
     const scenario = createScenario(rowCount)
     mount(scenario.target, scenario.App)
@@ -150,8 +154,13 @@ const result = await runBenchmark({
 const json = JSON.stringify(result, null, 2)
 
 if (outputPath) {
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true })
-  fs.writeFileSync(outputPath, `${json}\n`, 'utf8')
+  try {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+    fs.writeFileSync(outputPath, `${json}\n`, 'utf8')
+  } catch (error) {
+    console.error(`Failed to write benchmark output to ${outputPath}:`, error)
+    process.exitCode = 1
+  }
 }
 
 console.log(json)
