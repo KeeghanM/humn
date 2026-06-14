@@ -148,6 +148,87 @@ describe('Rendering & Reactivity', () => {
     expect(target.firstChild.className).toBe('dark')
   })
 
+  it('should update nested components created during initial DOM creation', async () => {
+    const store = new Cortex({
+      memory: { count: 0 },
+      synapses: (set) => ({
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }),
+    })
+    const Child = () => h('span', {}, String(store.memory.count))
+    const App = () => h('div', {}, [h(Child)])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.increment()
+    await flushUpdates()
+
+    expect(target.textContent).toBe('1')
+  })
+
+  it('should update keyed components after reorder', async () => {
+    const store = new Cortex({
+      memory: {
+        items: [
+          { id: 1, label: 'One' },
+          { id: 2, label: 'Two' },
+          { id: 3, label: 'Three' },
+        ],
+      },
+      synapses: (set) => ({
+        rename: (id, label) =>
+          set((state) => {
+            const item = state.items.find((candidate) => candidate.id === id)
+            if (item) item.label = label
+          }),
+        reverse: () => set((state) => ({ items: [...state.items].reverse() })),
+      }),
+    })
+    const Row = ({ id }) => {
+      const item = store.memory.items.find((candidate) => candidate.id === id)
+      return h('li', { 'data-id': String(id) }, item.label)
+    }
+    const App = () =>
+      h(
+        'ul',
+        {},
+        store.memory.items.map((item) => h(Row, { id: item.id, key: item.id })),
+      )
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.reverse()
+    await flushUpdates()
+    store.synapses.rename(1, 'Moved')
+    await flushUpdates()
+
+    expect(target.querySelector('[data-id="1"]').textContent).toBe('Moved')
+    expect(target.firstChild.lastChild.dataset.id).toBe('1')
+  })
+
+  it('should ignore queued updates for components removed in the same tick', async () => {
+    const store = new Cortex({
+      memory: { mode: 'span', show: true },
+      synapses: (set) => ({
+        hide: () => set({ show: false }),
+        switchMode: () => set({ mode: 'strong' }),
+      }),
+    })
+    const Child = () =>
+      store.memory.mode === 'span'
+        ? h('span', {}, 'child')
+        : h('strong', {}, 'child')
+    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.hide()
+    store.synapses.switchMode()
+    await flushUpdates()
+
+    expect(target.innerHTML).toBe('<div></div>')
+  })
+
   it('should render components with scoped styles', () => {
     const alertStyle = css`
       background: red;

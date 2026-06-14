@@ -67,6 +67,35 @@ describe('Cortex (State Management)', () => {
     expect(store.memory.user.profile.theme).toBe('dark')
   })
 
+  it('should handle array mutation and delete operations in mutative updates', () => {
+    const store = new Cortex({
+      memory: {
+        items: [
+          { id: 1, name: 'One' },
+          { id: 2, name: 'Two' },
+        ],
+        user: { profile: { avatar: 'avatar.png', name: 'Keeghan' } },
+      },
+      synapses: (set) => ({
+        update: () =>
+          set((state) => {
+            state.items.push({ id: 3, name: 'Three' })
+            state.items.splice(1, 1)
+            state.items[0].name = 'Changed'
+            delete state.user.profile.avatar
+          }),
+      }),
+    })
+
+    store.synapses.update()
+
+    expect(store.memory.items).toEqual([
+      { id: 1, name: 'Changed' },
+      { id: 3, name: 'Three' },
+    ])
+    expect(store.memory.user.profile).toEqual({ name: 'Keeghan' })
+  })
+
   it('should use initial value if storage is empty', () => {
     const store = new Cortex({
       memory: {

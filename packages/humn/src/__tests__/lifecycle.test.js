@@ -92,6 +92,35 @@ describe('lifecycle', () => {
     expect(mountSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('should preserve original cleanup hooks across updates', async () => {
+    const cleanupSpy = vi.fn()
+    const mountedResource = { id: 'mounted-resource' }
+    const store = new Cortex({
+      memory: { count: 0, show: true },
+      synapses: (set) => ({
+        hide: () => set({ show: false }),
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }),
+    })
+
+    const Child = () => {
+      onMount(() => mountedResource)
+      onCleanup(() => cleanupSpy(mountedResource))
+      return h('span', {}, String(store.memory.count))
+    }
+    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const target = document.createElement('div')
+
+    mount(target, App)
+    store.synapses.increment()
+    await flushUpdates()
+    store.synapses.hide()
+    await flushUpdates()
+
+    expect(cleanupSpy).toHaveBeenCalledTimes(1)
+    expect(cleanupSpy).toHaveBeenCalledWith(mountedResource)
+  })
+
   it('should continue running cleanup hooks when one throws', async () => {
     const cleanupError = new Error('cleanup failed')
     const throwingCleanup = vi.fn(() => {

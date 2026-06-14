@@ -37,6 +37,11 @@ export function runUnmount(vNode) {
   if (!vNode) return
 
   clearObserverDependencies(vNode.instance?.update)
+  if (vNode.instance) {
+    vNode.instance.isMounted = false
+    vNode.instance.parent = null
+    vNode.instance.vNode = null
+  }
   if (vNode.hooks?.cleanups)
     vNode.hooks.cleanups.forEach((fn) =>
       invokeHookSafely(fn, 'Error in cleanup hook:'),
@@ -59,5 +64,4 @@ export function scheduleMountHooks(hooks) {
 
 export function runComponentUpdateHooks({ newHooks, oldHooks }) {
   if (!oldHooks) return
-  oldHooks.cleanups = newHooks.cleanups
 }

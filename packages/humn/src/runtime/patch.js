@@ -15,11 +15,12 @@ export function createComponentInstance() {
     index: 0,
     parent: null,
     update: null,
+    isMounted: false,
     vNode: null,
   }
 
   instance.update = () => {
-    if (!instance.vNode || !instance.parent) return
+    if (!instance.isMounted || !instance.vNode || !instance.parent) return
 
     const nextVNode = {
       children: instance.vNode.children,
@@ -46,13 +47,17 @@ export function mountComponent({ index, newVNode, oldVNode, parent }) {
 
   newVNode.instance = instance
   instance.index = index
+  instance.isMounted = true
   instance.parent = parent
 
   const childVNode = renderComponent(newVNode, instance.update)
   newVNode.child = childVNode
 
   patch(parent, childVNode, previousVNode?.child, index)
-  newVNode.el = childVNode.el
+  newVNode.el =
+    typeof childVNode === 'object' && childVNode !== null
+      ? childVNode.el
+      : parent.childNodes[index]
 
   if (isNew) scheduleMountHooks(newVNode.hooks)
   if (!isNew)

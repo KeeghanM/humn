@@ -14,13 +14,13 @@ export function getNamespace(parent) {
   return null
 }
 
-export function createElement(vNode, namespace) {
+export function createElement(vNode, namespace, parent = null, index = 0) {
   if (typeof vNode === 'string' || typeof vNode === 'number') {
     return document.createTextNode(String(vNode))
   }
 
   if (typeof vNode.tag === 'function')
-    return createComponentElement(vNode, namespace)
+    return createComponentElement({ index, namespace, parent, vNode })
 
   const tag = vNode.tag
   const elementNamespace = getElementNamespace(tag, namespace)
@@ -34,7 +34,12 @@ export function createElement(vNode, namespace) {
   return element
 }
 
-function createComponentElement(vNode, namespace) {
+function createComponentElement({ index, namespace, parent, vNode }) {
+  if (parent) {
+    mountComponent({ index, newVNode: vNode, oldVNode: null, parent })
+    return vNode.el
+  }
+
   const fragment = document.createDocumentFragment()
   mountComponent({
     index: 0,
@@ -50,7 +55,13 @@ function appendChildren({ element, namespace, tag, vNode }) {
   const childNamespace = tag === 'foreignObject' ? null : namespace
 
   vNode.children.forEach((child) => {
-    element.appendChild(createElement(child, childNamespace))
+    const childElement = createElement(
+      child,
+      childNamespace,
+      element,
+      element.childNodes.length,
+    )
+    if (childElement.parentNode !== element) element.appendChild(childElement)
   })
 }
 
