@@ -9,6 +9,7 @@
     "bench": "npm run bench --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
+    "dev:vscode": "code --uninstall-extension humansideofcode.humn-vscode || true && npm run package --workspace humn-vscode && code --install-extension packages/humn-vscode/humn-vscode-$(node -p \"require('./packages/humn-vscode/package.json').version\").vsix --force",
     "qa:test": "npm run qa:test --workspaces --if-present",
     "release": "npx semantic-release",
     "prepare": "husky",

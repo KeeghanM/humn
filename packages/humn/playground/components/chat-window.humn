@@ -1,8 +1,8 @@
 <script>
-  import { appCortex } from '../cortexes/app.js'
   import MessageSection from './messages.humn'
   import HeaderBar from './header-bar.humn'
   import SendBar from './send-bar.humn'
+  import { appCortex } from '../cortexes/app'
 
   const { messages, currentMessage } = appCortex.memory
   const { setOpen, addMessage, setCurrentMessage } = appCortex.synapses

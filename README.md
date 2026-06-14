@@ -112,6 +112,7 @@ We are building a library for humans, by humans. Please read coding-standards.md
 This monorepo contains the following packages:
 
 - [`humn`](/packages/humn): The core Humn library.
+- [`humn-language-server`](/packages/humn-language-server): Language Server Protocol implementation for `.humn` files.
 - [`humn-vscode`](/packages/humn-vscode): VSCode language support for `.humn` files.
 - [`prettier-plugin-humn`](/packages/prettier-plugin-humn): Prettier plugin for formatting `.humn` files.
 - [`vite-plugin-humn`](/packages/vite-plugin-humn): Vite plugin for compiling `.humn` files.

@@ -1,15 +1,17 @@
-# Ignore source control and build tools
+# Ignore source control and local tooling
 .git
 .gitignore
 .vscode
 .github
-node_modules
 **/*.map
-
-# we only want to bundle  dist
 src/
+scripts/
+*.vsix
+
 vite.config.js
-!dist/
+
+# Runtime source and production dependencies are bundled.
+node_modules/
 
 # Ignore the monorepo root references if any exist
 ../
