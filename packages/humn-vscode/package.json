@@ -7,17 +7,10 @@
     "url": "git+https://github.com/KeeghanM/humn.git"
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
-    "build": "vite build",
-    "watch": "vite build --watch",
     "package": "vsce package"
   },
   "license": "MIT",
   "publisher": "HumanSideOfCode",
-  "main": "./dist/extension.js",
-  "activationEvents": [
-    "onLanguage:humn"
-  ],
   "description": "Syntax highlighting and language support for the Humn language",
   "categories": [
     "Programming Languages"
@@ -59,11 +52,6 @@
     "vscode": "^1.70.0"
   },
   "devDependencies": {
-    "semantic-release-vsce": "^6.0.18",
-    "vite": "^7.2.6",
-    "prettier-plugin-humn": "*"
-  },
-  "dependencies": {
-    "prettier": "^3.7.3"
+    "semantic-release-vsce": "^6.0.18"
   }
 }
