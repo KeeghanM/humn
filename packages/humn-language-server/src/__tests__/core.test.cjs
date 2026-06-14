@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict')
 const path = require('node:path')
+const ts = require('typescript')
 
 const {
   createVirtualTypescript,
@@ -75,6 +76,26 @@ const virtualSource = createVirtualTypescript(source, parsed)
 assert.equal(virtualSource.includes('const handleSubmit'), true)
 assert.equal(virtualSource.includes('contacts.map'), true)
 assert.equal(virtualSource.includes('<form'), false)
+
+const arrowAttributeSource = `<script>
+  const setOpen = (open) => open
+</script>
+
+<button onclick={() => setOpen(true)}>Open</button>
+`
+const arrowAttributeParsed = parseHumn(arrowAttributeSource)
+const arrowAttributeVirtualSource = createVirtualTypescript(
+  arrowAttributeSource,
+  arrowAttributeParsed,
+)
+const arrowAttributeFile = ts.createSourceFile(
+  'arrow-attribute.tsx',
+  arrowAttributeVirtualSource,
+  ts.ScriptTarget.ES2022,
+  true,
+  ts.ScriptKind.TSX,
+)
+assert.equal(arrowAttributeFile.parseDiagnostics.length, 0)
 
 const diagnostics = getDiagnostics(
   `<script>

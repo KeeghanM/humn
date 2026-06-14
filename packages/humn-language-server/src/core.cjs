@@ -498,7 +498,9 @@ function createVirtualTypescript(source, parsed) {
   }
 
   for (const expression of parsed.expressions) {
+    chars[expression.start] = ';'
     copyRange(source, chars, expression.contentStart, expression.contentEnd)
+    if (expression.closed) chars[expression.end - 1] = ';'
   }
 
   return chars.join('')
