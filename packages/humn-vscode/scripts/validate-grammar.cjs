@@ -50,11 +50,18 @@ assert.equal(grammar.scopeName, 'source.humn')
 assert.equal(scriptBlock.contentName, 'source.tsx.embedded.humn')
 assert.deepEqual(scriptBlock.patterns, [{ include: 'source.tsx' }])
 assert.equal(styleBlock.contentName, 'source.css')
-assert.deepEqual(styleBlock.patterns, [{ include: 'source.css' }])
+assert.deepEqual(styleBlock.patterns, [
+  { include: '#root-style-declaration' },
+  { include: 'source.css' },
+])
 assert.deepEqual(grammar.patterns.at(-1), { include: 'source.tsx' })
 assert.equal(embeddedLanguages['source.tsx.embedded.humn'], 'typescriptreact')
 assert.equal(languageConfiguration.comments.lineComment, undefined)
 assert.deepEqual(languageConfiguration.comments.blockComment, ['<!--', '-->'])
+assert.equal(
+  grammar.repository['root-style-declaration'].begin,
+  '^ {0,2}((?:--[A-Za-z_][A-Za-z0-9_-]*|-?[A-Za-z_][A-Za-z0-9_-]*))\\s*(:)(?=[^;{]*;)(?![^;]*\\{)',
+)
 
 for (const object of grammarObjects) {
   assert.notEqual(

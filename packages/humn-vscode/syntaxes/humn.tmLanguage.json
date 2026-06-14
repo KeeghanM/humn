@@ -79,7 +79,70 @@
       "contentName": "source.css",
       "patterns": [
         {
+          "include": "#root-style-declaration"
+        },
+        {
           "include": "source.css"
+        }
+      ]
+    },
+    "root-style-declaration": {
+      "begin": "^ {0,2}((?:--[A-Za-z_][A-Za-z0-9_-]*|-?[A-Za-z_][A-Za-z0-9_-]*))\\s*(:)(?=[^;{]*;)(?![^;]*\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "support.type.property-name.css"
+        },
+        "2": {
+          "name": "punctuation.separator.key-value.css"
+        }
+      },
+      "end": "(;)|(?=$)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.terminator.rule.css"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#css-values"
+        }
+      ]
+    },
+    "css-values": {
+      "patterns": [
+        {
+          "match": "#[0-9a-fA-F]{3,8}",
+          "name": "constant.other.color.rgb-value.css"
+        },
+        {
+          "match": "(-?[0-9]+(?:\\.[0-9]+)?)",
+          "name": "constant.numeric.css"
+        },
+        {
+          "match": "(?<=\\d)(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)\\b",
+          "name": "keyword.other.unit.css"
+        },
+        {
+          "match": "([A-Za-z-][A-Za-z0-9-]*)\\s*(?=\\()",
+          "name": "support.function.css"
+        },
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.css"
+        },
+        {
+          "begin": "'",
+          "end": "'",
+          "name": "string.quoted.single.css"
+        },
+        {
+          "match": "[-A-Za-z_][A-Za-z0-9_-]*",
+          "name": "support.constant.property-value.css"
+        },
+        {
+          "match": "[,!]",
+          "name": "punctuation.separator.sequence.css"
         }
       ]
     }
