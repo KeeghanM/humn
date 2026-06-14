@@ -1,3 +1,9 @@
+## [humn-v1.7.1](https://github.com/KeeghanM/humn/compare/humn-v1.7.0...humn-v1.7.1) (2026-06-14)
+
+### Bug Fixes
+
+- **docs:** Docs generation now in package ([ac41d4c](https://github.com/KeeghanM/humn/commit/ac41d4cc11df6f0e14ac19cbacc9de8b3da42d2b))
+
 ## [humn-v1.7.0](https://github.com/KeeghanM/humn/compare/humn-v1.6.1...humn-v1.7.0) (2026-06-14)
 
 ### Features
