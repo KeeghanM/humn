@@ -1,5 +1,6 @@
-import { isDev } from './metrics.js'
 import { getObserver } from './observer.js'
+
+const isDev = import.meta.env?.DEV || false
 
 /**
  * Mapped type for the Memory configuration object.

@@ -1,4 +1,3 @@
-import { track } from '../metrics.js'
 import { patchProps } from './patch-props.js'
 import { renderComponent, scheduleMountHooks } from './component-lifecycle.js'
 
@@ -23,7 +22,6 @@ export function createElement(vNode, namespace) {
   if (typeof vNode.tag === 'function')
     return createComponentElement(vNode, namespace)
 
-  track('elementsCreated')
   const tag = vNode.tag
   const elementNamespace = getElementNamespace(tag, namespace)
   const element = elementNamespace

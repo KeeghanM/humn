@@ -1,4 +1,3 @@
-import { track } from '../metrics.js'
 import { setInstance } from '../observer.js'
 
 export function invokeHookSafely(fn, errorMessage) {
@@ -10,7 +9,6 @@ export function invokeHookSafely(fn, errorMessage) {
 }
 
 export function renderComponent(vNode) {
-  track('componentsRendered')
   const hooks = { mounts: [], cleanups: [] }
   setInstance(hooks)
 
