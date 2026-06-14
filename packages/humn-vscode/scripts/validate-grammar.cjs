@@ -43,6 +43,7 @@ function collectObjects(value, objects = []) {
 const grammarObjects = collectObjects(grammar)
 const scriptBlock = grammar.repository['script-block']
 const interpolation = grammar.repository.interpolation
+const cssValues = grammar.repository['css-values']
 const embeddedLanguages =
   extensionManifest.contributes.grammars[0].embeddedLanguages
 
@@ -52,6 +53,14 @@ assert.equal(interpolation.contentName, 'source.tsx.embedded.humn')
 assert.equal(embeddedLanguages['source.tsx.embedded.humn'], 'typescriptreact')
 assert.equal(languageConfiguration.comments.lineComment, undefined)
 assert.deepEqual(languageConfiguration.comments.blockComment, ['<!--', '-->'])
+assert.equal(
+  cssValues.patterns.some(
+    (pattern) =>
+      pattern.name === 'keyword.other.unit.css' &&
+      pattern.match === '(?<=\\d)(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)\\b',
+  ),
+  true,
+)
 
 for (const object of grammarObjects) {
   assert.notEqual(

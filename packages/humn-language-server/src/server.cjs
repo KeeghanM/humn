@@ -3,6 +3,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const ts = require('typescript')
 const {
+  CodeActionKind,
   CompletionItemKind,
   DiagnosticSeverity,
   DocumentSymbol,
@@ -12,9 +13,7 @@ const {
   ProposedFeatures,
   Range,
   SemanticTokensBuilder,
-  SemanticTokensRegistrationType,
   SymbolKind,
-  TextDocumentPositionParams,
   TextDocuments,
   TextDocumentSyncKind,
   TextEdit,
@@ -26,8 +25,10 @@ const {
   createVirtualTypescript,
   findIdentifierOccurrences,
   getComponentTagAt,
+  getComponentNameFromPath,
   getDiagnostics,
   getIdentifierAt,
+  getRelativeImportSource,
   getSemanticTokens,
   parseHumn,
   pathToUri,
@@ -43,27 +44,33 @@ const semanticLegend = {
 }
 
 const documentCache = new Map()
+let workspaceRoots = []
 
-connection.onInitialize(() => ({
-  capabilities: {
-    textDocumentSync: TextDocumentSyncKind.Incremental,
-    completionProvider: {
-      resolveProvider: false,
-      triggerCharacters: ['<', '{', '.', '/'],
+connection.onInitialize((params) => {
+  workspaceRoots = getWorkspaceRoots(params)
+
+  return {
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Incremental,
+      completionProvider: {
+        resolveProvider: false,
+        triggerCharacters: ['<', '{', '.', '/'],
+      },
+      definitionProvider: true,
+      hoverProvider: true,
+      referencesProvider: true,
+      renameProvider: {
+        prepareProvider: true,
+      },
+      documentSymbolProvider: true,
+      codeActionProvider: true,
+      semanticTokensProvider: {
+        legend: semanticLegend,
+        full: true,
+      },
     },
-    definitionProvider: true,
-    hoverProvider: true,
-    referencesProvider: true,
-    renameProvider: {
-      prepareProvider: true,
-    },
-    documentSymbolProvider: true,
-    semanticTokensProvider: {
-      legend: semanticLegend,
-      full: true,
-    },
-  },
-}))
+  }
+})
 
 documents.onDidChangeContent((change) => validateDocument(change.document))
 documents.onDidClose((event) => {
@@ -77,10 +84,11 @@ connection.onCompletion((params) => {
 
   const context = getDocumentContext(document)
   const offset = document.offsetAt(params.position)
-  const previous = document.getText().slice(Math.max(0, offset - 2), offset)
+  const source = document.getText()
+  const previous = source.slice(Math.max(0, offset - 2), offset)
   const items = []
 
-  if (previous.endsWith('<')) {
+  if (getTagCompletionPrefix(source, offset) !== null) {
     for (const symbol of context.parsed.symbols.values()) {
       if (symbol.kind !== 'component') continue
       items.push({
@@ -90,7 +98,8 @@ connection.onCompletion((params) => {
         documentation: symbol.import?.source,
       })
     }
-    return items
+    items.push(...getProjectComponentCompletions(document, context))
+    return dedupeCompletions(items)
   }
 
   if (isInScriptOrExpression(context.parsed, offset)) {
@@ -316,6 +325,34 @@ connection.onDocumentSymbol((params) => {
   }
 
   return symbols
+})
+
+connection.onCodeAction((params) => {
+  const document = documents.get(params.textDocument.uri)
+  if (!document) return []
+  const context = getDocumentContext(document)
+  const actions = []
+
+  for (const diagnostic of params.context.diagnostics) {
+    const match = diagnostic.message.match(/Component <([A-Z][A-Za-z0-9]*)>/)
+    if (!match) continue
+
+    const component = findProjectComponent(document, context, match[1])
+    if (!component) continue
+
+    actions.push({
+      title: `Import ${component.name} from '${component.importSource}'`,
+      kind: CodeActionKind.QuickFix,
+      diagnostics: [diagnostic],
+      edit: {
+        changes: {
+          [document.uri]: [createImportTextEdit(document, context, component)],
+        },
+      },
+    })
+  }
+
+  return actions
 })
 
 connection.languages.semanticTokens.on((params) => {
@@ -589,6 +626,139 @@ function toSymbolKind(kind) {
   if (kind === 'function') return SymbolKind.Function
   if (kind === 'class' || kind === 'component') return SymbolKind.Class
   return SymbolKind.Variable
+}
+
+function getWorkspaceRoots(params) {
+  if (params.workspaceFolders?.length) {
+    return params.workspaceFolders
+      .map((folder) => uriToPath(folder.uri))
+      .filter(Boolean)
+  }
+
+  const rootUri = params.rootUri || null
+  const rootPath = rootUri ? uriToPath(rootUri) : params.rootPath
+  return rootPath ? [rootPath] : []
+}
+
+function getTagCompletionPrefix(source, offset) {
+  const lineStart = source.lastIndexOf('\n', offset - 1) + 1
+  const linePrefix = source.slice(lineStart, offset)
+  const match = linePrefix.match(/(?:^|[\s>])<([A-Za-z][A-Za-z0-9]*)?$/)
+  return match ? match[1] || '' : null
+}
+
+function getProjectComponentCompletions(document, context) {
+  return getProjectComponents(document, context).map((component) => ({
+    label: component.name,
+    kind: CompletionItemKind.Class,
+    detail: `Auto import from ${component.importSource}`,
+    sortText: `0_${component.name}`,
+    additionalTextEdits: [createImportTextEdit(document, context, component)],
+  }))
+}
+
+function findProjectComponent(document, context, name) {
+  return getProjectComponents(document, context).find(
+    (component) => component.name === name,
+  )
+}
+
+function getProjectComponents(document, context) {
+  const documentPath = uriToPath(document.uri)
+  if (!documentPath) return []
+
+  const roots = workspaceRoots.length
+    ? workspaceRoots
+    : [path.dirname(documentPath)]
+  const components = []
+  const seen = new Set()
+
+  for (const root of roots) {
+    for (const filePath of getHumnFiles(root)) {
+      if (filePath === documentPath) continue
+
+      const name = getComponentNameFromPath(filePath)
+      if (!name || context.parsed.symbols.has(name) || seen.has(name)) continue
+
+      const importSource = getRelativeImportSource(document.uri, filePath)
+      if (!importSource) continue
+
+      seen.add(name)
+      components.push({ name, filePath, importSource })
+    }
+  }
+
+  return components.sort((left, right) => left.name.localeCompare(right.name))
+}
+
+function getHumnFiles(root) {
+  const files = []
+  collectHumnFiles(root, files)
+  return files
+}
+
+function collectHumnFiles(directory, files) {
+  if (!fs.existsSync(directory)) return
+
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (shouldSkipDirectory(entry.name)) continue
+
+    const filePath = path.join(directory, entry.name)
+    if (entry.isDirectory()) {
+      collectHumnFiles(filePath, files)
+      continue
+    }
+
+    if (entry.isFile() && entry.name.endsWith('.humn')) files.push(filePath)
+  }
+}
+
+function shouldSkipDirectory(name) {
+  return (
+    name === 'node_modules' ||
+    name === '.git' ||
+    name === 'dist' ||
+    name === '.vscode'
+  )
+}
+
+function createImportTextEdit(document, context, component) {
+  const source = document.getText()
+  const importLine = `${getImportIndent(source, context)}import ${component.name} from '${component.importSource}'\n`
+
+  if (!context.parsed.script) {
+    return TextEdit.insert(
+      Range.create(0, 0, 0, 0).start,
+      `<script>\n${importLine}</script>\n\n`,
+    )
+  }
+
+  if (context.parsed.imports.length) {
+    const lastImportEnd = Math.max(
+      ...context.parsed.imports.map((item) => item.end),
+    )
+    const lineEnd = source.indexOf('\n', lastImportEnd)
+    const insertOffset = lineEnd === -1 ? lastImportEnd : lineEnd + 1
+    return TextEdit.insert(document.positionAt(insertOffset), importLine)
+  }
+
+  const insertOffset =
+    source[context.parsed.script.contentStart] === '\n'
+      ? context.parsed.script.contentStart + 1
+      : context.parsed.script.contentStart
+  const prefix = source[context.parsed.script.contentStart] === '\n' ? '' : '\n'
+  return TextEdit.insert(
+    document.positionAt(insertOffset),
+    `${prefix}${importLine}`,
+  )
+}
+
+function getImportIndent(source, context) {
+  const firstImport = context.parsed.imports[0]
+  if (!firstImport) return '  '
+
+  const lineStart = source.lastIndexOf('\n', firstImport.start - 1) + 1
+  return source.slice(lineStart, firstImport.start).match(/^\s*/)[0]
 }
 
 function dedupeCompletions(items) {

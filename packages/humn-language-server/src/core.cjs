@@ -778,6 +778,26 @@ function resolveImportPath(documentUri, importSource) {
   )
 }
 
+function getComponentNameFromPath(filePath) {
+  return path
+    .basename(filePath, path.extname(filePath))
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+}
+
+function getRelativeImportSource(documentUri, targetPath) {
+  const documentPath = uriToPath(documentUri)
+  if (!documentPath) return null
+
+  let importSource = path
+    .relative(path.dirname(documentPath), targetPath)
+    .replace(/\\/g, '/')
+  if (!importSource.startsWith('.')) importSource = `./${importSource}`
+  return importSource
+}
+
 function uriToPath(uri) {
   try {
     return fileURLToPath(uri)
@@ -803,9 +823,11 @@ module.exports = {
   createVirtualTypescript,
   findIdentifierOccurrences,
   getComponentTagAt,
+  getComponentNameFromPath,
   getDiagnostics,
   getIdentifierAt,
   getRegionAtOffset,
+  getRelativeImportSource,
   getSemanticTokens,
   parseHumn,
   pathToUri,

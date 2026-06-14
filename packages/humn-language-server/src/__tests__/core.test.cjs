@@ -1,13 +1,17 @@
 const assert = require('node:assert/strict')
+const path = require('node:path')
 
 const {
   createVirtualTypescript,
   findIdentifierOccurrences,
   getComponentTagAt,
+  getComponentNameFromPath,
   getDiagnostics,
   getRegionAtOffset,
+  getRelativeImportSource,
   getSemanticTokens,
   parseHumn,
+  pathToUri,
 } = require('../core.cjs')
 
 const source = `<script>
@@ -92,4 +96,16 @@ assert.equal(
 assert.equal(
   diagnostics.some((diagnostic) => diagnostic.message.includes('Missing')),
   true,
+)
+
+assert.equal(
+  getComponentNameFromPath('/project/src/components/chat-window.humn'),
+  'ChatWindow',
+)
+assert.equal(
+  getRelativeImportSource(
+    pathToUri(path.resolve('/project/src/app.humn')),
+    path.resolve('/project/src/components/chat-window.humn'),
+  ),
+  './components/chat-window.humn',
 )

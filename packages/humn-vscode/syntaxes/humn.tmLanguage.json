@@ -50,6 +50,23 @@
       "contentName": "source.tsx.embedded.humn",
       "patterns": [
         {
+          "include": "#script-import-string"
+        },
+        {
+          "include": "#script-named-bindings"
+        },
+        {
+          "include": "#script-object-bindings"
+        },
+        {
+          "match": "\\b([A-Za-z_$][A-Za-z0-9_$]*)(?=\\s*\\.)",
+          "captures": {
+            "1": {
+              "name": "variable.other.object.ts"
+            }
+          }
+        },
+        {
           "include": "source.tsx"
         }
       ]
@@ -139,7 +156,7 @@
           "name": "constant.numeric.css"
         },
         {
-          "match": "(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)",
+          "match": "(?<=\\d)(px|em|rem|%|vh|vw|s|ms|deg|fr|pt)\\b",
           "name": "keyword.other.unit.css"
         },
         {
@@ -256,7 +273,78 @@
           "include": "#smart-nesting"
         },
         {
+          "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
+          "name": "variable.other.readwrite.ts"
+        },
+        {
+          "match": "\\?|:",
+          "name": "keyword.operator.ternary.ts"
+        },
+        {
           "include": "source.tsx"
+        }
+      ]
+    },
+    "script-import-string": {
+      "begin": "(['\"])(?=\\.?[./A-Za-z0-9_-])",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin.ts"
+        }
+      },
+      "end": "\\1",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.ts"
+        }
+      },
+      "name": "string.quoted.ts"
+    },
+    "script-named-bindings": {
+      "begin": "\\bimport\\s*\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control.import.ts"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block.ts"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
+          "name": "variable.other.readwrite.alias.ts"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.comma.ts"
+        }
+      ]
+    },
+    "script-object-bindings": {
+      "begin": "\\b(?:const|let|var)\\s*\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "storage.type.ts"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block.ts"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
+          "name": "variable.other.readwrite.alias.ts"
+        },
+        {
+          "match": ",|:",
+          "name": "punctuation.separator.ts"
         }
       ]
     },
