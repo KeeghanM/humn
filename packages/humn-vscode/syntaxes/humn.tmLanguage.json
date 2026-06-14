@@ -3,6 +3,9 @@
   "name": "Humn",
   "patterns": [
     {
+      "include": "#html-comment"
+    },
+    {
       "include": "#script-block"
     },
     {
@@ -51,12 +54,6 @@
       "patterns": [
         {
           "include": "#script-import-string"
-        },
-        {
-          "include": "#script-named-bindings"
-        },
-        {
-          "include": "#script-object-bindings"
         },
         {
           "match": "\\b([A-Za-z_$][A-Za-z0-9_$]*)(?=\\s*\\.)",
@@ -197,6 +194,9 @@
       },
       "patterns": [
         {
+          "include": "#html-comment"
+        },
+        {
           "include": "#string-double"
         },
         {
@@ -229,6 +229,9 @@
       },
       "patterns": [
         {
+          "include": "#html-comment"
+        },
+        {
           "include": "#string-double"
         },
         {
@@ -245,6 +248,9 @@
     },
     "html-content": {
       "patterns": [
+        {
+          "include": "#html-comment"
+        },
         {
           "include": "#interpolation"
         },
@@ -273,6 +279,16 @@
           "include": "#smart-nesting"
         },
         {
+          "include": "#humn-component"
+        },
+        {
+          "include": "#humn-html-tag"
+        },
+        {
+          "match": "=>",
+          "name": "keyword.operator.arrow.js"
+        },
+        {
           "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
           "name": "variable.other.readwrite.js"
         },
@@ -299,54 +315,6 @@
         }
       },
       "name": "string.quoted.ts"
-    },
-    "script-named-bindings": {
-      "begin": "\\bimport\\s*\\{",
-      "beginCaptures": {
-        "0": {
-          "name": "keyword.control.import.ts"
-        }
-      },
-      "end": "\\}",
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.block.ts"
-        }
-      },
-      "patterns": [
-        {
-          "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
-          "name": "variable.other.readwrite.alias.js"
-        },
-        {
-          "match": ",",
-          "name": "punctuation.separator.comma.ts"
-        }
-      ]
-    },
-    "script-object-bindings": {
-      "begin": "\\b(?:const|let|var)\\s*\\{",
-      "beginCaptures": {
-        "0": {
-          "name": "storage.type.ts"
-        }
-      },
-      "end": "\\}",
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.block.ts"
-        }
-      },
-      "patterns": [
-        {
-          "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
-          "name": "variable.other.readwrite.alias.js"
-        },
-        {
-          "match": ",|:",
-          "name": "punctuation.separator.ts"
-        }
-      ]
     },
     "smart-nesting": {
       "patterns": [
@@ -416,6 +384,11 @@
           ]
         }
       ]
+    },
+    "html-comment": {
+      "begin": "<!--",
+      "end": "-->",
+      "name": "comment.block.html"
     },
     "comments": {
       "patterns": [
