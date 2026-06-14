@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node scripts/build.cjs",
     "qa:test": "node scripts/validate-grammar.cjs",
-    "package": "vsce package",
+    "package": "npx @vscode/vsce package",
     "vscode:prepublish": "npm run build"
   },
   "license": "MIT",
