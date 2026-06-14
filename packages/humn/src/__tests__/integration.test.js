@@ -5,7 +5,7 @@ import { cloneVNode, Cortex, css, h, mount } from '../index.js'
 /**
  * Compiles and executes a .humn component string in the test environment.
  * @param {string} source - The .humn file content
- * @param {object} imports - A map of dependencies to inject (e.g. { todoStore, TodoItem })
+ * @param {object} imports - A map of dependencies to inject (e.g. { todoCortex, TodoItem })
  * @returns {function} - The compiled Component function
  */
 const compile = (source, imports = {}) => {
@@ -25,7 +25,7 @@ const compile = (source, imports = {}) => {
     // Change "export default function" to "return function" so the factory returns it
     .replace('export default function', 'return function')
 
-  // We inject 'h' and 'css' (core) + any user provided imports (store, sub-components)
+  // We inject 'h' and 'css' (core) + any user provided imports (cortex, sub-components)
   const dependencyNames = ['h', 'css', 'cloneVNode', ...Object.keys(imports)]
   const dependencyValues = [h, css, cloneVNode, ...Object.values(imports)]
 
@@ -38,8 +38,8 @@ async function flushUpdates() {
   await Promise.resolve()
 }
 
-// Mock Store Logic
-const createStore = () =>
+// Mock Cortex Logic
+const createCortex = () =>
   new Cortex({
     memory: {
       items: [
@@ -71,9 +71,9 @@ const createStore = () =>
 // Raw Source: Item.humn
 const itemSource = `
 <script>
-  import { todoStore } from './todo-store.js'
+  import { todoCortex } from './todo-cortex.js'
   const { item } = props
-  const { toggle } = todoStore.synapses
+  const { toggle } = todoCortex.synapses
 </script>
 
 <div 
@@ -97,11 +97,11 @@ const itemSource = `
 // Raw Source: App.humn
 const appSource = `
 <script>
-  import { todoStore } from './todo-store.js'
+  import { todoCortex } from './todo-cortex.js'
   import TodoItem from './item.humn'
 
-  const { items, inputValue } = todoStore.memory
-  const { updateInput, addTodo } = todoStore.synapses
+  const { items, inputValue } = todoCortex.memory
+  const { updateInput, addTodo } = todoCortex.synapses
 </script>
 
 <div id="app-root">
@@ -132,21 +132,21 @@ const appSource = `
 `
 
 describe('Integration: Compiler + Runtime', () => {
-  let store
+  let cortex
   let container
   let App
 
   beforeEach(() => {
     document.head.innerHTML = '' // Clear styles
     container = document.createElement('div')
-    store = createStore()
+    cortex = createCortex()
 
     // 1. Compile Dependencies first
-    const TodoItem = compile(itemSource, { todoStore: store })
+    const TodoItem = compile(itemSource, { todoCortex: cortex })
 
     // 2. Compile Root (Injecting the compiled dependency)
     App = compile(appSource, {
-      todoStore: store,
+      todoCortex: cortex,
       TodoItem: TodoItem,
     })
   })
@@ -174,7 +174,7 @@ describe('Integration: Compiler + Runtime', () => {
     // 1. Type
     input.value = 'New Integration Task'
     input.dispatchEvent(new Event('input'))
-    expect(store.memory.inputValue).toBe('New Integration Task')
+    expect(cortex.memory.inputValue).toBe('New Integration Task')
 
     // 2. Click Add
     btn.click()

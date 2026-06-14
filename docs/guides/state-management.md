@@ -7,10 +7,10 @@ To create a `Cortex` instance, you need to provide an initial `memory` (state) a
 Here's an example of a simple counter:
 
 ```javascript
-// store.js
+// cortex.js
 import { Cortex } from 'humn'
 
-export const counterStore = new Cortex({
+export const counterCortex = new Cortex({
   memory: {
     count: 0,
   },
@@ -24,10 +24,10 @@ export const counterStore = new Cortex({
 ```humn
 <script>
   // App.humn
-  import { counterStore } from './store.js'
+  import { counterCortex } from './cortex.js'
 
-  const { count } = counterStore.memory
-  const { increment, decrement } = counterStore.synapses
+  const { count } = counterCortex.memory
+  const { increment, decrement } = counterCortex.synapses
 </script>
 
 <div>
@@ -47,9 +47,9 @@ import App from './App.humn'
 mount(document.getElementById('app'), App)
 ```
 
-In this example, we're creating a `Cortex` instance called `counterStore` with an initial count of 0. We're also defining two synapses, `increment` and `decrement`, that update the count.
+In this example, we're creating a `Cortex` instance called `counterCortex` with an initial count of 0. We're also defining two synapses, `increment` and `decrement`, that update the count.
 
-The `App` component gets the `count` from the `counterStore.memory` and the `increment` and `decrement` functions from the `counterStore.synapses`. It then renders the count and two buttons to increment and decrement the count.
+The `App` component gets the `count` from the `counterCortex.memory` and the `increment` and `decrement` functions from the `counterCortex.synapses`. It then renders the count and two buttons to increment and decrement the count.
 
 ## State Persistence
 
@@ -60,7 +60,7 @@ To use it, wrap the value you want to persist with the `persist` function.
 ```javascript
 import { Cortex, persist } from 'humn'
 
-const todoStore = new Cortex({
+const todoCortex = new Cortex({
   memory: {
     items: persist([
       { id: 1, text: 'Create Humn Library', done: true },
@@ -79,7 +79,7 @@ By default, the key used in `localStorage` will be the same as the key in the `m
 You can also provide a custom key by passing a configuration object to the `persist` function:
 
 ```javascript
-const todoStore = new Cortex({
+const todoCortex = new Cortex({
   memory: {
     items: persist(
       [
@@ -100,4 +100,4 @@ Cortex supports strong typing out of the box. By defining your Memory and Synaps
 
 Cortex automatically handles the complexity of unwrapping `persist()` values in your types, so your API remains clean.
 
-> For a detailed guide on how to type your store using TypeScript or JSDoc, see the **[TypeScript Support](./typescript.md)** guide.
+> For a detailed guide on how to type your cortex using TypeScript or JSDoc, see the **[TypeScript Support](./typescript.md)** guide.

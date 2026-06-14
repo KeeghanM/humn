@@ -15,18 +15,18 @@ export function createRenderCounters() {
 }
 
 export function createLargeAppComponents(
-  store,
+  cortex,
   counters = createRenderCounters(),
 ) {
   const Header = () => {
     recordRender(counters, 'Header')
-    const { filter } = store.memory
+    const { filter } = cortex.memory
 
     return h('header', { 'data-testid': 'large-header' }, [
       h('h1', {}, 'Operations Console'),
       h('input', {
         'data-testid': 'large-filter',
-        oninput: (event) => store.synapses.setFilter(event.target.value),
+        oninput: (event) => cortex.synapses.setFilter(event.target.value),
         value: filter,
       }),
     ])
@@ -34,7 +34,7 @@ export function createLargeAppComponents(
 
   const Sidebar = () => {
     recordRender(counters, 'Sidebar')
-    const { activeId, sidebarOpen, stats } = store.memory
+    const { activeId, sidebarOpen, stats } = cortex.memory
 
     return h('aside', { 'data-testid': 'large-sidebar' }, [
       h('p', {}, `Sidebar: ${sidebarOpen ? 'open' : 'closed'}`),
@@ -58,7 +58,7 @@ export function createLargeAppComponents(
       [
         h(
           'button',
-          { onclick: () => store.synapses.setActive(row.id) },
+          { onclick: () => cortex.synapses.setActive(row.id) },
           row.id,
         ),
         h('span', {}, row.label),
@@ -69,7 +69,7 @@ export function createLargeAppComponents(
 
   const RowList = () => {
     recordRender(counters, 'RowList')
-    const { filter, rows } = store.memory
+    const { filter, rows } = cortex.memory
     const normalizedFilter = filter.trim().toLowerCase()
     const visibleRows = normalizedFilter
       ? rows.filter((row) => row.label.toLowerCase().includes(normalizedFilter))

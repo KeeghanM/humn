@@ -6,7 +6,6 @@
     "reactive",
     "ui",
     "state",
-    "store",
     "cortex"
   ],
   "homepage": "https://www.npmjs.com/package/humn",
@@ -27,10 +26,20 @@
   "main": "./dist/humn.umd.js",
   "module": "./dist/humn.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "humn": "./bin/humn.js"
+  },
   "files": [
+    "bin",
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "llms.txt",
+    "llms-full.txt",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".cursor",
+    "humn.ai.json"
   ],
   "scripts": {
     "bench": "node benchmarks/large-app.js",

@@ -201,7 +201,7 @@ sequenceDiagram
 ### Example 1: Simple Update
 
 ```javascript
-const store = new Cortex({
+const cortex = new Cortex({
   memory: { count: 0 },
   synapses: (set) => ({
     inc: () =>
@@ -212,10 +212,10 @@ const store = new Cortex({
 })
 
 const App = () => {
-  const { count } = store.memory
+  const { count } = cortex.memory
   return h('div', {}, [
     h('p', {}, `Count: ${count}`),
-    h('button', { onclick: store.synapses.inc }, 'Increment'),
+    h('button', { onclick: cortex.synapses.inc }, 'Increment'),
   ])
 }
 ```
@@ -235,7 +235,7 @@ const App = () => {
 
 ```javascript
 const App = () => {
-  const { isLoggedIn } = store.memory
+  const { isLoggedIn } = cortex.memory
 
   return h('div', {}, [
     h('h1', {}, 'App'),
@@ -257,7 +257,7 @@ const App = () => {
 
 ```javascript
 const TodoList = () => {
-  const { todos } = store.memory
+  const { todos } = cortex.memory
 
   return h(
     'ul',
@@ -267,7 +267,7 @@ const TodoList = () => {
         h('input', {
           type: 'checkbox',
           checked: todo.done,
-          onchange: () => store.synapses.toggle(todo.id),
+          onchange: () => cortex.synapses.toggle(todo.id),
         }),
         h('span', {}, todo.text),
       ]),

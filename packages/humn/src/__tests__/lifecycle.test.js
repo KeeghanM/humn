@@ -26,7 +26,7 @@ describe('lifecycle', () => {
 
   it('should fire onCleanup when component is removed', async () => {
     const onCleanupSpy = vi.fn()
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { show: true },
       synapses: (set) => ({ toggle: () => set((s) => ({ show: !s.show })) }),
     })
@@ -37,7 +37,7 @@ describe('lifecycle', () => {
     }
 
     const App = () => {
-      const { show } = store.memory
+      const { show } = cortex.memory
       return h('div', {}, [show ? h(Child) : null])
     }
 
@@ -49,7 +49,7 @@ describe('lifecycle', () => {
     expect(onCleanupSpy).not.toHaveBeenCalled()
 
     // 2. Remove Child
-    store.synapses.toggle()
+    cortex.synapses.toggle()
     await flushUpdates()
 
     expect(target.innerHTML).not.toContain('Child')
@@ -59,7 +59,7 @@ describe('lifecycle', () => {
   it('should not fire mount or cleanup hooks when a component updates', async () => {
     const cleanupSpy = vi.fn()
     const mountSpy = vi.fn()
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { count: 0 },
       synapses: (set) => ({
         increment: () =>
@@ -70,7 +70,7 @@ describe('lifecycle', () => {
     })
 
     const Counter = () => {
-      const { count } = store.memory
+      const { count } = cortex.memory
       onMount(mountSpy)
       onCleanup(cleanupSpy)
       return h('div', {}, String(count))
@@ -83,7 +83,7 @@ describe('lifecycle', () => {
     expect(mountSpy).toHaveBeenCalledTimes(1)
     expect(cleanupSpy).toHaveBeenCalledTimes(0)
 
-    store.synapses.increment()
+    cortex.synapses.increment()
     await flushUpdates()
 
     await new Promise((r) => setTimeout(r, 0))
@@ -95,7 +95,7 @@ describe('lifecycle', () => {
   it('should preserve original cleanup hooks across updates', async () => {
     const cleanupSpy = vi.fn()
     const mountedResource = { id: 'mounted-resource' }
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { count: 0, show: true },
       synapses: (set) => ({
         hide: () => set({ show: false }),
@@ -106,15 +106,15 @@ describe('lifecycle', () => {
     const Child = () => {
       onMount(() => mountedResource)
       onCleanup(() => cleanupSpy(mountedResource))
-      return h('span', {}, String(store.memory.count))
+      return h('span', {}, String(cortex.memory.count))
     }
-    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const App = () => h('div', {}, [cortex.memory.show ? h(Child) : null])
     const target = document.createElement('div')
 
     mount(target, App)
-    store.synapses.increment()
+    cortex.synapses.increment()
     await flushUpdates()
-    store.synapses.hide()
+    cortex.synapses.hide()
     await flushUpdates()
 
     expect(cleanupSpy).toHaveBeenCalledTimes(1)
@@ -130,7 +130,7 @@ describe('lifecycle', () => {
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {})
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { show: true },
       synapses: (set) => ({
         hide: () => set({ show: false }),
@@ -144,14 +144,14 @@ describe('lifecycle', () => {
     }
 
     const App = () => {
-      const { show } = store.memory
+      const { show } = cortex.memory
       return h('div', {}, [show ? h(Child) : null])
     }
 
     const target = document.createElement('div')
     mount(target, App)
 
-    store.synapses.hide()
+    cortex.synapses.hide()
     await flushUpdates()
 
     expect(throwingCleanup).toHaveBeenCalledTimes(1)

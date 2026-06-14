@@ -26,7 +26,7 @@ type AppSynapses = {
   login: (name: string) => void
 }
 
-export const store = new Cortex<AppMemory, AppSynapses>({
+export const cortex = new Cortex<AppMemory, AppSynapses>({
   memory: {
     count: persist(0), // Types are automatically unwrapped!
     user: null,
@@ -59,7 +59,7 @@ You can achieve the exact same result using JSDoc @typedef and @type.
  */
 
 /** @type {import('humn').Cortex<AppMemory, AppSynapses>} */
-export const store = new Cortex({
+export const cortex = new Cortex({
   memory: {
     count: persist(0),
     user: null,
@@ -75,15 +75,15 @@ export const store = new Cortex({
 ```
 
 Automatic Inference
-Once typed, your store will provide intellisense everywhere:
+Once typed, your cortex will provide intellisense everywhere:
 
 ```javascript
 // ✅ Autocomplete works here
-store.synapses.login('Keeghan')
+cortex.synapses.login('Keeghan')
 
 // ❌ Type Error: Argument of type 'number' is not assignable to parameter of type 'string'.
-store.synapses.login(123)
+cortex.synapses.login(123)
 
 // ✅ Correctly typed as 'number' (persistence is hidden)
-const count = store.memory.count
+const count = cortex.memory.count
 ```

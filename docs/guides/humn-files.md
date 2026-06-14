@@ -9,14 +9,14 @@ A `.humn` file consists of three optional sections: `<script>`, `<template>` (im
 ```humn
 <script>
   // Your JavaScript logic here
-  import { store } from './store.js'
+  import { cortex } from './cortex.js'
 
   // Props are available via the `props` variable
   const { name } = props
 
-  // Access store state
-  const { count } = store.memory
-  const { increment } = store.synapses
+  // Access cortex state
+  const { count } = cortex.memory
+  const { increment } = cortex.synapses
 </script>
 
 <!-- The template is the main content of the file -->
@@ -43,7 +43,7 @@ A `.humn` file consists of three optional sections: `<script>`, `<template>` (im
 
 The `<script>` block is where you define your component's logic.
 
-- **Imports**: Import other components, stores, or utilities.
+- **Imports**: Import other components, cortexes, or utilities.
 - **Props**: `props` is a magic variable available in the script scope containing the properties passed to the component.
 - **Reactivity**: Destructuring from `Cortex` memory creates reactive subscriptions.
 

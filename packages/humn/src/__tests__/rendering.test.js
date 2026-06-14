@@ -33,7 +33,7 @@ describe('Rendering & Reactivity', () => {
   })
 
   it('should reorder keyed elements (Keyed Diffing)', async () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] },
       synapses: (set) => ({
         reverse: () => set((s) => ({ items: [...s.items].reverse() })),
@@ -41,7 +41,7 @@ describe('Rendering & Reactivity', () => {
     })
 
     const App = () => {
-      const { items } = store.memory
+      const { items } = cortex.memory
       return h(
         'ul',
         {},
@@ -60,7 +60,7 @@ describe('Rendering & Reactivity', () => {
 
     expect(target.firstChild.firstChild.id).toBe('li-1')
 
-    store.synapses.reverse()
+    cortex.synapses.reverse()
     await flushUpdates()
 
     expect(target.firstChild.firstChild.id).toBe('li-3')
@@ -100,14 +100,14 @@ describe('Rendering & Reactivity', () => {
   })
 
   it('should sync input values even if DOM is dirty', async () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { text: '' },
       synapses: (set) => ({
         reset: () => set({ text: '' }),
       }),
     })
 
-    const App = () => h('input', { value: store.memory.text, id: 'my-input' })
+    const App = () => h('input', { value: cortex.memory.text, id: 'my-input' })
     const target = document.createElement('div')
     mount(target, App)
     const input = target.querySelector('input')
@@ -116,7 +116,7 @@ describe('Rendering & Reactivity', () => {
     input.value = 'Hello'
 
     // Force reset from State
-    store.synapses.reset()
+    cortex.synapses.reset()
     await flushUpdates()
 
     expect(input.value).toBe('')
@@ -124,7 +124,7 @@ describe('Rendering & Reactivity', () => {
 
   it('should update styles on state change', async () => {
     // This also tests "Deep Nested Updates" but verifies via CSS class application
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { user: { profile: { theme: 'light' } } },
       synapses: (set) => ({
         goDark: () =>
@@ -135,7 +135,7 @@ describe('Rendering & Reactivity', () => {
     })
 
     const App = () => {
-      const { user } = store.memory
+      const { user } = cortex.memory
       return h('div', { class: user.profile.theme }, 'Content')
     }
 
@@ -143,31 +143,31 @@ describe('Rendering & Reactivity', () => {
     mount(target, App)
 
     expect(target.firstChild.className).toBe('light')
-    store.synapses.goDark()
+    cortex.synapses.goDark()
     await flushUpdates()
     expect(target.firstChild.className).toBe('dark')
   })
 
   it('should update nested components created during initial DOM creation', async () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { count: 0 },
       synapses: (set) => ({
         increment: () => set((state) => ({ count: state.count + 1 })),
       }),
     })
-    const Child = () => h('span', {}, String(store.memory.count))
+    const Child = () => h('span', {}, String(cortex.memory.count))
     const App = () => h('div', {}, [h(Child)])
     const target = document.createElement('div')
 
     mount(target, App)
-    store.synapses.increment()
+    cortex.synapses.increment()
     await flushUpdates()
 
     expect(target.textContent).toBe('1')
   })
 
   it('should update keyed components after reorder', async () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         items: [
           { id: 1, label: 'One' },
@@ -185,21 +185,23 @@ describe('Rendering & Reactivity', () => {
       }),
     })
     const Row = ({ id }) => {
-      const item = store.memory.items.find((candidate) => candidate.id === id)
+      const item = cortex.memory.items.find((candidate) => candidate.id === id)
       return h('li', { 'data-id': String(id) }, item.label)
     }
     const App = () =>
       h(
         'ul',
         {},
-        store.memory.items.map((item) => h(Row, { id: item.id, key: item.id })),
+        cortex.memory.items.map((item) =>
+          h(Row, { id: item.id, key: item.id }),
+        ),
       )
     const target = document.createElement('div')
 
     mount(target, App)
-    store.synapses.reverse()
+    cortex.synapses.reverse()
     await flushUpdates()
-    store.synapses.rename(1, 'Moved')
+    cortex.synapses.rename(1, 'Moved')
     await flushUpdates()
 
     expect(target.querySelector('[data-id="1"]').textContent).toBe('Moved')
@@ -207,7 +209,7 @@ describe('Rendering & Reactivity', () => {
   })
 
   it('should ignore queued updates for components removed in the same tick', async () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { mode: 'span', show: true },
       synapses: (set) => ({
         hide: () => set({ show: false }),
@@ -215,15 +217,15 @@ describe('Rendering & Reactivity', () => {
       }),
     })
     const Child = () =>
-      store.memory.mode === 'span'
+      cortex.memory.mode === 'span'
         ? h('span', {}, 'child')
         : h('strong', {}, 'child')
-    const App = () => h('div', {}, [store.memory.show ? h(Child) : null])
+    const App = () => h('div', {}, [cortex.memory.show ? h(Child) : null])
     const target = document.createElement('div')
 
     mount(target, App)
-    store.synapses.hide()
-    store.synapses.switchMode()
+    cortex.synapses.hide()
+    cortex.synapses.switchMode()
     await flushUpdates()
 
     expect(target.innerHTML).toBe('<div></div>')
