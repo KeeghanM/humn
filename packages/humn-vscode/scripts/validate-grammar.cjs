@@ -65,7 +65,7 @@ assert.equal(
 for (const object of grammarObjects) {
   assert.notEqual(
     object.name,
-    'variable.other.readwrite.js',
-    'Humn grammar must not mark broad identifier regex matches as variables',
+    'variable.other.readwrite.prose.js',
+    'Humn grammar must not mark prose text as variables',
   )
 }

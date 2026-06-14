@@ -57,12 +57,10 @@ const occurrences = findIdentifierOccurrences(source, parsed, 'contactName')
 assert.equal(occurrences.length >= 4, true)
 
 const semanticTokens = getSemanticTokens(source, parsed)
-assert.equal(
-  semanticTokens.some(
-    (token) => source.slice(token.start, token.end) === 'contacts',
-  ),
-  true,
+const semanticTokenNames = semanticTokens.map((token) =>
+  source.slice(token.start, token.end),
 )
+assert.equal(semanticTokenNames.includes('contacts'), true)
 assert.equal(
   semanticTokens.some(
     (token) =>
@@ -71,6 +69,7 @@ assert.equal(
   ),
   true,
 )
+assert.equal(semanticTokenNames.includes('components'), false)
 
 const virtualSource = createVirtualTypescript(source, parsed)
 assert.equal(virtualSource.includes('const handleSubmit'), true)

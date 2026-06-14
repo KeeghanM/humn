@@ -549,11 +549,17 @@ function findIdentifierOccurrences(source, parsed, name) {
 
   const pattern = new RegExp(`\\b${escapeRegExp(name)}\\b`, 'g')
   for (const range of searchable) {
-    pattern.lastIndex = range.start
+    const searchableSource = maskStringsAndComments(
+      source.slice(range.start, range.end),
+    )
+    pattern.lastIndex = 0
     let match
-    while ((match = pattern.exec(source)) !== null && match.index < range.end) {
+    while ((match = pattern.exec(searchableSource)) !== null) {
       if (KEYWORDS.has(match[0])) continue
-      ranges.push({ start: match.index, end: match.index + name.length })
+      ranges.push({
+        start: range.start + match.index,
+        end: range.start + match.index + name.length,
+      })
     }
   }
 
@@ -590,19 +596,23 @@ function getIdentifierTokens(source, parsed) {
   const tokens = []
   const pattern = /\b[A-Za-z_$][\w$]*\b/g
   for (const range of ranges) {
-    pattern.lastIndex = range.start
+    const searchableSource = maskStringsAndComments(
+      source.slice(range.start, range.end),
+    )
+    pattern.lastIndex = 0
     let match
-    while ((match = pattern.exec(source)) !== null && match.index < range.end) {
+    while ((match = pattern.exec(searchableSource)) !== null) {
       const name = match[0]
       if (KEYWORDS.has(name)) continue
-      const previous = previousNonWhitespace(source, match.index)
+      const tokenStart = range.start + match.index
+      const previous = previousNonWhitespace(source, tokenStart)
       const symbol = parsed.symbols.get(name)
       let type = 'variable'
       if (previous === '.') type = 'property'
       else if (symbol?.kind === 'function') type = 'function'
       else if (symbol?.kind === 'class' || symbol?.kind === 'component')
         type = 'class'
-      tokens.push({ start: match.index, end: match.index + name.length, type })
+      tokens.push({ start: tokenStart, end: tokenStart + name.length, type })
     }
   }
   return tokens

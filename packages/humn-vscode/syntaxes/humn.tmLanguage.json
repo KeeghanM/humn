@@ -62,7 +62,7 @@
           "match": "\\b([A-Za-z_$][A-Za-z0-9_$]*)(?=\\s*\\.)",
           "captures": {
             "1": {
-              "name": "variable.other.object.ts"
+              "name": "variable.other.object.js"
             }
           }
         },
@@ -274,11 +274,11 @@
         },
         {
           "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
-          "name": "variable.other.readwrite.ts"
+          "name": "variable.other.readwrite.js"
         },
         {
           "match": "\\?|:",
-          "name": "keyword.operator.ternary.ts"
+          "name": "keyword.operator.ternary.js"
         },
         {
           "include": "source.tsx"
@@ -316,7 +316,7 @@
       "patterns": [
         {
           "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
-          "name": "variable.other.readwrite.alias.ts"
+          "name": "variable.other.readwrite.alias.js"
         },
         {
           "match": ",",
@@ -340,7 +340,7 @@
       "patterns": [
         {
           "match": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\b",
-          "name": "variable.other.readwrite.alias.ts"
+          "name": "variable.other.readwrite.alias.js"
         },
         {
           "match": ",|:",
