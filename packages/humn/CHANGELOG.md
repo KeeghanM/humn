@@ -1,3 +1,10 @@
+## [humn-v1.6.1](https://github.com/KeeghanM/humn/compare/humn-v1.6.0...humn-v1.6.1) (2026-06-14)
+
+### Bug Fixes
+
+- **runtime:** unmount and replace old component if component types differ ([c2ae0fa](https://github.com/KeeghanM/humn/commit/c2ae0fa2b8916c12dc8e46db8e03d0befd33b5b3))
+- **runtime:** use standard patch path for keyed component insertion to retain context ([d48eea1](https://github.com/KeeghanM/humn/commit/d48eea13bdbac5ffa98e38bd118bac290272a676))
+
 ## [humn-v1.6.0](https://github.com/KeeghanM/humn/compare/humn-v1.5.0...humn-v1.6.0) (2026-06-14)
 
 ### Features
