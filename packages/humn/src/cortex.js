@@ -160,7 +160,7 @@ export class Cortex {
 
   /**
    * Creates a copy-on-write mutation draft that tracks changed paths without
-   * cloning the whole store before every mutative update.
+   * cloning the whole cortex before every mutative update.
    */
   _createMutationDraft(base, changedPaths) {
     const clones = new WeakMap()

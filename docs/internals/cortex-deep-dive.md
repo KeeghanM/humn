@@ -28,7 +28,7 @@ graph LR
 The Memory is the single source of truth for your application. It's a plain JavaScript object that holds all your data.
 
 ```javascript
-const store = new Cortex({
+const cortex = new Cortex({
   memory: {
     user: null,
     posts: [],
@@ -129,12 +129,12 @@ sequenceDiagram
 
 ## Subscription System
 
-When a component reads from `store.memory`, it automatically subscribes to updates:
+When a component reads from `cortex.memory`, it automatically subscribes to updates:
 
 ```javascript
 const Counter = () => {
-  const { count } = store.memory // ← Auto-subscribes!
-  const { increment } = store.synapses
+  const { count } = cortex.memory // ← Auto-subscribes!
+  const { increment } = cortex.synapses
 
   return h('button', { onclick: increment }, count)
 }
@@ -146,7 +146,7 @@ const Counter = () => {
 graph TB
     subgraph "Subscription Flow"
         A["Component Renders"]
-        B["Reads store.memory"]
+        B["Reads cortex.memory"]
         C["Cortex Registers Component"]
         D["State Updates"]
         E["Cortex Notifies Component"]
@@ -169,12 +169,12 @@ Only components that **read** from the Cortex will re-render:
 
 ```javascript
 const ComponentA = () => {
-  const { count } = store.memory // Subscribes to 'count'
+  const { count } = cortex.memory // Subscribes to 'count'
   return h('div', {}, count)
 }
 
 const ComponentB = () => {
-  const { user } = store.memory // Subscribes to 'user'
+  const { user } = cortex.memory // Subscribes to 'user'
   return h('div', {}, user.name)
 }
 
@@ -186,7 +186,7 @@ const ComponentB = () => {
 Async logic is handled naturally in synapses:
 
 ```javascript
-const userStore = new Cortex({
+const userCortex = new Cortex({
   memory: {
     user: null,
     loading: false,
@@ -242,7 +242,7 @@ You can derive values in your components:
 
 ```javascript
 const TodoList = () => {
-  const { todos } = store.memory
+  const { todos } = cortex.memory
 
   // Computed
   const completedCount = todos.filter((t) => t.done).length
@@ -266,7 +266,7 @@ const createLogger = (set) => (updater) => {
   console.log('After:', get())
 }
 
-const store = new Cortex({
+const cortex = new Cortex({
   memory: { count: 0 },
   synapses: (set, get) => {
     const loggedSet = createLogger(set)
@@ -281,21 +281,21 @@ const store = new Cortex({
 })
 ```
 
-### Multiple Stores
+### Multiple Cortexes
 
 You can create multiple Cortex instances for different domains:
 
 ```javascript
-// stores/user-store.js
-export const userStore = new Cortex({
+// cortexes/user-cortex.js
+export const userCortex = new Cortex({
   memory: { currentUser: null },
   synapses: (set) => ({
     /* ... */
   }),
 })
 
-// stores/cart-store.js
-export const cartStore = new Cortex({
+// cortexes/cart-cortex.js
+export const cartCortex = new Cortex({
   memory: { items: [] },
   synapses: (set) => ({
     /* ... */
@@ -536,7 +536,7 @@ VSCode and other modern editors will give you full IntelliSense with this approa
 
 - Keep Memory serialisable (no functions, symbols, or class instances)
 - Use mutative syntax in functional updates for clarity
-- Create separate stores for different domains
+- Create separate cortexes for different domains
 - Handle loading and error states in async actions
 - Use descriptive names for synapses (verbs: `fetchUser`, `updateSettings`)
 
@@ -546,15 +546,15 @@ VSCode and other modern editors will give you full IntelliSense with this approa
 - Don't mutate Memory directly outside of synapses
 - Don't create circular references in Memory
 - Don't forget to handle errors in async actions
-- Don't read from `store.memory` in synapses (use `get()` instead)
+- Don't read from `cortex.memory` in synapses (use `get()` instead)
 
 ## Performance Tips
 
 1. **Destructure selectively**: Only read what you need
 
    ```javascript
-   const { count } = store.memory // Good
-   const allState = store.memory // Subscribes to everything!
+   const { count } = cortex.memory // Good
+   const allState = cortex.memory // Subscribes to everything!
    ```
 
 2. **Batch updates**: Multiple `set` calls in one synapse are batched

@@ -109,20 +109,20 @@ describe('Interaction helpers', () => {
   it('replaces wrapped event listeners when handler props change', async () => {
     const firstHandler = vi.fn()
     const secondHandler = vi.fn()
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { handler: firstHandler },
       synapses: (set) => ({
         setHandler: (handler) => set({ handler }),
       }),
     })
-    const App = () => h('button', { onclick: store.memory.handler }, 'Run')
+    const App = () => h('button', { onclick: cortex.memory.handler }, 'Run')
     const target = document.createElement('div')
 
     mount(target, App)
     const button = target.querySelector('button')
 
     button.click()
-    store.synapses.setHandler(secondHandler)
+    cortex.synapses.setHandler(secondHandler)
     await flushUpdates()
     button.click()
 
@@ -132,7 +132,7 @@ describe('Interaction helpers', () => {
 
   it('replaces and removes keyboard helper listeners across patches', async () => {
     const onEnter = vi.fn()
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { enabled: true, version: 0 },
       synapses: (set) => ({
         bump: () =>
@@ -143,7 +143,7 @@ describe('Interaction helpers', () => {
       }),
     })
     const App = () => {
-      const { enabled, version } = store.memory
+      const { enabled, version } = cortex.memory
       const props = enabled
         ? { 'data-version': version, onenter: onEnter }
         : { 'data-version': version }
@@ -155,12 +155,12 @@ describe('Interaction helpers', () => {
     mount(target, App)
     const input = target.querySelector('input')
 
-    store.synapses.bump()
+    cortex.synapses.bump()
     await flushUpdates()
     input.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
     )
-    store.synapses.disable()
+    cortex.synapses.disable()
     await flushUpdates()
     input.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),

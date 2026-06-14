@@ -40,7 +40,7 @@ Humn uses Single File Components (`.humn`) to keep your logic, view, and styles 
 ### 1. The Cortex (Logic)
 
 ```javascript
-// store.js
+// cortex.js
 import { Cortex } from 'humn'
 
 export const appCortex = new Cortex({
@@ -63,7 +63,7 @@ export const appCortex = new Cortex({
 ```humn
 <script>
   // app.humn
-  import { appCortex } from './store'
+  import { appCortex } from './cortex'
 
   // Access the Cortex
   const { count, user } = appCortex.memory
@@ -92,6 +92,16 @@ import App from './app.humn'
 
 mount(document.getElementById('app'), App)
 ```
+
+## AI & Agent Support
+
+Humn natively ships with [llms.txt](https://llmstxt.org/) standard support and AI assistant rules. To help your AI coding agents (like Cursor, Claude Code, GitHub Copilot) understand Humn's conventions and write idiomatic code, run the following command in your project:
+
+```bash
+npx humn init-ai
+```
+
+This will automatically scaffold `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/humn.mdc` in your workspace so agents don't confuse Humn with React or Svelte.
 
 ## Contributing
 

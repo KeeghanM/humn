@@ -219,7 +219,7 @@ Client-owned or local state includes:
 - temporary user input
 - transient process state
 
-Do not duplicate server-owned state into local stores without explicit justification.
+Do not duplicate server-owned state into local cortexes without explicit justification.
 
 Prefer derived state over duplicated state.
 
@@ -501,7 +501,7 @@ Avoid:
 
 - deep nesting and complex conditionals
 - large multi-responsibility functions, modules, classes, or components
-- copying server-owned state into local stores without clear need
+- copying server-owned state into local cortexes without clear need
 - silent error handling or catch-and-ignore blocks
 - tests tightly coupled to implementation details
 - introducing new dependencies without checking existing patterns

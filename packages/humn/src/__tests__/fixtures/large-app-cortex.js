@@ -9,7 +9,7 @@ export function createRows(count) {
   }))
 }
 
-export function createLargeAppStore({ rowCount = 1000 } = {}) {
+export function createLargeAppCortex({ rowCount = 1000 } = {}) {
   return new Cortex({
     memory: {
       activeId: 1,

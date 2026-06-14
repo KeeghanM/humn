@@ -5,7 +5,7 @@ import {
   createLargeAppComponents,
   createRenderCounters,
 } from './fixtures/large-app-components.js'
-import { createLargeAppStore } from './fixtures/large-app-store.js'
+import { createLargeAppCortex } from './fixtures/large-app-cortex.js'
 
 async function flushUpdates() {
   await Promise.resolve()
@@ -13,8 +13,8 @@ async function flushUpdates() {
 
 describe('Large app regression coverage', () => {
   it('renders a multi-component app with thousands of DOM elements', () => {
-    const store = createLargeAppStore({ rowCount: 1200 })
-    const { App } = createLargeAppComponents(store)
+    const cortex = createLargeAppCortex({ rowCount: 1200 })
+    const { App } = createLargeAppComponents(cortex)
     const target = document.createElement('div')
 
     mount(target, App)
@@ -26,8 +26,8 @@ describe('Large app regression coverage', () => {
   })
 
   it('preserves row DOM identity across unrelated state updates', async () => {
-    const store = createLargeAppStore({ rowCount: 800 })
-    const { App } = createLargeAppComponents(store)
+    const cortex = createLargeAppCortex({ rowCount: 800 })
+    const { App } = createLargeAppComponents(cortex)
     const target = document.createElement('div')
 
     mount(target, App)
@@ -37,7 +37,7 @@ describe('Large app regression coverage', () => {
     const lastRow = target.querySelector('[data-row-id="800"]')
 
     for (let index = 0; index < 25; index++) {
-      store.synapses.incrementNotifications()
+      cortex.synapses.incrementNotifications()
     }
     await flushUpdates()
 
@@ -48,19 +48,19 @@ describe('Large app regression coverage', () => {
   })
 
   it('handles many mixed state updates without losing list correctness', async () => {
-    const store = createLargeAppStore({ rowCount: 600 })
-    const { App } = createLargeAppComponents(store)
+    const cortex = createLargeAppCortex({ rowCount: 600 })
+    const { App } = createLargeAppComponents(cortex)
     const target = document.createElement('div')
 
     mount(target, App)
 
     for (let index = 1; index <= 100; index++) {
-      store.synapses.toggleRow(index)
-      store.synapses.setActive(index)
-      if (index % 10 === 0) store.synapses.recordSave()
+      cortex.synapses.toggleRow(index)
+      cortex.synapses.setActive(index)
+      if (index % 10 === 0) cortex.synapses.recordSave()
     }
-    store.synapses.updateScores(3)
-    store.synapses.setFilter('Project task 59')
+    cortex.synapses.updateScores(3)
+    cortex.synapses.setFilter('Project task 59')
     await flushUpdates()
 
     expect(target.querySelectorAll('[data-row-id]').length).toBe(11)
@@ -70,7 +70,7 @@ describe('Large app regression coverage', () => {
     expect(target.textContent).toContain('Active: 100')
     expect(target.textContent).toContain('Saves: 10')
 
-    store.synapses.clearFilter()
+    cortex.synapses.clearFilter()
     await flushUpdates()
 
     expect(target.querySelectorAll('[data-row-id]').length).toBe(600)
@@ -78,15 +78,15 @@ describe('Large app regression coverage', () => {
 
   it('only re-renders components that read changed state paths', async () => {
     const counters = createRenderCounters()
-    const store = createLargeAppStore({ rowCount: 300 })
-    const { App } = createLargeAppComponents(store, counters)
+    const cortex = createLargeAppCortex({ rowCount: 300 })
+    const { App } = createLargeAppComponents(cortex, counters)
     const target = document.createElement('div')
 
     mount(target, App)
     const initialCounts = { ...counters }
 
     for (let index = 0; index < 25; index++) {
-      store.synapses.incrementNotifications()
+      cortex.synapses.incrementNotifications()
     }
     await flushUpdates()
 

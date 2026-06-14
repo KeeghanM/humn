@@ -8,7 +8,7 @@ import {
   createLargeAppComponents,
   createRenderCounters,
 } from '../src/__tests__/fixtures/large-app-components.js'
-import { createLargeAppStore } from '../src/__tests__/fixtures/large-app-store.js'
+import { createLargeAppCortex } from '../src/__tests__/fixtures/large-app-cortex.js'
 
 function getArg(name, fallback) {
   const prefix = `--${name}=`
@@ -61,10 +61,10 @@ function createScenario(rowCount) {
   document.body.appendChild(target)
 
   const counters = createRenderCounters()
-  const store = createLargeAppStore({ rowCount })
-  const { App } = createLargeAppComponents(store, counters)
+  const cortex = createLargeAppCortex({ rowCount })
+  const { App } = createLargeAppComponents(cortex, counters)
 
-  return { App, counters, store, target }
+  return { App, counters, cortex, target }
 }
 
 async function runBenchmark({ mixedUpdates, notificationUpdates, rowCount }) {
@@ -89,7 +89,7 @@ async function runBenchmark({ mixedUpdates, notificationUpdates, rowCount }) {
     mount(scenario.target, scenario.App)
 
     for (let index = 0; index < notificationUpdates; index++) {
-      scenario.store.synapses.incrementNotifications()
+      scenario.cortex.synapses.incrementNotifications()
     }
     await flushUpdates()
 
@@ -107,12 +107,12 @@ async function runBenchmark({ mixedUpdates, notificationUpdates, rowCount }) {
     mount(scenario.target, scenario.App)
 
     for (let index = 1; index <= mixedUpdates; index++) {
-      scenario.store.synapses.toggleRow(index)
-      scenario.store.synapses.setActive(index)
-      if (index % 10 === 0) scenario.store.synapses.recordSave()
+      scenario.cortex.synapses.toggleRow(index)
+      scenario.cortex.synapses.setActive(index)
+      if (index % 10 === 0) scenario.cortex.synapses.recordSave()
     }
-    scenario.store.synapses.updateScores(5)
-    scenario.store.synapses.setFilter(
+    scenario.cortex.synapses.updateScores(5)
+    scenario.cortex.synapses.setFilter(
       `Project task ${Math.floor(rowCount / 2)}`,
     )
     await flushUpdates()

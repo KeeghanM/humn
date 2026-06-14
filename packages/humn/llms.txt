@@ -1,0 +1,25 @@
+# Humn
+
+> Humn is a reactive frontend framework with .humn single-file components, Cortex state, scoped styles and a Vite compiler plugin.
+
+Humn is not React, Vue, Svelte or Solid. Do not assume JSX runtime behaviour, hooks, signals or Svelte stores. Humn components are compiled from .humn files into JavaScript functions that return VNodes. Application state usually lives in Cortexes.
+
+## Start here
+
+- **Quick start**: Install Humn, configure Vite and mount an app.
+- **.humn files**: Component file format, script/template/style sections and props.
+- **Cortex**: State management, memory, synapses, persistence and update rules.
+- **Events and interaction helpers**: onclick, oncommit, oninputdebounced and event modifiers.
+- **Styling**: Scoped CSS and compiler behaviour.
+- **Testing**: Recommended testing approach for components and cortexes.
+
+## Agent notes
+
+- Use .humn files for components.
+- Use Cortex for shared state.
+- Do not start fetches or side effects directly in the `<script>` block (it runs on every render). Always use `onMount()` for component-owned side effects.
+- For async data, use `resource(initialData)` in memory and `resourceSynapse()` for fetching.
+- Read state through `cortex.memory` inside component scripts.
+- Mutate state through `cortex.synapses`.
+- Do not use React hooks, JSX imports, Svelte `$:` syntax or Solid signals.
+- Styles inside .humn files are scoped by the compiler.

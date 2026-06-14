@@ -18,7 +18,7 @@ export const setObserver = (obs) => {
 
 ### 2. Cortex Proxies (`cortex.js`)
 
-When you create a `Cortex` store, the `memory` object is wrapped in a Proxy. This Proxy intercepts all property access (get) and mutation (set).
+When you create a `Cortex` cortex, the `memory` object is wrapped in a Proxy. This Proxy intercepts all property access (get) and mutation (set).
 
 ## The Dependency Tracking Cycle
 
@@ -28,7 +28,7 @@ When a component needs to render, Humn sets `currentObserver` to that component'
 
 ### Step 2: Property Access (Get)
 
-As the component renders, it reads values from the store (e.g., `store.memory.count`).
+As the component renders, it reads values from the cortex (e.g., `cortex.memory.count`).
 The Proxy intercepts this access. It checks if `currentObserver` is set. If so, it adds the observer to a dependency list for that specific property.
 
 ```javascript
@@ -47,7 +47,7 @@ Humn clears `currentObserver`. The component is now subscribed to exactly the pr
 
 ### Step 4: Mutation (Set)
 
-When you update state (e.g., `store.synapses.increment()`), the Proxy intercepts the change.
+When you update state (e.g., `cortex.synapses.increment()`), the Proxy intercepts the change.
 It looks up the dependency list for the changed property and calls all subscribed observers.
 
 ```javascript

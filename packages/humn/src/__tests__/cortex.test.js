@@ -10,21 +10,21 @@ describe('Cortex (State Management)', () => {
   })
 
   it('should initialize memory and synapses', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: { count: 0 },
       synapses: (set) => ({
         increment: () => set((state) => ({ count: state.count + 1 })),
       }),
     })
 
-    expect(store.memory.count).toBe(0)
-    store.synapses.increment()
-    expect(store.memory.count).toBe(1)
+    expect(cortex.memory.count).toBe(0)
+    cortex.synapses.increment()
+    expect(cortex.memory.count).toBe(1)
   })
 
   it('should handle deep nested updates (State only)', () => {
     // This verifies the Proxy logic works without needing to mount a component
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         user: { profile: { theme: 'light' } },
       },
@@ -36,13 +36,13 @@ describe('Cortex (State Management)', () => {
       }),
     })
 
-    expect(store.memory.user.profile.theme).toBe('light')
-    store.synapses.goDark()
-    expect(store.memory.user.profile.theme).toBe('dark')
+    expect(cortex.memory.user.profile.theme).toBe('light')
+    cortex.synapses.goDark()
+    expect(cortex.memory.user.profile.theme).toBe('dark')
   })
 
   it('should preserve unchanged references during mutative updates', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         settings: { locale: 'en' },
         user: { profile: { theme: 'light' } },
@@ -55,20 +55,20 @@ describe('Cortex (State Management)', () => {
       }),
     })
 
-    const settings = store.memory.settings
-    const user = store.memory.user
-    const profile = store.memory.user.profile
+    const settings = cortex.memory.settings
+    const user = cortex.memory.user
+    const profile = cortex.memory.user.profile
 
-    store.synapses.goDark()
+    cortex.synapses.goDark()
 
-    expect(store.memory.settings).toBe(settings)
-    expect(store.memory.user).not.toBe(user)
-    expect(store.memory.user.profile).not.toBe(profile)
-    expect(store.memory.user.profile.theme).toBe('dark')
+    expect(cortex.memory.settings).toBe(settings)
+    expect(cortex.memory.user).not.toBe(user)
+    expect(cortex.memory.user.profile).not.toBe(profile)
+    expect(cortex.memory.user.profile.theme).toBe('dark')
   })
 
   it('should handle array mutation and delete operations in mutative updates', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         items: [
           { id: 1, name: 'One' },
@@ -87,31 +87,31 @@ describe('Cortex (State Management)', () => {
       }),
     })
 
-    store.synapses.update()
+    cortex.synapses.update()
 
-    expect(store.memory.items).toEqual([
+    expect(cortex.memory.items).toEqual([
       { id: 1, name: 'Changed' },
       { id: 3, name: 'Three' },
     ])
-    expect(store.memory.user.profile).toEqual({ name: 'Keeghan' })
+    expect(cortex.memory.user.profile).toEqual({ name: 'Keeghan' })
   })
 
   it('should use initial value if storage is empty', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         count: persist(10, { key: 'my-count' }),
       },
       synapses: () => ({}),
     })
 
-    expect(store.memory.count).toBe(10)
+    expect(cortex.memory.count).toBe(10)
   })
 
   it('should hydrate from local storage if data exists', () => {
     // Simulate existing data
     localStorage.setItem('my-count', JSON.stringify(99))
 
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         count: persist(0, { key: 'my-count' }),
       },
@@ -119,11 +119,11 @@ describe('Cortex (State Management)', () => {
     })
 
     // Should ignore '0' and use '99'
-    expect(store.memory.count).toBe(99)
+    expect(cortex.memory.count).toBe(99)
   })
 
   it('should update local storage when persisted state changes', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         count: persist(0),
       },
@@ -132,13 +132,13 @@ describe('Cortex (State Management)', () => {
       }),
     })
 
-    store.synapses.inc()
+    cortex.synapses.inc()
 
     expect(localStorage.getItem('count')).toBe('1')
   })
 
   it('should NOT update local storage for non-persisted keys', () => {
-    const store = new Cortex({
+    const cortex = new Cortex({
       memory: {
         count: persist(0),
         temp: 'transient',
@@ -151,7 +151,7 @@ describe('Cortex (State Management)', () => {
     // Spy on setItem to prove it wasn't called
     const spy = vi.spyOn(Storage.prototype, 'setItem')
 
-    store.synapses.changeTemp()
+    cortex.synapses.changeTemp()
 
     expect(spy).not.toHaveBeenCalled()
   })
