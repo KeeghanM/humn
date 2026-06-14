@@ -1,3 +1,9 @@
+## [humn-v1.7.0](https://github.com/KeeghanM/humn/compare/humn-v1.6.1...humn-v1.7.0) (2026-06-14)
+
+### Features
+
+- **cortex:** introduce resource and resourceSynapse for async data ([c0640d5](https://github.com/KeeghanM/humn/commit/c0640d518df50567931e9f93e88d9c24f37f4f2a))
+
 ## [humn-v1.6.1](https://github.com/KeeghanM/humn/compare/humn-v1.6.0...humn-v1.6.1) (2026-06-14)
 
 ### Bug Fixes
