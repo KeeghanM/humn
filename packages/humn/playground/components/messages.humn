@@ -1,5 +1,5 @@
 <script>
-  import { appCortex } from '../cortexes/app.js'
+  import { appCortex } from '../cortexes/app'
   import Message from './message.humn'
 
   const { messages } = appCortex.memory

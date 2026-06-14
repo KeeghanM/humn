@@ -1,5 +1,5 @@
 <script>
-  import { appCortex } from '../cortexes/app.js'
+  import { appCortex } from '../cortexes/app'
 
   const { currentMessage } = appCortex.memory
   const { addMessage, setCurrentMessage } = appCortex.synapses
