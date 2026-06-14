@@ -587,11 +587,6 @@ function getSemanticTokens(source, parsed) {
 
 function getIdentifierTokens(source, parsed) {
   const ranges = []
-  if (parsed.script)
-    ranges.push({
-      start: parsed.script.contentStart,
-      end: parsed.script.contentEnd,
-    })
   for (const expression of parsed.expressions)
     ranges.push({ start: expression.contentStart, end: expression.contentEnd })
 

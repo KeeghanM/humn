@@ -62,6 +62,7 @@ const semanticTokenNames = semanticTokens.map((token) =>
   source.slice(token.start, token.end),
 )
 assert.equal(semanticTokenNames.includes('contacts'), true)
+assert.equal(semanticTokenNames.includes('staff'), false)
 assert.equal(
   semanticTokens.some(
     (token) =>
