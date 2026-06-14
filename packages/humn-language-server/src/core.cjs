@@ -293,10 +293,11 @@ function findTags(source, ranges, expressions) {
 function parseImports(source, script) {
   const imports = []
   const scriptSource = source.slice(script.contentStart, script.contentEnd)
+  const maskedSource = maskComments(scriptSource)
   const importPattern = /import\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]/g
   let match
 
-  while ((match = importPattern.exec(scriptSource)) !== null) {
+  while ((match = importPattern.exec(maskedSource)) !== null) {
     const fullStart = script.contentStart + match.index
     const specifier = match[1].trim()
     const sourcePath = match[2]
@@ -418,6 +419,54 @@ function parseDeclarations(source, script) {
 function collectMatches(source, pattern, callback) {
   let match
   while ((match = pattern.exec(source)) !== null) callback(match)
+}
+
+function maskComments(source) {
+  let output = ''
+  let offset = 0
+
+  while (offset < source.length) {
+    const char = source[offset]
+    if (source.startsWith('//', offset)) {
+      const end = source.indexOf('\n', offset + 2)
+      const stop = end === -1 ? source.length : end
+      output += ' '.repeat(stop - offset)
+      offset = stop
+      continue
+    }
+    if (source.startsWith('/*', offset)) {
+      const end = source.indexOf('*/', offset + 2)
+      const stop = end === -1 ? source.length : end + 2
+      output += ' '.repeat(stop - offset)
+      offset = stop
+      continue
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      const start = offset
+      const quote = char
+      output += char
+      offset++
+      while (offset < source.length) {
+        if (source[offset] === '\\') {
+          output += source.slice(offset, offset + 2)
+          offset += 2
+          continue
+        }
+        if (source[offset] === quote) {
+          output += quote
+          offset++
+          break
+        }
+        output += source[offset]
+        offset++
+      }
+      continue
+    }
+    output += char
+    offset++
+  }
+
+  return output
 }
 
 function maskStringsAndComments(source) {
@@ -749,20 +798,72 @@ function getScriptDiagnostics(source, parsed) {
   return diagnostics
 }
 
+function shouldMaskBrace(source, index) {
+  const prefix = source.slice(0, index).trim()
+  if (prefix.endsWith('=>')) {
+    return true
+  }
+  if (
+    /\bclass(?:\s+[A-Za-z_$][\w$]*)?(?:\s+extends\s+[A-Za-z_$][\w$.]*)?$/.test(
+      prefix,
+    )
+  ) {
+    return true
+  }
+  if (prefix.endsWith(')')) {
+    let depth = 1
+    let i = prefix.length - 2
+    while (i >= 0 && depth > 0) {
+      if (prefix[i] === ')') depth++
+      else if (prefix[i] === '(') depth--
+      i--
+    }
+    if (depth === 0) {
+      const beforeParen = prefix.slice(0, i + 1).trim()
+      const match = beforeParen.match(/\b([A-Za-z_$][\w$]*)$/)
+      if (match) {
+        const word = match[1]
+        if (['if', 'while', 'for', 'switch', 'catch'].includes(word)) {
+          return false
+        }
+      }
+      return true
+    }
+  }
+  if (/\bfunction\b\s*$/.test(prefix)) {
+    return true
+  }
+  return false
+}
+
 function maskNestedBodies(source) {
   const chars = source.split('')
-  let depth = 0
+  const stack = []
+
   for (let offset = 0; offset < chars.length; offset++) {
     if (chars[offset] === '{') {
-      depth++
+      const isMaskedParent =
+        stack.length > 0 && stack[stack.length - 1] === true
+      if (isMaskedParent) {
+        stack.push(true)
+      } else {
+        if (shouldMaskBrace(source, offset)) {
+          stack.push(true)
+        } else {
+          stack.push(false)
+        }
+      }
       continue
     }
     if (chars[offset] === '}') {
-      depth = Math.max(0, depth - 1)
+      stack.pop()
       continue
     }
-    if (depth > 0 && chars[offset] !== '\n' && chars[offset] !== '\r')
+
+    const inMaskedBlock = stack.includes(true)
+    if (inMaskedBlock && chars[offset] !== '\n' && chars[offset] !== '\r') {
       chars[offset] = ' '
+    }
   }
   return chars.join('')
 }

@@ -10,12 +10,8 @@ scripts/
 
 vite.config.js
 
-# Runtime source and production dependencies are required by the extension.
-node_modules/**/.bin
-node_modules/**/.cache
-node_modules/**/test
-node_modules/**/tests
-node_modules/**/__tests__
+# Runtime source and production dependencies are bundled.
+node_modules/
 
 # Ignore the monorepo root references if any exist
 ../

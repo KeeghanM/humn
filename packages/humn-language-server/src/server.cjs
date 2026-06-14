@@ -18,6 +18,7 @@ const {
   TextDocumentSyncKind,
   TextEdit,
   createConnection,
+  FileChangeType,
 } = require('vscode-languageserver/node')
 const { TextDocument } = require('vscode-languageserver-textdocument')
 const {
@@ -44,6 +45,7 @@ const semanticLegend = {
 }
 
 const documentCache = new Map()
+const projectComponentsCache = new Map()
 let workspaceRoots = []
 
 connection.onInitialize((params) => {
@@ -72,10 +74,33 @@ connection.onInitialize((params) => {
   }
 })
 
+documents.onDidOpen((event) => validateDocument(event.document))
 documents.onDidChangeContent((change) => validateDocument(change.document))
 documents.onDidClose((event) => {
   documentCache.delete(event.document.uri)
   connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] })
+})
+
+connection.onDidChangeWatchedFiles((change) => {
+  for (const event of change.changes) {
+    const filePath = uriToPath(event.uri)
+    if (!filePath) continue
+
+    for (const [root, files] of projectComponentsCache.entries()) {
+      if (filePath.startsWith(root)) {
+        if (event.type === FileChangeType.Created) {
+          if (!files.includes(filePath)) {
+            files.push(filePath)
+          }
+        } else if (event.type === FileChangeType.Deleted) {
+          const index = files.indexOf(filePath)
+          if (index !== -1) {
+            files.splice(index, 1)
+          }
+        }
+      }
+    }
+  }
 })
 
 connection.onCompletion((params) => {
@@ -166,11 +191,20 @@ connection.onHover((params) => {
   if (componentTag) {
     const symbol = context.parsed.symbols.get(componentTag.name)
     if (!symbol) return null
-    return {
-      contents: {
-        kind: MarkupKind.Markdown,
-        value: `**${componentTag.name}**\n\nImported from \`${symbol.import.source}\`.`,
-      },
+    if (symbol.import) {
+      return {
+        contents: {
+          kind: MarkupKind.Markdown,
+          value: `**${componentTag.name}**\n\nImported from \`${symbol.import.source}\`.`,
+        },
+      }
+    } else {
+      return {
+        contents: {
+          kind: MarkupKind.Markdown,
+          value: `**${componentTag.name}**`,
+        },
+      }
     }
   }
 
@@ -212,7 +246,7 @@ connection.onReferences((params) => {
   if (!name) return []
 
   const ranges = tag
-    ? getComponentTagRanges(context.parsed, name)
+    ? getComponentTagRanges(source, context.parsed, name)
     : findIdentifierOccurrences(source, context.parsed, name)
   return ranges.map((range) =>
     Location.create(document.uri, toRange(document, range.start, range.end)),
@@ -245,7 +279,7 @@ connection.onRenameRequest((params) => {
   if (!identifier) return null
 
   const ranges = tag
-    ? getComponentTagRanges(context.parsed, tag.name)
+    ? getComponentTagRanges(source, context.parsed, tag.name)
     : findIdentifierOccurrences(source, context.parsed, identifier.name)
   return {
     changes: {
@@ -434,8 +468,7 @@ function getDocumentContext(document) {
 }
 
 function hasTsConfig() {
-  for (const root of workspaceRoots) {
-    const rootPath = uriToPath(root)
+  for (const rootPath of workspaceRoots) {
     if (rootPath && fs.existsSync(path.join(rootPath, 'tsconfig.json'))) {
       return true
     }
@@ -571,12 +604,20 @@ function getLocalDefinition(document, context, name) {
   return null
 }
 
-function getComponentTagRanges(parsed, name) {
+function getComponentTagRanges(source, parsed, name) {
   const ranges = parsed.tags
     .filter((tag) => tag.name === name)
     .map((tag) => ({ start: tag.nameStart, end: tag.nameEnd }))
   const symbol = parsed.symbols.get(name)
   if (symbol) ranges.push({ start: symbol.start, end: symbol.end })
+
+  const scriptOccurrences = findIdentifierOccurrences(source, parsed, name)
+  for (const occurrence of scriptOccurrences) {
+    if (!ranges.some((r) => r.start === occurrence.start)) {
+      ranges.push(occurrence)
+    }
+  }
+
   return ranges
 }
 
@@ -688,7 +729,13 @@ function getProjectComponents(document, context) {
   const seen = new Set()
 
   for (const root of roots) {
-    for (const filePath of getHumnFiles(root)) {
+    let files = projectComponentsCache.get(root)
+    if (!files) {
+      files = getHumnFiles(root)
+      projectComponentsCache.set(root, files)
+    }
+
+    for (const filePath of files) {
       if (filePath === documentPath) continue
 
       const name = getComponentNameFromPath(filePath)

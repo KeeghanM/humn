@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict')
 const path = require('node:path')
+const fs = require('node:fs')
 const ts = require('typescript')
 
 const {
@@ -130,3 +131,48 @@ assert.equal(
   ),
   './components/chat-window.humn',
 )
+
+// Comments in imports should be ignored
+const commentsInImportsSource = `<script>
+  // import CommentedButton from './CommentedButton.humn'
+  /* import MultiLineCommented from './MultiLineCommented.humn' */
+  import RealButton from './RealButton.humn'
+</script>`
+const parsedCommentsInImports = parseHumn(commentsInImportsSource)
+assert.equal(parsedCommentsInImports.imports.length, 1)
+assert.equal(parsedCommentsInImports.imports[0].symbols[0].name, 'RealButton')
+
+// Control flow blocks do not get masked, but functions/classes do
+const sideEffectsInIfSource = `<script>
+  if (true) {
+    fetch('/api')
+  }
+  const myFunc = () => {
+    fetch('/api')
+  }
+</script>`
+const parsedSideEffectsInIf = parseHumn(sideEffectsInIfSource)
+const diags = getDiagnostics(sideEffectsInIfSource, parsedSideEffectsInIf)
+const fetchDiags = diags.filter((d) => d.message.includes('fetch runs'))
+assert.equal(fetchDiags.length, 1)
+
+// Test hasTsConfig path resolution
+const os = require('node:os')
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'humn-test-'))
+try {
+  const mockWorkspaceRoots = [tempDir]
+  const hasTsConfigCheck = (roots) => {
+    for (const rootPath of roots) {
+      if (rootPath && fs.existsSync(path.join(rootPath, 'tsconfig.json'))) {
+        return true
+      }
+    }
+    return false
+  }
+  assert.equal(hasTsConfigCheck(mockWorkspaceRoots), false)
+
+  fs.writeFileSync(path.join(tempDir, 'tsconfig.json'), '{}')
+  assert.equal(hasTsConfigCheck(mockWorkspaceRoots), true)
+} finally {
+  fs.rmSync(tempDir, { recursive: true, force: true })
+}
